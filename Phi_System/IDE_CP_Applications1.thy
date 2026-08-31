@@ -1180,8 +1180,7 @@ structure Gen_Open_Abstraction_SS = Simpset (
 
 setup \<open>Context.theory_map (Gen_Open_Abstraction_SS.map (fn ctxt =>
           ctxt addsimps @{thms' HOL.simp_thms}
-            |> fold Simplifier.add_proc [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]
-            |> Simplifier.add_cong @{thm' mk_symbol_cong}))\<close>
+            |> fold Simplifier.add_proc [\<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>defined_All\<close>, \<^simproc>\<open>NO_MATCH\<close>]))\<close>
 
 
 paragraph \<open>Rules of Various Reasoning\<close>

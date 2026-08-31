@@ -96,8 +96,7 @@ val _ = Theory.setup (Context.theory_map (
          |> fold Simplifier.add_proc [\<^simproc>\<open>NO_MATCH\<close>, \<^simproc>\<open>defined_Ex\<close>, \<^simproc>\<open>HOL.defined_All\<close>, \<^simproc>\<open>defined_all\<close>,
                       \<^simproc>\<open>defined_Collect\<close>, \<^simproc>\<open>Set.defined_All\<close>, \<^simproc>\<open>Set.defined_Bex\<close>,
                       \<^simproc>\<open>unit_eq\<close>, \<^simproc>\<open>case_prod_beta\<close>, \<^simproc>\<open>case_prod_eta\<close>,
-                      \<^simproc>\<open>Collect_mem\<close>, move_Ex_for_set_notation]
-     |> Simplifier.add_cong @{thm' mk_symbol_cong})
+                      \<^simproc>\<open>Collect_mem\<close>, move_Ex_for_set_notation])
 ))
 
 

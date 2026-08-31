@@ -1,8 +1,13 @@
-# GUARD_NITPICK_FALSIFY_PLAN — prove_or_rebute 竞速化（Nitpick / Nunchaku 反驳档）
+# GUARD_NITPICK_FALSIFY_PLAN — prove_or_refute 竞速化（Nitpick / Nunchaku 反驳档）
 
-状态：rev 3，待作者批准后从 T0 开始执行。
-日期：2026-08-23（rev 1 级联插入 → rev 2 竞速化 → rev 3 吸收两轮对抗评审
+状态：§0–§8 的设计（rev 3，2026-08-23）已全部执行并落地生产（见 §21）；§22 起为
+生产接线之后的审计、修复与实验，最新进展在 §26。**读者从零开始时**：设计读 §0–§8，
+当前状态读 §26.8（实验 1 的最终形态）、§26.9（实验 1、2 的结果）、§26.10（驳斥率回归的根因与修复）、§26.11（修复后的驳斥率与未驳斥硬核）、§26.12（Nunchaku 实验）与 §23.8（仍未决的裁决）。
+日期：2026-08-23 起（rev 1 级联插入 → rev 2 竞速化 → rev 3 吸收两轮对抗评审
 （15 条意见零否决）与作者三项裁决）。
+
+**命名**：函数于 2026-08-24 由 `prove_or_rebute` 更名 `prove_or_refute`（作者指示，
+修正拼写，§6 第 8 条）。§0–§5 的历史记述中残留的旧拼写指的是同一个函数。
 
 作者已裁决（写死，不再是决策点）：
 - **完全替换旧实现，无总开关、无关闭分支、无逐位兼容回退**——回退手段是 git。
@@ -78,6 +83,9 @@ timed_tac 30ms (auto_search_tac ctxt) ORELSE (fn th =>
 确认保留为 Config 参数**，2026-08-24）。初值 **500ms**（作者原值；
 700ms 上调的理由——外置 kodkodi 地板——已随单路径裁定消失），T0/T5 实测回填
 终值。
+
+（**已过期**：现值 5000ms，且该值本身仍是未决裁决——见 §23.8 第 1 项。此外驳斥器
+自 2026-08-28 起另有 `\<phi>guard_refute_timeout`，本节的"单一 Config"不再成立。）
 
 **预算算术纪律**（评审 blocker 1 全部内容，实现必须逐条遵守）：
 1. R-nitpick 递给 Nitpick 的名义超时 = 外层预算（单一 Scala 路径无 fudge 预扣，
@@ -2564,7 +2572,8 @@ loose bounds in new results: [false, false, false]
 
 - **收益未量化**:修复对那 181 条目标的实际影响(多少条因此可驳)尚未测。要测就按
   §22.3 的裁决,在评估目标之前插一行 `declare [[\<phi>guard_race_log = …]]` 重新收一次语料。
-- **本节与 §22/§23 的本轮改动均未提交。**
+- **提交状态**:本机工作树未提交;cslh19 上已在分支 `exp-guess-inst-scope` 提交
+  (随实验 1 一并,见 §26.8)。两处状态不同,合并前需对齐。
 
 
 ## 25 · 守卫里的 schematic 变量:极性与特化(2026-08-28;本节假定读者没有会话记忆)
@@ -2643,13 +2652,15 @@ preprocess        : NONE (simplifier closed the goal)
 映射为 **`Provable`**——最保守的出口,不产生驳斥。构造子是单射,这个解**唯一**,不损失
 一般性。
 
-### 25.5 残余风险(正在测量)
+### 25.5 残余风险(提出时的形态;**结论见 §25.9**)
 
 危险的情形是:**特化了、但没有关闭目标**,于是 Nitpick 拿到一个被加强的守卫去驳。
 另有一处理论缝隙:`guess_inst_eq` 在 `?v args = RHS` 时经 `inst`(`:33-45`)用
 `fold_rev Thm.lambda args` 抽象,若 `args` 不是互不相同的变量(非 Miller pattern),该解
-未必最一般。两者均**只读过代码、未观测**。已派 agent 测量(产物
-scratchpad `GUESS_INST_RISK.md`)。
+未必最一般。
+
+本节写作时两者均只读过代码、未观测。**两者均已于同日测出,且都成立**——见 §25.9,
+其中第二条正是第一条的机理。
 
 ### 25.6 真实负载上的规模
 
@@ -2680,9 +2691,11 @@ scratchpad `GUESS_INST_RISK.md`)。
 ### 25.8 未做
 
 - ~~§25.5 的两项测量~~ **已完成,结论见 §25.9。**
-- 若测出真实的误驳路径,才会出现需要裁决的设计问题:把含 schematic 的目标整条排除在
-  驳斥赛道之外(仿 `reasoners.ML:1345` 的 TVar 筛)、在守卫预处理的上下文里关掉
-  `inst_var_by_Ctr_sels` 这个 looper、或接受并写成文档义务。**尚未裁决,勿预先实施。**
+- ~~若测出真实的误驳路径,才会出现需要裁决的设计问题~~ **误驳已在 §25.9 坐实,作者随即
+  裁决并实施:全局 looper 撤出 theory simpset,改为只在守卫机制内装一处(§26.8);是否
+  连 R-nitpick 一并摘掉,由实验 2 的驳斥率数据决定。** 当时列出的三个候选中,"把含
+  schematic 的目标整条排除在驳斥赛道之外(仿 `reasoners.ML:1345` 的 TVar 筛)"与"接受
+  并写成文档义务"两条**未被采纳**,记此以免重提。
 
 ### 25.9 残余风险的测量结果:误驳是真的(2026-08-28)
 
@@ -2753,15 +2766,44 @@ looper,于是这个"承诺"被带进了一条反演语义的管线**(`Guard_Refu
 回答规模问题:**从 phi-system 一路到 `Phi_Examples` 的全部执行中,`guess_inst` 提交了多少
 次实例化,其中多少是被强制的、多少不是**。
 
-### 26.2 两处 TEMPORARY 改动(成对存在,要删一起删)
+### 26.2 工作树上属于本轮的改动(两类,不要混为一谈)
+
+**甲、TEMPORARY 探测器——成对存在,要删一起删:**
 
 | 位置 | 改动 |
 |---|---|
-| `Phi_Logic_Programming_Reasoner/library/guess_instantiate.ML` | 探测器本体 |
-| `Phi_Logic_Programming_Reasoner/PLPR.thy`(`ML_file "library/guess_instantiate.ML"` 之后) | `declare [[\<phi>guess_inst_probe = "…/scratchpad/guess_inst_probe.tsv"]]` |
+| `library/guess_instantiate.ML` | 探测器本体(`probe_log` 配置、`probe_forced`、`Thread_Data` 累加器、`probe_flush`) |
+| `PLPR.thy`(`ML_file "library/guess_instantiate.ML"` 之后) | `declare [[\<phi>guess_inst_probe = "$ISABELLE_HOME_USER/guess_inst_probe.tsv"]]` |
 
 `declare` 必须在**上游**才能覆盖整条链(承 §22.3 的作者裁决:插在评估目标之前即可,
-且编辑 `PLPR.thy` 本身不是坏事)。
+且编辑 `PLPR.thy` 本身不是坏事)。路径用 `$ISABELLE_HOME_USER` 而非会话临时目录,
+以便跨机器复用、且不随 scratchpad 清理消失。
+
+**乙、实验 1 的作用域改动——不是 TEMPORARY,是待裁决的设计改动(详见 §26.8):**
+
+| 位置 | 改动 |
+|---|---|
+| `library/guess_instantiate.ML` 末尾 | 全局 `Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)` **注释掉**,原文保留供回退 |
+| `library/reasoners.ML` `guard_condition_solver` 的 `auto_tac` | 唯一的 `add_guess_inst_looper` 装配点 |
+| `Phi_System/IDE_CP_Reasoning2.thy:1368` | 删除 `certified by (instantiate …, clarsimp …)`,义务交给 AoA |
+| 七个 `.proof-store` | AoA 在新作用域下重录 |
+
+**撤销实验 1 时,乙的四项要一起回退**;甲可独立删除。
+
+**丙、实验 2 的改动(2026-08-30,结论见 §26.9:无收益,去留待作者定):**
+`library/guard_refute.ML` `preprocess` 的 `simp_ctxt` 末尾
+`|> Raw_Simplifier.del_loop "inst_var_by_Ctr_sels"`。
+
+**丁、同期为跑通实验而做、但不属于本项目的改动(见 §26.9 末尾的两条指针):**
+
+| 位置 | 性质 |
+|---|---|
+| `Performant_Isabelle_ML/HOL/SSymb.thy`、`Phi_BI/Phi_Preliminary.thy` | **真实修复**,应提交:`\<phi>safe_simp` 的符号判等引理(§26.9 指针 1)+ 驳斥器预处理的数位链折算与 `del_cong mk_symbol_cong`(§26.10) |
+| `Phi_Logic_Programming_Reasoner/library/guard_refute.ML` 的 `refuter_probe`、`reasoners.ML` 的 `nitpick_probe` | **TEMPORARY 探针**(残差、结果码、逐 racer 裁决),待撤;`guard_refute.ML` 里实验 2 的 `del_loop` 与探针交织,撤时小心分离 |
+| `Performant_Isabelle_ML/library/breakdown_probe.ML` 及其在 `Performant_Isabelle_ML.thy` 的加载行、`race.ML`、`auto_sledgehammer/library/sledgehammer_solver.ML`(`classify`/`normalise`/`joins_norm`/`eval_prf_str`)、`reasoners.ML` `checked_io`、`Isa-Mini/Agent/agent_server.ML`(`hammer_or_aoa_method`、`aoa_replay` 逐步解释器)、`Isa-Mini/Agent/proof_store_AoA.ML` `replay` | **TEMPORARY 起源探针**,待撤 |
+| `PLPR.thy` 的 `declare [[\<phi>guard_race_log = …]]`(`ML_file "library/reasoners.ML"` 之后) | TEMPORARY,与甲同性质 |
+
+`auto_sledgehammer/library/cache_file.ML` 与 `proof_store_AoA.ML` 里另有其他会话的 store 回放探针,不在本项目范围内。
 
 ### 26.3 探测器怎么做的
 
@@ -2780,14 +2822,416 @@ looper,于是这个"承诺"被带进了一条反演语义的管线**(`Guard_Refu
 ### 26.4 运行与状态
 
 运行方式:评估 `Phi_Examples/PhiEx_All.thy`(import 八个示例 theory,整条 phi-system 链
-从源码加载)。
+从源码加载)。用 Isa-REPL 而非 isabelle-mcp:`Client.file` **返回评估中遇到的错误**,而
+isabelle-mcp 对 import 链里的错误不报告(`ISABELLE_MCP_EVALUATION_ISSUES.md` 第 17 条)。
 
-**途中的一条实操记录**:终止 isabelle-mcp 会话后无法重启,`Phi_System_Base` 的 heap 被
-判过期。**原因不是本轮改动**——该 heap 按其 `ROOT` 只装仓库外部 theory,phi-system 自己的
-theory 全在 heap 之外。真正过期的是别人改的依赖:比 `Minilang_AoA` heap(2026-08-24 19:57)
-新的源文件有 `Performant_Isabelle_ML/`(2)、`Semantic_Embedding/`(8)、
-`auto_sledgehammer/library/sledgehammer_solver.ML`(1)。原会话启动早于这些改动故不复查,
-一旦终止即无法重启。**教训:改过 `.ML` 后重启 isabelle-mcp 之前,先确认 heap 链没有被
-别的 agent 弄旧。**
+**共享工作树的一条约束**:`Phi_System_Base` 的 heap 只装仓库外部 theory,但它经
+`Minilang_AoA` 依赖 `Performant_Isabelle_ML` / `Semantic_Embedding` /
+`auto_sledgehammer`——别的 agent 改动这些会使 heap 过期。运行中的会话不复查,重启才复查,
+故重启前先比对这几处的源码 mtime 与 heap mtime。
 
-**结果:待填。**
+### 26.5 全链普查结果(2026-08-29,本机,Isa-REPL,全局 looper 形态)
+
+`PhiEx_All.thy` 全链 **6568 秒,零错误**。
+
+| | |
+|---|---|
+| 探测记录(被实例化的目标) | **12 728** |
+| 实例化提交 | **18 053** |
+| 被强制 | **18 020(99.817%)** |
+| **未被强制** | **33(0.183%)** |
+
+未被强制的 33 次恰好两族:**甲族 29 次**,形如 `lookup_tree t x = Some (?y x y)`,
+参数 `x y` 是上下文固定的自由变量(目标无 `\<And>`/`\<forall>` 前缀,故非绑定),等式只在一点上
+约束 `?y`;其中 5 次参数根本不出现在右边,抽象抽了个空,得到**常函数**。**乙族 4 次**,全在
+`Matrix_Oprs.thy:134`,参数是 `snd ?x29`(自身含 schematic),**答案里含 `?g23` 自己**——
+`inst` 唯一的自指防线 `Var v' => v <> v'` 只拦"整个结果就是同一变量",拦不住嵌套;四条
+记录的目标逐次变形,是上一次的解代进去后又发生一次,**在原地迭代**。此为 `guess_inst`
+自身的健壮性问题,与守卫驳斥无关。33 条原文见 `Docs/GUESS_INST_UNFORCED_CASES.md`
+(该文件基于被另一会话覆盖后的 20 条数据,文件头有说明)。
+
+**产地**:甲族全部来自 AoA 代理在 `by hammer_or_aoa` 里写的 Minilang 引理证明
+(`Binary_Trees.thy:55-135` 那批 `lookup_tree_*`/`insert_tree_*` 引理;`t2`/`s2`/`R'`/`k1 v1`
+是代理起的名字,源码里不出现)。源位置为 `?` 的机制:`Isa-Mini/Agent/agent_server.ML:1952`
+的 `Position.setmp_thread_data Position.none`,AoA 引擎执行证明步骤时把线程位置显式清空。
+**所以这 33 条发生在"证明义务/引理的证明"语境,不是守卫驳斥语境**;在证明语境里
+`UNFORCED` 只损失完整性,且这些引理全部证出。**守卫驳斥语境里发生了多少次,本普查
+答不了**——`preprocess` 一开始就展开 `Premise_def`,守卫进入简化器时已无标记。
+
+**`UNFORCED` 判据的分寸**:它只表示"选择不被方程唯一确定",不表示"这次选择造成伤害";
+后者还取决于该变量是否在整个目标状态里以不同参数出现在别处。另一会话已给探测器加了
+四列记录这一点(其它子目标数/提到该变量的子目标数/出现次数/原文),甲族记录显示
+"其它子目标数 0"——即整个状态只有这一条子目标,选择无关紧要。
+
+### 26.6 实验 1:looper 只作用于守卫预处理(2026-08-29,作者指示的第 1 步)
+
+**这一版的作用域(已被 §26.8 取代,保留以记录它证否了什么)**:全局 `Theory.setup` 注释掉,
+looper 只加在 `guard_condition_solver` 的**前置简化**那一遍;传给 `prove_or_refute` 的
+`ctxt` 不带它,三条赛道与 `Guard_Refute_SS.enhance` 均不继承。
+
+**结果:跑不通,断在 `Phi_System/IDE_CP_Reasoning2.thy:1368`:**
+
+```
+certified by (instantiate \<open>(x,y)\<close> for x y, clarsimp simp add: image_iff case_prod_beta prod.map_beta)
+goal: fst (snd (snd (s\<^sub>1 (…)))) = ?y6 \<and> fst (snd (s\<^sub>1 (…))) = ?xa6
+```
+
+一个**显式 `clarsimp`**、普通证明方法、不在守卫预处理里,要靠 `guess_inst` 解 `?y6 ?xa6`
+(参数表为空,唯一解,`forced`)。**结论:looper 在普通证明里承担真实工作,"只留给守卫预处理"
+这一版作用域不成立。** §26.8 的最终形态把它扩到整个守卫机制。
+
+**验收环境的硬约束**:必须在 **AoA 门关闭**(`AOA_ALLOW_NONINTERACTIVE` 注释掉)的机器上
+判定。门开着且有 API key 时,失败的证明会被 AoA 用付费 LLM 静默修补、proof-store 被就地
+重写,"跑通"因而无效。该设置自身的注释早已写明这一点。cslh19 无 key,是正确的验收环境。
+
+### 26.7 cslh19 环境(2026-08-29,照抄本机)
+
+`etc/components` 注册 `contrib/`(不注册 MLML 根:其 `ROOTS` 拉进 `tasks/*`、`data/NTP4VC`,
+一处解析失败整张 session 表为空)、`Semantic_Embedding`、`Isa-Mini/{translator,REPL,Agent/AoA_REPL}`、
+`Isabelle_RPC`、`phi-system`、**`afp-2026-05-13/thys`**(从 HF Hub 拉 2.17 GB 配对 tarball,
+只解 AFP 子目录,**未覆盖**那台机器别人在用的 `Isabelle2025-2/`)。`etc/settings` 抄非密钥部分。
+发行版自带系统级 heap(`HOL`、`HOL-Library`、`HOL-Analysis`、整套 `AFP-*`),故
+`Phi_System_Base` 37 秒建完,`isabelle build -n` 确认 65 个 session 全新。
+`Performant_Isabelle_ML` 需推到 `686a067`(`race.ML`,从源码加载,不进 heap)。
+REPL server 须 `nohup setsid` 从**脚本文件**起(`~/start_repl.sh`),PATH 加
+`Isabelle2025-2/bin`;进程管理按 pid,不用 `pkill -f`(模式会匹配到发起它的 ssh 命令行)。
+**作者裁决:cslh19 一律 12 核**,已写入 `etc/preferences` 的 `threads = "12"`。
+`\<phi>guard_race_log` 的 `declare` 必须放在 `ML_file "library/reasoners.ML"` **之后**
+——该属性在那里才声明。
+
+### 26.8 实验 1 的最终形态(2026-08-29)
+
+**形态(作者裁决,cslh19 分支 `exp-guess-inst-scope`,提交 `0eaf7000`)**:全局
+`Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)` 保持注释掉;looper
+**只在一处装**——`reasoners.ML` `guard_condition_solver` 的 `auto_tac`:
+
+```sml
+fun auto_tac ctxt0'' =
+    let val ctxt = Guess_Instantiate.add_guess_inst_looper ctxt0'' in
+      ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
+      (if is_F then timed_tac 250ms (auto_search_tac ctxt)
+       else prove_or_refute can_inst ctxt ctxt0)
+    end
+```
+
+一处装即覆盖守卫机制的**全部四条**简化路径:守卫前置简化、`is_F` 捷径
+(`\<condition> False` 时不开竞赛,只给 250 ms 搜索)、P-auto/R-conv(经 `prove_or_refute`
+的 `auto_search_tac ctxt`,含 R-conv 在 `Variable.import` 出的 `ctxt'` 上那次)、
+R-nitpick(经 `Guard_Refute_SS.enhance`,`enhance` 是**合并**故继承)。全文件仅此一处
+`add_guess_inst_looper`,grep 即可确认覆盖面。作者指示 `auto_search_tac` 本身**不改**。
+
+**实验 2 的变体**:在 `guard_refute.ML` 的 `simp_ctxt` 上加
+`Raw_Simplifier.del_loop "inst_var_by_Ctr_sels"`。一处装、一处摘,A/B 只差 R-nitpick
+一条赛道——正对着 §25.9 证实的不可靠性。
+
+**已修的三处隐性依赖**(撤掉全局 looper 后暴露):
+1. `IDE_CP_Reasoning2.thy:1368` 的 `certified by (instantiate …, clarsimp …)`——**删除该行**,
+   义务交给 AoA。AoA 用 `InstVarsInGoal`(模型显式选值)+ `HAMMER` 关掉,152 s、一次 LLM 调用;
+   证据在 `~/.isabelle/Isabelle2025-2/log/AoA/*/interaction.yaml` 与 proof-store 的重放 blob。
+2. 六个 `Phi_Examples` 的 proof-store 失配——本机(AoA 门开)重录后 `scp` 过去,不需新的调用。
+3. `Binary_Trees.thy:521` 一条聚合体索引守卫**不收敛**(单线程死循环)。新形态下 looper 覆盖
+   整个守卫机制,理论上不应再现。**已验证**:§26.9 的三次完整运行均未再现。
+
+**两条 Isa-REPL 的操作事实**:
+- 杀 python 客户端**不取消服务端计算**。中止一次运行必须连 REPL server 一起换掉
+  (`~/hard_restart.sh`),否则未收敛的计算继续占着线程池,后续请求被饿死。
+- 判断进度看**输出文件是否增长**。CPU 占用与 load average 不可用:load 低是因为 ML 工作
+  线程多处于 S 态不进队列;CPU 高只说明进程在忙,不说明它在跑当前这一轮。
+
+**验收环境**:必须在 cslh19 上、`AOA_ALLOW_NONINTERACTIVE` **注释掉**的状态下跑。本机
+`etc/settings` 带 API key 且门开着,失败的证明会被 AoA 静默付费修补,"跑通"无效
+(§26.6 已记)。cslh19 `threads = "12"`(作者裁决)。
+
+**上一段已被作者于 2026-08-30 改判**:proof-store 的跨机回放存在与本项目无关的缺陷
+(一条记录的回放时长与真实回放时长不符,回放预算因此过小;另案处理),关门状态下
+cslh19 每次都停在同一批可回放失败的义务上,实验无法推进。作者决定 cslh19 **开门**跑
+(`~/start_repl.sh` 导出 `AOA_ALLOW_NONINTERACTIVE=yes`,并配好与本机相同的嵌入服务
+密钥),以 store 探针(`proof_store_probe.log` 的 `MISS`/`REPLAY_FAILED` 计数)记录 AoA 在
+何处重解。"跑通"的含义随之变为:Isa-REPL 对整篇 `PhiEx_All.thy` 返回的错误列表为空。
+
+### 26.9 实验 1 与实验 2 的结果(2026-08-30,cslh19,开门,`threads = 12`)
+
+两轮都在 §26.8 的形态上跑整篇 `PhiEx_All.thy`,数据存于 cslh19 `~/exp1_final/` 与
+`~/exp2_final/`(`guard_race.tsv`、`guard_race.tsv.goals`、`guess_inst_probe.tsv`),
+cslh19 分支 `exp-guess-inst-scope-2` 的提交 `863d7dab`(实验 1)与 `099b2184`(实验 2)。
+
+**实验 1(looper 一处装,覆盖全部四条简化路径)**:整篇通过,错误列表为空,38 分钟。
+守卫竞赛 640 条:R-nitpick 驳斥 312、未判定 214、P-auto 证明 79、R-conv 驳斥 35。
+探测器全程 forced,无 unforced。AoA 本轮接手 4 条义务,store 命中 1010、未命中 3。
+
+**实验 2(在实验 1 上仅给 R-nitpick 的预处理摘掉 looper)**:整篇通过,24 分钟。
+守卫竞赛 635 条:R-nitpick 驳斥 313、未判定 210、P-auto 证明 77、R-conv 驳斥 35。
+
+**行数与目标数不是一回事**。`guard_race.tsv` 一行是一次竞赛;同一个守卫目标在一次运行里
+会被竞赛多次(`Phi_Types.thy:2732` 的一条 9 次、`Binary_Trees.thy:521` 的一条 7 次),
+所以 640 行对应 403 个不同目标(实验 2:635 行、398 个)。R-nitpick 的 312 行对应
+**194 个不同目标**,实验 2 的 313 行同样对应 194 个。
+
+**逐条比对**。第一列是每次运行内的流水号,跨运行不可对应;以 `.goals` 文件里的
+"源码位置 + 目标文本"为键。只看 R-nitpick:两轮都由它驳斥 192 个;实验 1 驳斥、实验 2
+未判定 1 个(`Quicksort.thy:47`);实验 1 未判定、实验 2 驳斥 2 个(`Quicksort.thy:38`、
+`:47` 的另一条)。三条变化都在 5 秒预算边缘,两个方向都有——既非超集也非子集。
+全部裁决的转移:`refuted → refuted` 275、`undecided → undecided` 149、`proved → proved` 48、
+`undecided → refuted` 2、`refuted → undecided` 1。
+
+**与更早的数字不可直接比较**。§23 的"驳斥 222"是 T74 对 247 条转储目标的**单独回放**
+(Nitpick 独跑,无竞赛、无 P-auto 抢先、无 AoA 争抢 CPU),总体不同;2026-08-29 关门跑的
+"R-nitpick 464 行 / 未判定 62"与今天的"312 / 214"形态相同,差别来自开门后 AoA 与守卫竞赛
+争抢 CPU,5 秒预算更易用尽。只有同条件下的实验 1 对实验 2 才是有效比较。
+
+**结论**:R-nitpick 的驳斥率**不依赖** guess_inst looper——摘掉之后 194 个目标对 194 个,
+192 个逐条相同,其余 3 个是预算抖动。§25.9 证实的"特化把守卫改强"这一不可靠性,在 R-nitpick 的
+预处理里不需要 looper 来触发,也不因摘掉 looper 而消失或出现;要消除它得另想办法
+(§25.8 已记作者的决定)。实验 2 的改动本身**不带来任何收益**,是否保留由作者定
+(保留则 R-nitpick 少一个非确定性来源;撤掉则形态回到 §26.8 的"一处装",更简单)。
+
+**未判定率**:实验 1 为 33%,实验 2 为 33%;2026-08-29 关门跑(AoA 不与守卫竞赛抢
+CPU)为 23%。差异来自并行负载下 5 秒预算更易用尽,不来自形态本身。
+
+**运行期间的两件与本项目无关、但曾拦住实验的事**,各自另案,这里只留指针:
+1. 2026-08-30 上午 `phi-system` 提交 `9ce57472` 把运行时符号的表示从 `mk_symbol <数字>`
+   改为 `SSymb` 的数位链,但 `\<phi>safe_simp`(替换式 simpset)仍只登记旧形状的
+   `mk_symbol_inject`,结构体字段名的互异判定全部失败,`Phi_Examples` 四处报错。
+   已修:`SSymb.thy` 三组判等引理起名 `symbol_digit_inject` /
+   `symbol_digit_distinct` / `symbol_digit_neq_zero`,`Phi_Preliminary.thy` 的
+   `\<phi>safe_simp` 登记改用它们。
+2. `Bucket_Hash.thy:191` 两次 `Interrupt_Breakdown`。三轮起源探针(TEMPORARY,与
+   本项目的探测器一样待撤)的 18 条记录全部落在"所在 group 刚被取消"的线程上,
+   与"取消记账在内层 `Timeout.apply` 收尾时丢失"的机制相容、与栈耗尽不相容;
+   到达 Isar 的那一次走的是 store 回放路径(无竞赛裁判善后)。作者决定交由其正在
+   构建的顶层异常日志系统定案,本项目不再追。
+
+### 26.10 驳斥率回归的根因与修复(2026-08-31)
+
+**症状**(§26.9 已记):符号重构(`9ce57472`,符号项从 `mk_symbol <数字字面量>` 改为
+`SSymb` 数位链 `A (B Z)`)之后,凡带聚合体字段符号的守卫,R-nitpick 从"驳斥"退为
+`none`(在 6 个作用域里未找到反模型而正常结束,非超时)。08-29 关门数据与之后各轮的
+共同目标里,36 个此类守卫全部如此。
+
+**根因**(忠实脚手架逐环验证;"忠实"指直接调 `Phi_Nitpick.pick_nits_in_term`、单次
+预处理,与竞赛路径逐参数一致):
+1. 数位链折算引理 `symbol_digit_eval`(§26.2 丁)把 `A (B Z)` 折成
+   `mk_symbol ((0*6+2)*6+1)`,但**算术留在原地**——全局 cong 规则 `mk_symbol_cong`
+   (`SSymb.thy`;由 `Phi_Preliminary.thy:299` 等六处 `Simplifier.add_cong` 进各简化
+   语境)禁止化简器进入 `mk_symbol` 的参数;
+2. Nitpick 只能在其有限模型内解释这段算术:`card 1-6` 下 nat 只有 0..5,字面量 `6`
+   与乘加都超界,含它的前提在一切模型下不可满足,反模型空间为空 → `none`。
+3. **三组对照钉死此环**(同一残差、card 1-6):原样 `none`;符号数值重映射为字面量
+   1..6 → `quasi_genuine`(0.19 s);重映射为字面量 **7..12** → 仍 `quasi_genuine`。
+   故要害是"算术未求值",不是数值大小;`card 1-16/1-32` 反而因作用域爆炸而 `unknown`,
+   不是修法。
+
+**修复**(两处,均已提交 cslh19 分支;本机源码同步):
+- `SSymb.thy`:`symbol_digit_eval` 七条折算引理(§26.2 丁,实验 C 引入);
+- `Phi_Preliminary.thy`:该折算注册进 `Phi_Guard_Refute.Simpset_Hooks`。初版修复在
+  hook 里 `del_cong mk_symbol_cong` 且优先级 200(必须晚于 `Eval_Sem_Idx_SS` 的
+  enhancer,否则合并把 cong 并回来);随后作者裁决(2026-08-31)**全局删除
+  `mk_symbol_cong`**——旧表示里它保护 `mk_symbol` 内的数字字面量不被化简改形,新的
+  数位链表示下已无物可保护,`mk_symbol` 是 typedef 的 Abs、不该出现在正常项里。
+  于是 `SSymb.thy` 删引理、phi-system 六处 `add_cong` 一并删除,hook 退回为单纯的
+  折算登记(优先级 90)。**C12 验证**(与 C11 同树只差全局删除):638 次竞赛、381 个
+  目标,R-nitpick 466 次 / 272 个目标,未判定 59;C11→C12 逐目标零回归(仅 2 条未判定
+  抖动 + 1 条 R-conv/R-nitpick 换手)。
+
+**验证**(C11,关门,与 B 同树只差上述修复):639 次竞赛、383 个目标;R-nitpick 驳斥
+463 次 / **271 个目标**(B:299 次 / 183 个),未判定降到 63(B:195,回到 08-29 关门
+水平 62)。**36 个丢失目标全部回到 `refuted/R-nitpick1`**;B→C11 反向变化仅 2 条
+未判定抖动 + 1 条改由 R-conv 驳斥。整轮仅一处既有失败(`Bucket_Hash` 一条
+`Object_Equiv` 义务关门下无可回放证明,即 §26.9 指针 2 的 store 回放缺陷,另案)。
+
+**排查中被否决的解释**(逐一实测排除,列出以防重推):并发负载、Kodkod 单槽结果缓存
+(等价判定是严格结构相等)、Scala 端并发(外部 `kodkodi` 进程同样 `none`)、全局锁
+串行、良基检查超时与其进程级缓存(`tac_timeout` 压到 0.0005 s 仍驳斥)、局部上下文
+(理论级上下文重跑同样 `none`)、理论进度点(截断到 `proc` 之前同样驳斥)、自由变量
+的 `__` 后缀改名、`Interrupt_Breakdown`。**教训**:期间"隔离能驳斥"的一系列对照全部
+无效——对照脚手架把残差再喂给 `Phi_Guard_Refute.nitpick`,其内部第二次预处理的前提
+过滤(只留 `\<premise>` 标记)丢光了全部前提,Nitpick 驳斥的是无前提目标(探针记录
+`assms=10, prems=0` 为证)。对照必须用上述忠实脚手架。
+
+### 26.11 修复后的驳斥率与未驳斥硬核(2026-08-31)
+
+**竞赛口径**(C12,关门):381 个目标中 P-auto 证出 37;未证出 344 个里 R-nitpick 驳斥
+272(79.1%),R-conv 另驳 25,合计 86.3%,未判定 47(13.7%)。与符号重构前(08-29 关门
+数据,未证出 227 场驳斥 196 = 86.3%)持平。
+
+**独立回放口径**(T74 的协议:每条独占固定 5000 ms、空闲、无竞赛;原 247 条语料已随
+scratchpad 清理丢失,故在 C12 的 335 条未证出单目标语料上重测;文本解析损耗 105 条,
+与当年 305→247 同性质):可读 230 条,驳斥 195 = **84.8%**;竞赛内已驳的独立重放
+193/195 复现;**竞赛内未判定的 35 条只救回 2 条(5.7%)**。
+
+**"当年 89.9%"的含义澄清**(§23 的 222/247):那份语料全部来自 2000 ms 旧竞赛的
+undecided,89.9% 度量的是"独立重放能从弱竞赛的漏网里捞回多少",不是总驳斥率。同一
+字面口径在今天只得 5.7%——数字变低是因为强竞赛已把独立 Nitpick 能驳的当场驳掉,
+漏网只剩硬核。引用时三个口径不可混用。
+
+**未驳斥硬核**(竞赛口径 44 个从未被驳斥的目标;独立回放确认加时间无效):
+1. 真命题 1 个(`Phi_System.Phi_Types:1847`;在 `Phi_Examples` 之外,与"Phi_Examples 内
+   未证出者皆可驳"的作者断言一致)。该命令共产出四条同胞守卫:两条假的变体被 R-nitpick
+   正确驳斥(反模型 x = None, y = None),一条被 R-conv 驳斥;唯一的真变体多带一条
+   `\<exists>ya. y = Some ya` 前提,与 `rel_option eq x y` 合取后结论恒真。P-auto 在历轮
+   运行中从未证出它,且退出码是 **none**(约 0.5 s 内搜索自行放弃,非超时);它并非难证——
+   `auto simp: option.rel_sel` 或 `fastforce elim: option.rel_cases` 皆秒证,裸 `auto` 不行。
+   即 P-auto 的搜索缺 `rel_option` 的展开规则,是证明侧的完备性缺口,不是预算问题;
+2. **地址空间算术类**(如 `Dynamic_Array:78`):前提含 `2^addrspace_bits` 上下界,
+   `addrspace_bits` 是仅约束为正的 specification 常量,有限作用域里前提可满足域被挤空。
+   **card 扫值证实且门槛精确**(独立、30 s 预算):该目标 card 1-6 与 1-8 均 `none`,
+   **1-10 起 `quasi_genuine`**(2.3 s)——正是"须能表示 2^3 = 8"的算术门槛(card 1-8 的
+   nat 只有 0..7)。此类可用更大的 card 换回,代价是每个作用域档都变贵。**另一条路已实测
+   可行**(作者提议,2026-08-31):把指数项 `2^addrspace_bits`、`2^(addrspace_bits-2)` 各自
+   抽象成新自由变量后,同一目标在 **card 1-6 就驳斥**(689 ms;原样 669 ms `none`)。注意
+   把 `addrspace_bits` 本身换成自由变量是无效的——`user_axioms = false` 下 Nitpick 本就把
+   specification 常量当自由未知量,卡点在指数**值**的可表示性。抽象的代价:丢掉被抽象项
+   之间的算术联系(同为 2 的幂、A = 4·A'),模型空间进一步扩大,与前提过滤同属"扩大误判面"
+   的放宽,是否采用待作者裁决(可加 `A' ≤ A`、`0 < A'` 一类边约束收窄)。**跳档 card 也已
+   实测**(作者提议 `1-6,24`;30 s 预算):`1-6,9` 驳斥该目标(2.1 s),但 `1-6,16` 与
+   `1-6,24` 反而 `unknown`(0.1-0.6 s 即放弃)——大档的翻译/搜索自身失败,且任一档失败就把
+   整次调用拖成 `unknown`,**跳档必须小**(9 或 10)。已可小档驳斥的目标零额外代价
+   (`max_genuine = 1` 找到即停,0148 实测 0.4 s 不变);Matrix_Oprs 一类硬核目标带 `,9`
+   只多付 0.3-1.6 s 的放弃时间,带 `,16`/`,24` 则整档烧满预算(23-31 s)。结论:若走
+   card 路线,取 `1-6,9`,`1-6,24` 两头都坏;与指数项抽象二选一待竞赛整轮(C13)实测净效应;
+3. **不透明布局上的递归谓词类**(主体,`Binary_Trees` 24 个基本都是;如 `Binary_Trees:455`
+   的深路径 `valid_index`、`Matrix_Oprs:76` 的嵌套 `idx_step_type` 数值索引):布局是
+   `block.layout (addr.blk a)` 这样的不透明项,Nitpick 需同时发明其递归结构并满足
+   索引算术。**card 扫值证实加大作用域无效**:三条 Matrix_Oprs 目标在 card 1-8/1-10/1-12
+   下全部转为 `unknown`,且在 1-5.5 s 内就放弃(30 s 预算远未用完)——不是超时,是更大
+   作用域下的翻译/搜索自身失败。此类只能靠预处理展开(见下)。
+提高方向(下一轮设计,非调参):预处理补 `valid_index`/嵌套 `idx_step_type` 沿已知
+路径的展开规则;对地址空间边界做驳斥专用弱化。语料与结果:cslh19
+`~/corpus/`、`~/corpus_replay.tsv`、台架 `Phi_Examples/Corpus_Replay.thy`(未跟踪)。
+
+### 26.12 Nunchaku 实验:地址空间算术类的算术核心可被 smbc 秒驳(2026-08-31)
+
+作者问自建 Nunchaku(`contrib/nunchaku`,fork 0.6,commit 53684a5)能否处理 §26.11
+第 2 类(地址空间算术类,代表语料 0143 = `Dynamic_Array:78`)。结论分两层:
+
+**结构性限制:完整守卫问题不可翻译。**把 `Phi_Guard_Refute.preprocess` 的残留
+(14 条前提 + 结论)原样交给 Nunchaku 的收集器,抛
+`TOO_META (OFCLASS(FIC, sep_algebra_class))`,且逐步收窄前提无效——因为收集器
+无条件收取**整个背景理论**的孤儿公理(`nunchaku_collect.ML:1002`
+`orphan_axioms_of`:全理论 `Spec_Rules` 中 Unknown 类、无关联项的公理),phi-system
+上下文里这类公理成堆,其中类型类实例公理无法原子化即炸。Nitpick 无此问题(公理
+按需收取且容忍类约束)。故 Nunchaku **不能**当 R-nitpick 的直接替补:任何接入都需
+"前提过滤到可翻译片段 + 换干净背景理论"的专用预处理。
+
+**算术核心:smbc 10 ms 真驳斥,且保留指数结构。**取纯算术前提
+`lenl * 2 < 2 ^ abits`、`lenl ≤ 2 ^ (abits - 2)`,结论 `lenl ≤ Suc 0`,其中
+`addrspace_bits` 映射为自由变量 `abits`、`length l` 映射为 `lenl`(保真:该
+specification 常量唯一公理 `0 < addrspace_bits` 被反模型满足),在 `Main` 上下文里
+走 collect→translate→nice→solve 四阶段(台架 `Phi_Examples/Scratch_NunB.thy`,
+cslh19,未跟踪;生成的问题存 `~/nun_b_problem.nun`)。Nunchaku 把 nat 编成一进制
+数据类型(`zero_`/`Suc_`)、`+ - * ^ ≤ <` 编成递归函数。三后端(各自独立、直接
+命令行调用同一问题文件):
+
+| 后端 | 结果 | 耗时 |
+|---|---|---|
+| smbc 0.6.1(窄化求值) | **SAT,真反模型 `abits = 3, lenl = 2`** | **0.01 s** |
+| cvc5 1.3.4(有限模型查找,三种策略) | 全部超时 | 120 s 预算耗尽 |
+| kodkod(kodkodi 1.5.7,关系式枚举) | 超时(止步 dimension 12) | 300 s 预算耗尽 |
+
+端到端(Isabelle 侧 `Nunchaku_Tool.solve_nun_problem`,solvers = smbc,cvc5)
+`Sat (by smbc)`,全程 23 ms。这正是 Nitpick card 1-6 的盲区(§26.11:须 card 1-10
+才 `quasi_genuine`,2.3 s):smbc 的窄化求值在递归函数编码上"倒着算"出小反例,
+而 SMT 有限模型查找与关系式枚举都被递归函数拖死。
+
+**部署与工程注意**(cslh19 `~/nunchaku-fork/`):fork 二进制 + 官方静态 cvc5 1.3.4
+(按 `component/solvers.pins` 的 sha256 校验;动态链接的本机 cvc5 拷过去缺库,
+必须用 static 资产)+ smbc 0.6.1(按 fork CI 配方 `w2-smbc.sh` 在独立 opam switch
+里建:containers 2.8.1 须从上游 tarball pin,主仓已下架)。`NUNCHAKU_HOME` 必须写
+`~/.isabelle/Isabelle2025-2/etc/settings`(用户级 settings 在组件初始化之后 source,
+能覆盖;写 `start_repl.sh` 的 export 会被发行版自带 nunchaku-0.5 组件的 settings
+无条件覆盖)。REPL 台架里**不可加载** `nunchaku_commands.ML`:它注册进程级全局
+Isar 命令,同进程二次求值必炸 "Duplicate outer syntax command";走 ML API 时按
+`default_default_params` 手写参数记录即可(台架即此做法)。
+
+**当年"直接 hack 掉公理"路线的复刻与结局**(2026-08-31,作者提示后补做;§18.3
+第 5 条当年的 scratchpad 补丁与报告已随 scratchpad 清理丢失,按记载重造):补丁
+副本 `Phi_Examples/nunchaku_collect_patched.ML`(cslh19,未跟踪,两处改动)把
+`preprocess_prop` 无法原子化的孤儿公理分流进"被忽略公理"桶(`poly_axioms`,
+Nunchaku 如实报告 "Ignored axioms" 并把 genuine 降为 quasi 级),断言保持严格。
+效果:0143 的**完整**守卫问题(14 条前提原样、phi 上下文)首次翻译成功,被忽略
+公理恰两条(`OFCLASS(FIC, sep_algebra_class)`、`OFCLASS(RES, ...)`)。但求解两头
+都死:specialize 开(默认)→ Nunchaku 内核 specialization 趟自身报
+"incompatible statements" 错(77 ms;fork 待办候选);`--no-specialize` → 五个
+cvc5 策略臂全部 0.0 s INCOMPLETE、smbc 0.0 s 报 `undefined_values` 放弃(完整
+问题里 typedef 部分函数带来的未定义值超出 smbc 支持面)。与 §18.3 第 5 条"当年
+完整守卫 77 ms 拿到反例、84 条批量只驳 10 条且是 Nitpick 的真子集"并读,结论
+一致:仅分流不可原子化公理时,完整问题超出全部后端,只吃得下 Nitpick 本就能驳
+的易目标。
+
+**继续"删公理"到极限:黑盒常量方案**(2026-08-31,作者追问"删更多公理会有用吗"
+后实测,答案是会):在补丁副本上再加两刀。补丁 2 把白名单(纯 HOL 词汇:
+HOL/Nat/Num/Groups/Orderings/Power/List/Option/Set/…)之外的常量全部变成不解释
+的黑盒——在两个定义漏斗(`spec_rules_of`、`definition_of`)口上加闸,常量落到
+`val` 声明,定义不再被追;补丁 3 让孤儿公理凡触及黑盒常量的一律分流(0143 语境
+下共 16 条,含两条 `Map_of_Val` 递归等式)。逐层归因:补丁 2 拆掉 smbc
+`undefined_values` 的墙(typedef 偏函数不再进问题)但它仍报 incomplete;补丁 3
+拆掉最后一堵(被量化公理约束的未解释函数),SAT 即现。结果:0143 **完整**问题
+(14 条前提原样、不裁剪不换上下文)smbc **0.0 s SAT**,反模型
+`length l = 2, addrspace_bits = 4`,全部前提在 smbc 自由发明的有限解释下满足;
+Nunchaku 标 "(potentially spurious)",认识论等级与 Nitpick `user_axioms = false`
+的 quasi_genuine 同级(欠约束反模型),竞赛现行配置已接受该等级。
+**阴性对照通过**:同管线跑语料唯一真命题 0003(`Phi_Types:1847`)——cvc5
+**36 ms Unsat**(公理只删不增,松弛问题的 Unsat 蕴含原问题的 Unsat,该方向保真),
+smbc 2.5 s `max_depth` 放弃,无伪 SAT;单样本上分离完美。工程注意:fork wrapper
+的 `--no-spurious-models`(为标记盲的 stock 前端而设,见 NUNCHAKU_FORK_PLAN §3.1)
+会把这类 SAT 压成 Unknown NONE——接入时须让前端识别 "(potentially spurious)"
+标记并按 quasi 级呈报(即 fork 计划的前端加固提案),或在程序化调用侧放开该旗标。
+
+**可靠性定位与模型验证**(2026-08-31,作者追问后补):须如实区分——Nitpick 的
+`user_axioms = false` 仍保留全部**定义**(等式规格),只忽略非定义性公理;黑盒
+常量方案连定义一并丢弃,欠约束严格更多,误判面严格更大,"与 quasi_genuine 同级"
+只在"都是欠约束反模型"这个意义上成立。误判的代价真实存在:竞赛里模型式反驳
+直接终场,伪反驳会杀掉本可证出的目标;阴性对照 0003 通过是因为其真值系于
+`rel_option`(Option 在白名单内、定义保留)——真值系于 phi 常量定义的真命题
+**不受此保护**。定案须批量测:对 37 条 P-auto 已证目标(已知为真集)测伪 SAT 率。
+**模型可验证**:smbc 给出每个自由变量的具体取值(0143:`l = [a0,a0]`、
+`addrspace_bits = 4`,另加对每个黑盒函数发明的有限解释)。可译回 Isabelle 的
+算术部分已内核验证(`Phi_Examples/Scratch_VerifyNun.thy`,cslh19,未跟踪):代入
+取值后四条算术前提 `by simp` 全真、结论 `length [x,y] \<le> Suc 0` 为假,秒级
+通过。据此可设计**验证门**:只接受"可检片段经内核求值确认"的 Nunchaku SAT——
+算术类硬核由此拿到内核级证书,残余假设仅为"phi 前提与该取值的相容性"(那些
+前提来自真实符号执行状态,但具体取值的相容性未证)。
+
+**Nitpick 对等语义实测**(2026-08-31,作者提议"像 Nitpick 一样只丢 user axioms、
+保留定义"后):补丁 4 取代补丁 2/3(黑盒变体存档为
+`Phi_Examples/nunchaku_collect_blackbox.ML`):定义全保留;`spec_rules_of` 过滤掉
+Unknown 类规格——只剩公理的常量退化为未指定值,与 Nitpick `user_axioms = false`
+下 specification 常量同待遇;孤儿公理全部分流(0143/0003 语境各 17 条)。结果:
+真命题 0003 依旧 **43 ms Unsat**(保真方向不受影响);但 0143 回到 Nitpick 的
+困境——定义闭包正是后端解不动的东西:smbc `incomplete`(0.0 s;`--no-specialize`
+则 `undefined_values`,typedef 偏函数随定义回归),cvc5 各策略真超时(18 s 搜索,
+不再秒退),kodkod 60 s 超时。结论:**Nitpick 对等语义下 Nunchaku 仍被 Nitpick
+支配**(Nitpick 尚能 card 1-10 驳斥该目标,Nunchaku 全后端不能);要吃下硬核就
+必须黑盒化定义,其可靠性代价由验证门补偿。副产物,fork bug 复现器:双求解器
+组合 `--solvers smbc,cvc5` 在该问题上稳定崩
+`Invalid_argument("DT_util.apply: not a fun")`,单求解器均不崩(复现文件 cslh19
+`~/nun_0143.nun`;Isabelle 侧因此拿到 Unknown_Error)。
+
+**取值神谕管线实测**(2026-08-31,作者提议:把反模型的取值——只代换
+free/schematic 变量与白名单常量如 `addrspace_bits`——代换进原目标,再交回反驳侧
+确认):0143 上四组对照(忠实脚手架、竞赛 pinned 参数,台架
+`Phi_Examples/Scratch_NitpickInst.thy`,cslh19,未跟踪):A 原目标 card 1-6 =
+none(0.6 s);B 原目标 card 1-10 = quasi_genuine(2.3 s,card 9 命中,Nitpick 模型
+含 `l = [a5, a7]`);C 代换 `addrspace_bits := 4`(smbc 原值)card 1-6/9/17/1-10
+全败(none/none/unknown/unknown);**D 代换 `addrspace_bits := 3`(最小可行值)
+card 9 单档 = quasi_genuine,1.5 s**(1-6,9 跳档 1.6 s、1-9 区间 1.9 s)。两条
+结构性教训:① **字面量可表示性决定所需 card**——代换后 `2^addrspace_bits` 成
+字面量,必须落进 nat 原子域(card ≥ 值 + 1);smbc 给的 4(2^4 = 16)把 card 9 的
+可行域堵死,card 17 这类大档又翻译/搜索自身失败(与 §26.11 跳档教训同源),故
+**神谕取值必须最小化**,确认档按最大字面量 + 1 取单档(单档 9 快于区间 1-9)。
+② Nitpick 的打印反模型只有 Free variables 段,**不报欠指定常量的选值**
+(`addrspace_bits` 缺席);smbc 如实报出 `addrspace_bits := 4`——神谕角色上 smbc
+信息更全。信任等级:确认跑用全定义、现行 pinned 参数,结论与现行 R-nitpick 同为
+quasi_genuine,神谕阶段不进入信任链。0143 单点收益有限(盲跳档 1-6,9 2.1 s 已可
+驳,指数项抽象 689 ms 更快);其价值在普适形态:盲扫不中的目标,只要神谕能给出
+可最小化的取值,就能换到正确作用域,且比直接采信黑盒 SAT 可靠。批量净效应待
+C13 类全轮实测。
+
+**含义与未决**:"删公理"路线(黑盒常量 + 触及黑盒者公理分流)实测走通,且比
+"裁前提"保真——14 条前提全部保留、全部被模型满足;也不必放弃指数结构,胜过
+"指数项抽象"与"card 1-6,9"两案。待作者裁决:① 是否立项该驳斥器(白名单定稿、
+spurious 标记的呈报通道、验证门、纳入竞赛方式);② 立项前应先批量测:44 个未驳斥
+硬核测命中率,37 条 P-auto 已证目标测伪 SAT 率——单样本对照不足以定案;③ 第 3 类
+(不透明布局上的递归谓词类)在黑盒化下是否同样可驳未测,其前提在本方案下同样
+全部保留,值得一并批量实测。补丁副本
+`Phi_Examples/nunchaku_collect_patched.ML`(cslh19,未跟踪,三处补丁均有注释标记)。

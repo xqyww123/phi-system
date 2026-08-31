@@ -295,10 +295,6 @@ lemmas [\<phi>programming_simps, \<phi>safe_simp] =
 lemmas [\<phi>programming_simps] =
   fst_def[symmetric] snd_def[symmetric]
 
-setup \<open>Context.theory_map (Phi_Safe_Simps.map (
-  Simplifier.add_cong @{thm' mk_symbol_cong}
-))\<close>
-
 (*simproc_setup case_prod_app (\<open>(case_prod f x) y\<close>) = \<open>fn _ => fn ctxt => fn ctm =>
   let val (Const(\<^const_name>\<open>case_prod\<close>, _) $ f $ x $ y) = Thm.term_of ctm
    in SOME (Conv.rewr_conv @{thm' BNF_Fixpoint_Base.case_prod_app} ctm)
@@ -341,8 +337,30 @@ end\<close>
 
 lemmas [\<phi>safe_simp] =
     fmdom_fmupd fmdom_empty finsert_iff fempty_iff
-    mk_symbol_inject[OF UNIV_I UNIV_I] fmadd_empty fmadd_idempotent
+    fmadd_empty fmadd_idempotent
     fmadd_assoc fmadd_fmupd fmupd_idem
+
+text \<open>Field names of named tuples are symbols, and the safe simpset REPLACES the ambient
+  one, so the rules deciding symbol (dis)equality must be listed here explicitly.
+  A symbol is a digit chain over \<open>SSymb.Z\<close> (see \<open>Performant_Isabelle_HOL.SSymb\<close>);
+  \<open>mk_symbol_inject\<close>, which decided the former \<open>mk_symbol <numeral>\<close> shape, no longer
+  matches any term.  \<open>symbol_digit_distinct\<close> and \<open>symbol_digit_neq_zero\<close> are stored in
+  the flipped orientation (their \<open>symmetric\<close> attribute), hence both forms.\<close>
+
+lemmas [\<phi>safe_simp] =
+    symbol_digit_inject
+    symbol_digit_distinct symbol_digit_distinct[symmetric]
+    symbol_digit_neq_zero symbol_digit_neq_zero[symmetric]
+
+text \<open>The guard refuter hands its residue to Nitpick, which cannot interpret a symbol's
+  digit chain (\<open>A (B Z)\<close>) but copes with the wrapped numeral (\<open>mk_symbol 13\<close>); see
+  \<open>symbol_digit_eval\<close> in \<open>Performant_Isabelle_HOL.SSymb\<close>.  The folding is registered on
+  the refuter's preprocessing simpset only -- it is the model finder's normal form,
+  not the system's.  Registered by ENHANCER, like \<open>Eval_Sem_Idx_SS\<close> (PhSm_Ag_Base).\<close>
+
+setup \<open>Context.theory_map (
+  Phi_Guard_Refute.Simpset_Hooks.add 90
+    (fn _ => fn ctxt => ctxt addsimps @{thms symbol_digit_eval}))\<close>
 
 declare rel_fun_eq[iff]
 

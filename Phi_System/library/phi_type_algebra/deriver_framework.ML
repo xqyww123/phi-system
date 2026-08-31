@@ -542,7 +542,6 @@ val _ = Theory.setup (Context.theory_map (
               map_ident}
       |> Simplifier.add_cong @{thm imp_cong[folded atomize_eq]}
       |> Simplifier.add_cong @{thm HOL.conj_cong}
-      |> Simplifier.add_cong @{thm' mk_symbol_cong}
 )
           (*Because of this cong, the order of the conjunction is significant!*)
 ))

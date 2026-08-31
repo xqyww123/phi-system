@@ -182,6 +182,12 @@ fun preprocess ctxt assms goal =
       Guard_Refute_SS.enhance ctxt
         |> Simpset_Hooks.invoke (Context.Proof ctxt) ()
         |> fold Splitter.add_split (case_splits ctxt prepared)
+        (*EXPERIMENT 2 (2026-08-30, author's step 2): R-nitpick's preprocessing
+          runs WITHOUT the guess_inst looper, which `enhance` inherits from the
+          ambient context (equipped once in guard_condition_solver's auto_tac,
+          reasoners.ML).  P-auto and R-conv keep it.  Compare the R-nitpick
+          refutation count against experiment 1 (312 of 640 on cslh19).*)
+        |> Raw_Simplifier.del_loop "inst_var_by_Ctr_sels"
     val st =
       (case SINGLE (Simplifier.asm_full_simp_tac simp_ctxt 1)
               (Goal.init (Thm.cterm_of ctxt prepared)) of
@@ -212,14 +218,91 @@ fun preprocess ctxt assms goal =
   preprocessing: it is shared with the searching racers, so the search sees
   its timeout minus what preprocessing spent.*)
 
+(*TEMPORARY probe (2026-08-31): the refuter as it runs INSIDE the race -- what
+  residue it hands to Nitpick and what Nitpick answers there.  Goals the race
+  reports `none` for are refuted in 0.3 s when the same functions are called
+  from a scratch theory; the difference must be in the context, so record the
+  in-race residue for comparison.  Text is markup-free.*)
+val refuter_probe_category =
+  Event_Log.category {name = "refuter_probe", enabled = fn () => true,
+    encode = fn {i, n, n_assms, n_prems, n_subst, code, pre_ms, search_ms, residue, msgs,
+                 rerun_same, rerun_global, rerun_more, ml} =>
+      ([("subgoal", string_of_int i ^ "/" ^ string_of_int n),
+        ("assms", string_of_int n_assms), ("prems", string_of_int n_prems),
+        ("subst", string_of_int n_subst),
+        ("code", code), ("pre_ms", string_of_int pre_ms), ("search_ms", string_of_int search_ms),
+        (*bisection on a `none`: the same call again (nondeterminism / Kodkod
+          cache), and the same call under the theory-level context (local
+          context data)*)
+        ("rerun_same", rerun_same), ("rerun_global", rerun_global),
+        (*and: the same call through the EXTERNAL kodkodi process instead of
+          the Scala peer, and the same call serialised behind a global lock*)
+        ("rerun_external", #1 rerun_more), ("rerun_locked", #2 rerun_more)],
+       [Event_Log.elem_text "residue" residue, Event_Log.elem_text "msgs" msgs,
+        Event_Log.elem_text "ml" ml])}
+
+fun plain_term ctxt t =
+  XML.content_of (YXML.parse_body (Print_Mode.setmp []
+    (Syntax.string_of_term (ctxt |> Config.put show_types true |> Config.put show_sorts true)) t))
+
+(*serialises the "locked" rerun of the probe across all racers*)
+val probe_lock = Synchronized.var "refuter_probe_lock" ()
+
 fun nitpick ctxt params (i, n) (subst, assms, goal) =
-  (case preprocess ctxt assms goal of
-     NONE => Provable
+  let val t0 = Timing.start ()
+      val pre = preprocess ctxt assms goal
+      val pre_ms = Time.toMilliseconds (#elapsed (Timing.result t0))
+      fun log n_prems code search_ms residue msgs reruns rerun_more ml =
+        Event_Log.append refuter_probe_category
+          {i = i, n = n, n_assms = length assms, n_prems = n_prems, n_subst = length subst,
+           code = code, pre_ms = pre_ms, search_ms = search_ms, residue = residue, msgs = msgs,
+           rerun_same = fst reruns, rerun_global = snd reruns, rerun_more = rerun_more, ml = ml}
+      fun plain s = XML.content_of (YXML.parse_body s)
+      fun run ctxt' prems concl =
+        let val t = Timing.start ()
+            val (code, msgs) =
+              Phi_Nitpick.pick_nits_in_term (Proof.init ctxt') params true
+                Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
+         in (code, msgs, Time.toMilliseconds (#elapsed (Timing.result t))) end
+      fun timed (code, _, ms) = code ^ "@" ^ string_of_int ms ^ "ms"
+  in
+  (case pre of
+     NONE => (log 0 "simp_proved" 0 "-" "-" ("-", "-") ("-", "-") "-"; Provable)
    | SOME (prems, concl) =>
-       (case Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params true
-               Phi_Nitpick.Auto_Try i n 0 subst [] prems concl of
-          (code, _) =>
-            if code = Phi_Nitpick.genuineN orelse code = Phi_Nitpick.quasi_genuineN
-            then Refuted else Unknown))
+       let val (code, msgs, search_ms) = run ctxt prems concl
+           val reruns =
+             if code = Phi_Nitpick.noneN
+             then (timed (run ctxt prems concl),
+                   timed (run (Proof_Context.init_global (Proof_Context.theory_of ctxt)) prems concl))
+             else ("-", "-")
+           val rerun_more =
+             if code = Phi_Nitpick.noneN
+             then let (*verbose Normal-mode rerun: capture Nitpick's own per-scope
+                        narrative -- which scopes ran and what Kodkod answered*)
+                      val vparams =
+                        Nitpick_Commands.default_params (Proof_Context.theory_of ctxt)
+                          [("verbose", "true"), ("falsify", "true"), ("expect", ""),
+                           ("max_genuine", "1"), ("max_potential", "0"), ("max_threads", "1"),
+                           ("sat_solver", "SAT4J"), ("batch_size", "smart"),
+                           ("card", "1-6"), ("user_axioms", "false"), ("mono", "true"),
+                           ("timeout", "5.000"), ("tac_timeout", "0.05")]
+                      val (vcode, vmsgs) =
+                        Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) vparams true
+                          Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
+                   in ("verbose:" ^ vcode ^ "|" ^
+                       XML.content_of (YXML.parse_body (cat_lines vmsgs)),
+                       timed (Synchronized.change_result probe_lock
+                                (fn () => (run ctxt prems concl, ()))))
+                  end
+             else ("-", "-")
+           val _ = log (length prems) code search_ms
+                       (plain_term ctxt (Logic.list_implies (prems, concl)))
+                       (cat_lines (map plain msgs)) reruns rerun_more
+                       (if code = Phi_Nitpick.noneN
+                        then ML_Syntax.print_term (Logic.list_implies (prems, concl)) else "-")
+        in if code = Phi_Nitpick.genuineN orelse code = Phi_Nitpick.quasi_genuineN
+           then Refuted else Unknown
+       end)
+  end
 
 end

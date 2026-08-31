@@ -1958,6 +1958,11 @@ declare Premise_def [\<phi>guard_refute_simp]
 
 ML_file "library/reasoners.ML"
 
+(*TEMPORARY (2026-08-30): the guard-race experiments read these two Event_Log
+  categories; both default off.  Placed upstream of every evaluation target so the
+  whole chain logs (author's ruling in GUARD_NITPICK_FALSIFY_PLAN.md §22.3).*)
+declare [[\<phi>log_guard_race = true, \<phi>log_guess_inst = true]]
+
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)

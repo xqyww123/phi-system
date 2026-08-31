@@ -325,10 +325,6 @@ structure Eval_Sem_Idx_SS = Simpset (
   val post_merging = I
 )\<close>
 
-setup \<open>Context.theory_map (Eval_Sem_Idx_SS.map (
-  Simplifier.add_cong @{thm' mk_symbol_cong}
-))\<close>
-
 (*The guard refuter needs exactly these rules -- a guard about a field's type is
   otherwise an opaque constant to its model search -- but it lives in PLPR, upstream of
   every aggregate, so it cannot name this simpset.  Registering the ENHANCER rather than

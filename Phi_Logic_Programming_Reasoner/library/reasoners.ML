@@ -1261,17 +1261,40 @@ fun pinned_nitpick_params ctxt budget =
   Crashed, Timeout.TIMEOUT => Timed_Out, interrupts => Cancelled) — we bypass
   Nitpick_Commands.handle_exceptions, incidentally a silence win (its
   NOT_SUPPORTED bare warning is unreachable).*)
+(*TEMPORARY probe (2026-08-31): what does the refuter actually answer inside
+  the race?  In isolation the goals that the race reports `none` for are
+  refuted in 0.3 s; this records, per racer run, the verdict (or the absorbed
+  Protocol_Message) and the wall clock, in its own Event_Log category.*)
+val nitpick_probe_category =
+  Event_Log.category {name = "nitpick_probe", enabled = fn () => true,
+    encode = fn (racer, outcome, ms) =>
+      ([("racer", racer), ("outcome", outcome), ("elapsed_ms", string_of_int ms)], [])}
+
 fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.racer =
   (name, fn () =>
-     (case Phi_Guard_Refute.nitpick ctxt (Lazy.force params) (i, n) goal of
-        Phi_Guard_Refute.Refuted =>
-          Synchronized.change_result protocol
-            (fn {pauto_finished, refuted_by = _} =>
-              (if pauto_finished then SOME (Refuted name) else NONE,
-               {pauto_finished = pauto_finished, refuted_by = SOME name}))
-      | Phi_Guard_Refute.Provable => NONE
-      | Phi_Guard_Refute.Unknown => NONE)
-     handle Output.Protocol_Message _ => NONE)
+     let val t0 = Timing.start ()
+         val v = Exn.capture_body (fn () =>
+                   Phi_Guard_Refute.nitpick ctxt (Lazy.force params) (i, n) goal)
+         val outcome =
+           (case v of
+              Exn.Res Phi_Guard_Refute.Refuted => "Refuted"
+            | Exn.Res Phi_Guard_Refute.Provable => "Provable"
+            | Exn.Res Phi_Guard_Refute.Unknown => "Unknown"
+            | Exn.Exn (Output.Protocol_Message _) => "Protocol_Message"
+            | Exn.Exn e => "exn:" ^ General.exnName e)
+         val _ = Event_Log.append nitpick_probe_category
+                   (name, outcome, Time.toMilliseconds (#elapsed (Timing.result t0)))
+      in
+        (case v of
+           Exn.Res Phi_Guard_Refute.Refuted =>
+             Synchronized.change_result protocol
+               (fn {pauto_finished, refuted_by = _} =>
+                 (if pauto_finished then SOME (Refuted name) else NONE,
+                  {pauto_finished = pauto_finished, refuted_by = SOME name}))
+         | Exn.Res _ => NONE
+         | Exn.Exn (Output.Protocol_Message _) => NONE
+         | Exn.Exn e => Exn.reraise e)
+      end)
 
 
 (** Guard Solver **)

@@ -1365,7 +1365,6 @@ lemma \<phi>mapToA_split_goal_Ty[
                 clarsimp simp add: image_iff case_prod_beta prod.map_beta, force) \<semicolon>
 
     apply_rule ToA_MapperC_backward[OF CC, THEN transformation_left_frame]
-      certified by (instantiate \<open>(x,y)\<close> for x y, clarsimp simp add: image_iff case_prod_beta prod.map_beta)
 
   \<medium_right_bracket> certified by (insert useful(1), clarsimp simp add: image_iff case_prod_beta prod.map_beta)
     apply (drule ToA_Mapper_f_expn, drule ToA_Mapper_f_expn, drule ToA_MapperC_f_expn, simp, rule)
