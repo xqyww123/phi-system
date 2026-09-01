@@ -99,12 +99,18 @@ timed_tac 30ms (auto_search_tac ctxt) ORELSE (fn th =>
    分（500ms 前自行返回的场次仍带真实裁决与耗时）。名义超时照旧传预算（规则 1
    不变）。注意模型重构**不可绕过**：其返回值 `codatatypes_ok` 参与 genuine vs
    quasi_genuine 判定（nitpick.ML:628-631），绕过 = 破坏"只信 genuine"铁律；
+   【2026-09-01 作者裁定失效：统一包裹撤销，改分选手刀——P-auto/R-conv 各持
+   竞赛预算；R-nitpick 的模型搜索上界即 Nitpick 自带内刀（名义+timeout_bonus，
+   vendored phi_nitpick.ML），装配处只套防挂网，preprocess 不计费，收尾缓冲
+   从此有余量。规则 1/2/4/5 与"模型重构不可绕过"不受影响。】
 4. 超时串只认十进制秒（`"0.45"`；`"450ms"` 会 error 且被兜底吞掉）；
 5. 预算在读取处钳制 `Int.max (1, Config.get ...)`（<1ms 对 `Timeout.apply` 意为
    **无超时**——`Timeout.ignored` 陷阱）；不设断言、不在战术内抛 error。
 6. **串行模式最坏情形 = (2+k)×预算**（k 为子目标数；多线程关闭时引擎按表序
    逐个跑，每选手各持全预算）——已接受的代价（2026-08-26 评审后记录；
    不设选手数封顶，D4 裁决不回退）。
+   【2026-09-01 分选手刀后算式改为 2×预算 + k×防挂网：R-nitpick 腿持
+   防挂网而非预算。】
 
 ## 2 · 选手规格
 
@@ -346,6 +352,7 @@ T 步的可达性分支删除）。
 
 已定（2026-08-24 对抗代码评审后，作者逐项裁决，详见 §12）：
 - **D1**：外层看门狗 = 预算、统一包裹，直接掐 Nitpick 收尾；§1.2 规则 3/5 已改写。
+  【2026-09-01 裁定失效：改分选手刀，见 §1.2 规则 3 处标注。】
 - **D2**：竞速区按模块级分解重写（race engine / racers / guard solver 三层），
   分节注释遵循手册层级（`Doc/Implementation/ML.thy:76-85`：星号越多范围越大，
   `(**** chapter ****)` > `(*** section ***)` > `(** subsection **)`）。
@@ -358,6 +365,11 @@ T 步的可达性分支删除）。
   "R-conv 无条件抢答"（会在空虚-H 守卫上把"通过"翻成"跳过"）；绕过 Nitpick
   模型重构（`codatatypes_ok` 参与 genuine 判定，不可绕）。
 - 挂起待 T5 实测再议：30ms 前置与 P-auto 判据统一（会剧增竞速触发频率）。
+  【2026-09-01 作者裁定解除：统一为"解决才算过"（`Seq.filter Thm.no_prems`），
+  已落地 reasoners.ML；挂起所要求的触发频率实测由当日的"闸门单独轮"补做，
+  同批裁定另见分选手刀（撤统一看门狗；R-nitpick 的搜索上界 = Nitpick 自带内刀，
+  即名义+timeout_bonus；preprocess 不计费；装配处防挂网从
+  \<phi>guard_refute_timeout 推导；两默认预算同日降为 2000）。】
 
 已定（2026-08-25，第二轮对抗评审后作者逐项裁决）：
 - **关切一（两处调用线程裸跑代码加护罩）批准**：日志写入经局部辅助
@@ -680,6 +692,13 @@ proper、**可以**藏进容器（容器自身 `is_interrupt` 为 false）——
    要用 `XML.content_of (YXML.parse_body -)`）。
 4. **待作者裁决的新设计问题**：竞速是否也应在"30ms 内返回部分进展但未全解"时
    触发？现计划 §4 保留前置不动（= 这类守卫继续静默死亡）。未实现，仅记录。
+   【2026-09-01 作者裁定：触发（"进了竞赛至少我们能给 REFUTED 这个回答"）。
+   已落地；本节"唯一入口是 30ms 速证超时"的论断随之失效——入口现为
+   "30ms 内未解决（含超时）"，"第四种无声结局"的主体不复存在。§17.3 的
+   T5 三命中基线预期同此失效。语义后果：该人群经竞赛拿到裁决，当日闸门
+   单独轮实测 78 refuted / 11 undecided / 0 proved——竞赛中的 P-auto 是
+   同一确定性搜索的重放，结构上不会新增 proved；推理结果可变（裁决取代了
+   静默按假处理）。】
 
 **T1 已落地**（三个文件）：
 - `reasoners.ML`：竞速实现替换旧级联（§1.1 骨架 + §1.2 预算断言 + §2.1/2.2 选手 +
@@ -1240,6 +1259,9 @@ serial、verdict（`proved`/`refuted`/`undecided`）、胜者名或 `-`、墙钟
 2. **`undecided` 分不出"被外层看门狗掐掉"与"Nitpick 自判 unknown"。** 这是
    §1.2-3 作者裁定统一包裹时**已接受**的代价，不要重开这个议题；500ms 之前
    自行返回的场次仍带真实裁决与耗时。
+   【2026-09-01 前提已变：统一包裹撤销（分选手刀）。真超时由 Nitpick 内刀转
+   "unknown" 温和返回（nitpick_probe outcome 可见），防挂网落下则记
+   exn:Interrupt_Break，两种成因可分；句中 500ms 亦早非默认值（现 2000）。】
 
 ### 17.6 未决
 
@@ -1963,6 +1985,11 @@ theory 里的一条命令,从它往后的命令都在该配置下运行。**不�
 的注释与 `val racers`、`reasoners.ML` `pinned_nitpick_params` 的注释、
 `guard_refute.ML` `nitpick` 的注释。
 
+【2026-09-01 作者裁定：统一看门狗再度撤销，改**分选手刀**（P-auto/R-conv 持
+竞赛预算；R-nitpick 的模型搜索上界即 Nitpick 自带内刀，名义+timeout_bonus；
+装配处只套防挂网，preprocess 不计费）。上段"已知后果"随之消除；其点名的
+三处代码注释已于同日全部同步改写。】
+
 **`\<phi>guard_race_log` 是什么**(读者需要的背景):`reasoners.ML:1287-1288` 声明的
 字符串配置,默认空串。空串即关闭(`:1323-1325`);非空则视为文件路径,竞赛每处理一个
 守卫追加一行 7 字段 TSV,并向 `<路径>.goals` 追加一份人可读转储(`:1458`):serial、
@@ -2110,6 +2137,8 @@ SHA 校验报警、`[simp]` vs `[iff]` 之争本身、"两个 ctxt 可能不一�
 
 1. **`\<phi>guard_race_timeout` 取值**(500 / 2000 / 5000)。它现在**只管 P-auto 和
    R-conv**(驳斥器有了自己的看门狗),所以这是关于两条**证明**赛道的决定。相关数据见 22.5。
+   （2026-09-01 注：分选手刀落地后本句重新为真；期间曾一度退回统一看门狗。
+   同日已裁：取 2000，出厂默认已改，`\<phi>guard_refute_timeout` 亦同降 2000。）
 2. **22.3 那四项未批改动**逐条撤销还是保留。
 3. **`converse_eq_pointfree` 是否采纳**,以及若采纳,是否连带删掉 `Phi_BNF_Trivial_Simps`
    里那 12 行翻转机器(`args_conv`/`flip_eq`/`flip_eq'`/`of_rel_eq`)。两名评审员从不同
@@ -3226,6 +3255,54 @@ quasi_genuine,神谕阶段不进入信任链。0143 单点收益有限(盲跳档
 驳,指数项抽象 689 ms 更快);其价值在普适形态:盲扫不中的目标,只要神谕能给出
 可最小化的取值,就能换到正确作用域,且比直接采信黑盒 SAT 可靠。批量净效应待
 C13 类全轮实测。
+
+**落地实现:R-nunchaku racer 与两 racer 共享的反例验证**(2026-08-31,作者指示
+后实现;起点安全点 phi-system 382407dc):
+- `library/nunchaku_collect_blackbox.ML`:黑盒收集器的正式 vendored 副本(三处
+  补丁带注释);PLPR 依 util → 黑盒 collect → problem → translate → model →
+  reconstruct 加载其余发行版模块,并起 `Phi_Nunchaku_*` 结构别名——**发行版
+  heap 中已含 stock 版 `Nunchaku_Collect`**(实测:仅导入 Main 即可见),导入
+  合并会在下游把同名结构盖回 stock;编译期绑定不受影响,但后续一切 ML 块必须
+  用别名。
+- `library/guard_refute_nunchaku.ML`(`Phi_Guard_Refute_Nunchaku.nunchaku`):
+  preprocess → 黑盒翻译 → 直接调 `nunchaku-bin --allow-spurious-models
+  --solvers smbc`(绕开组件 wrapper 的 --no-spurious-models)→ 模型文本过滤
+  (stock 解析器不识 smbc 的 match/fun/?__ 语法,按条目起始行分组、整条目丢弃)
+  → 重建 → 提取。提取的左端按**名字**在目标的 frees/consts 里解析真类型——
+  重建给的左端带 dummy 类型,直接 aconv 永不命中,此 bug 曾让 Phi_Nitpick 版
+  确认在"代换未生效"下空转通过——取值经 `Type.constraint` +
+  `Syntax.check_term` 对解析类型重检,修不好即丢弃。
+- `Phi_Guard_Refute.verify_model`:作者裁定的 **simp 判据**——代换后
+  `asm_full_simp`,残留裸 `False` = `refuted_kernel`(内核级);
+  `k 条前提 ⟹ False` = `refuted_cond:k`(残余假设与 trust_assms 轨道同款);
+  整体被证明 = `proved`(神谕取值有误);其余不采信。符号求值无作用域天花板,
+  神谕取值无需最小化(smbc 给 4 就用 4,`2^4` 直接算成 16)。两 racer 共用:
+  R-nunchaku 以之**门控**(裸 SAT 永不采信),R-nitpick 暂**只记录**(是否让
+  验证改变竞赛裁决待作者定,`\<phi>refute_verify` 默认关)。
+- `reasoners.ML`:`r_nunchaku_racer` 进竞赛装配,`\<phi>nunchaku_racer` config
+  默认关,待批量测后定。三目标实测(cslh19,`Scratch_RacerMeasure.thy`):
+
+| 语料 | R-nitpick(竞赛口径) | R-nunchaku(smbc 神谕 + simp 验证) |
+|---|---|---|
+| 0143 算术类硬核 | Unknown 0.7 s | **Refuted 117 ms**(sat 88 ms + 验证 27 ms,`refuted_cond:11`) |
+| 0148 | Refuted 142 ms | Unknown 60 ms(原子取值无可代换内容,simp 判据结构性不适用——两判据互补,竞赛无损失) |
+| 0003 真命题 | Unknown | Unknown(smbc max_depth,无伪阳性) |
+
+**全语料评测**(2026-08-31,独立回放口径,`Scratch_FullEval.thy`,cslh19
+`~/full_eval.tsv`;每项独占:Nitpick 5 s + simp 验证 ≤5 s + smbc 5 s,单项 90 s
+兜底):335 项,可读 230(105 条解析损耗与 Corpus_Replay 同源——八理论合并上下文
+的语法冲突,**0143/0148/0003 恰在不可读集合里**,故本轮未测到算术类硬核):
+- unverified R-nitpick(现行裁决口径):**195/230 = 84.8%**,与 §26.11 基线逐位
+  吻合(自校准通过,验证代码路径未扰动基线);
+- verified R-nitpick(simp 验证通过):**59/230 = 25.7%**;195 条驳斥拆解为
+  59 verified / **96 no_pairs**(打印反模型只含抽象原子,无可代换值——simp
+  判据的结构边界,非驳斥有误)/ 40 unverified(可疑度更高;部分成因指向评审
+  发现的 verify_model simpset 缺陷,修后须重测);
+- verified R-nunchaku:10/230 = 4.3%,**且全部为 R-nitpick 已驳条目——本轮
+  增量为零**。注意:此结论不可外推到硬核——R-nunchaku 的目标客户(算术类)
+  全落在 105 条不可读里;要测它的真实增量,须先修合并上下文的读取(按理论
+  分组解析);
+- 双双未驳斥 32 条(Binary_Trees 区段为主,与 §26.11 硬核分类一致)。
 
 **含义与未决**:"删公理"路线(黑盒常量 + 触及黑盒者公理分流)实测走通,且比
 "裁前提"保真——14 条前提全部保留、全部被模型满足;也不必放弃指数结构,胜过

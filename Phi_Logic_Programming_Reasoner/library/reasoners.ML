@@ -1006,12 +1006,12 @@ datatype race_result = Proved of thm | Refuted of string
     slot by relay (see the early-finish protocol below), so attribution
     travels in the result, not in the racer name the engine reports.*)
 
-(*the shared acceptance criterion of both searching racers: run the search,
-  keep the state iff nothing is left to prove*)
+(*the shared acceptance criterion of the searching racers and the quick
+  gate: the search's solved states, as a lazy sequence -- nothing runs until
+  it is pulled, so a caller's timeout still covers the search*)
+fun solved_states search st = Seq.filter Thm.no_prems (search st)
 fun search_solved search st =
-  (case Seq.pull (search st) of
-     SOME (st', _) => if Thm.no_prems st' then SOME st' else NONE
-   | NONE => NONE)
+  Option.map #1 (Seq.pull (solved_states search st))
 
 (*Early-finish protocol (plan §8, author-ruled 2026-08-25): let a refutation
   end the race the moment it is known that no proof can still arrive.  Both
@@ -1184,9 +1184,8 @@ fun extract_fixed_frees ctxt (assms, t) =
 
   The budget passed in is the model search's OWN timeout, fixed and never
   charged for preprocessing (author ruling 2026-08-28).  Nitpick divides the
-  number across the card scopes.  The outer watchdog is shared with the
-  searching racers and covers preprocessing too, so this timeout is a ceiling
-  the search rarely gets in full — see the note at the racer assembly.
+  number across the card scopes, and its own net (budget + timeout_bonus)
+  enforces it; preprocessing is covered only by the assembly's hang net.
 
   mono = true drops Nitpick's per-type monotonicity INFERENCE (default
   "smart", nitpick_commands.ML:43) and simply assumes monotonicity, so the
@@ -1213,9 +1212,12 @@ fun extract_fixed_frees ctxt (assms, t) =
   refutation).  Worst case over the corpus: 1434ms.*)
 (*The model search's own timeout, separate from the racer's watchdog: charging
   preprocessing against the search would make its reach depend on a quantity
-  that has nothing to do with it (author ruling 2026-08-28).*)
+  that has nothing to do with it (author ruling 2026-08-28).  Declared to
+  Nitpick, whose own net (+ timeout_bonus) enforces it; the assembly's hang
+  net derives from it too, so the two stay consistent.  2000: see the note
+  at guard_race_timeout.*)
 val guard_refute_timeout =
-      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_refute_timeout\<close> (K 5000)
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_refute_timeout\<close> (K 2000)
 
 fun pinned_nitpick_params ctxt budget =
   Nitpick_Commands.default_params (Proof_Context.theory_of ctxt)
@@ -1299,15 +1301,15 @@ fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.rac
 
 (** Guard Solver **)
 
-(*5000ms (author ruling 2026-08-27).  Since 2026-08-28 this bounds P-auto and
-  R-conv only -- the refuter family has its own watchdog, derived from
-  \<phi>guard_refute_timeout -- so the value is now a decision about the two
-  SEARCHING racers alone, and is open: over the real-workload dump P-auto times
-  out on 41% of races and R-conv on 45%, and races carrying a timeout consume
-  97.9% of all race wall clock, so whatever stands here is paid on nearly every
-  guard.  HEAD carried 500.*)
+(*2000ms (author ruling 2026-09-01).  Since 2026-08-28 this bounds P-auto and
+  R-conv only -- the refuter family's bound derives from
+  \<phi>guard_refute_timeout -- so the value is a decision about the two
+  SEARCHING racers alone.  It is paid on nearly every guard: races carrying a
+  timeout consume 97.9% of all race wall clock (P-auto times out on 41% of
+  races, R-conv on 45%).  2000 vs a uniform 5000: identical verdicts on the
+  common corpus, race wall clock 2067s -> 898s (2026-09-01 full-chain runs).*)
 val guard_race_timeout =
-      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 5000)
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 2000)
 val log_guard_race =
       Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guard_race\<close> (K false)
 
@@ -1339,7 +1341,14 @@ val guard_race_category =
   stronger form proves nothing.*)
 fun prove_or_refute can_inst ctxt ctxt0 =
   let val search = auto_search_tac ctxt
-   in timed_tac (Time.fromMilliseconds 30) search ORELSE
+      (*Author ruling 2026-09-01: the gate passes only a SOLVED state
+        (solved_states, shared with the racers) -- auto_search_tac never
+        fails, so an empty-handed return used to skip the race (guard assumed
+        false, unrefuted, wall-clock-dependent).  Admitted guards end
+        refuted or undecided only (measured 78/11/0): the race's P-auto is
+        a deterministic replay, kept as the sole producer of pauto_finished
+        (<30ms).  Lifts the plan-§5 deferral.*)
+   in timed_tac (Time.fromMilliseconds 30) (solved_states search) ORELSE
   (fn th =>
     let val timer = Timing.start ()
         val goals = Thm.cprems_of th
@@ -1391,13 +1400,15 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           assumption screen is load-bearing for the per-goal one), and the
           assumptions are asked once from the goal-side ctxt (ruling #2
           made structural).*)
+        val refute_timeout =
+          Time.fromMilliseconds (Config.get ctxt guard_refute_timeout)
         val nitpick_racers =
           let fun tvar_free t = null (Term.add_tvars t [])
               val nctxt = Config.put Kodkod.kodkod_scala true ctxt
               val assms0 = map Thm.term_of (Assumption.all_assms_of nctxt)
            in if getenv "NITPICK_SPY" <> "yes" andalso forall tvar_free assms0
-              then let val params = Lazy.lazy (fn () => pinned_nitpick_params nctxt
-                             (Time.fromMilliseconds (Config.get nctxt guard_refute_timeout)))
+              then let val params =
+                     Lazy.lazy (fn () => pinned_nitpick_params nctxt refute_timeout)
                        val n = length goals
                     in map_filter (fn (k, goal) =>
                          let val t0 = Thm.term_of goal
@@ -1418,24 +1429,27 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           P-auto stays first: the engine breaks concurrent claims to the
           lowest index and starts serial racers in order, both biasing ties
           toward Proved.
-          One watchdog for every racer (author ruling 2026-08-28).  The model
-          search's own timeout is fixed and not charged for preprocessing, but
-          this wall clock still covers both, so a refuter effectively searches
-          for that timeout MINUS preprocessing (0.4s median, 2.6s worst over
-          the replayed corpus).  Splitting the watchdog to pay for that is
-          deferred to the \<phi>guard_race_timeout redesign.*)
+          Per-racer knives (author ruling 2026-09-01): searching racers keep
+          the race budget; the R-nitpick family's wrap is only a HANG NET --
+          its knife is Nitpick's own net (declared timeout + timeout_bonus,
+          vendored phi_nitpick.ML), with preprocessing (0.4s median / 2.6s
+          worst) uncharged.  A uniform 2000ms watchdog cost exactly the
+          three Quicksort:47 refutations (racer legs 4.6-6s).*)
+        (*strictly above worst preprocessing (2.6s) + Nitpick's net (+1s)
+          at any config value*)
+        val hang_net = refute_timeout + seconds 5.0
+        fun wrap t (name, body) =
+          (name, fn () =>
+             (*capture site (EVENT_LOG_PLAN 7): a racer crash gets its frame
+               list before the engine converts it to Crashed; the region is
+               bounded by t*)
+             Exception_Log.capture
+               {site = "guard-racer " ^ name, record = Exception_Log.default_record}
+               (fn () => Timeout.apply t body ()))
         val racers =
-          p_auto_racer search protocol th ::
-          r_conv_racer can_inst ctxt ctxt0 search protocol goals ::
-          nitpick_racers
-          |> map (fn (name, body) =>
-               (name, fn () =>
-                  (*capture site (EVENT_LOG_PLAN 7): a racer crash gets its
-                    frame list before the engine converts it to Crashed; the
-                    region is bounded by the racer's own budget*)
-                  Exception_Log.capture
-                    {site = "guard-racer " ^ name, record = Exception_Log.default_record}
-                    (fn () => Timeout.apply budget body ())))
+          wrap budget (p_auto_racer search protocol th) ::
+          wrap budget (r_conv_racer can_inst ctxt ctxt0 search protocol goals) ::
+          map (wrap hang_net) nitpick_racers
 
         val {winner, exits, forked} = Race.race racers
 

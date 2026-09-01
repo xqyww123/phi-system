@@ -214,15 +214,11 @@ fun preprocess ctxt assms goal =
   cost (author ruling 2026-08-28).  Charging preprocessing against the search
   makes the search's reach depend on a quantity that has nothing to do with
   it, and makes two measurements incomparable whenever preprocessing differs.
-  The caller's watchdog is a separate matter and today does NOT allow for
-  preprocessing: it is shared with the searching racers, so the search sees
-  its timeout minus what preprocessing spent.*)
+  Since 2026-09-01 the assembly wrap is only a hang net; the search's bound
+  is Nitpick's own internal net (see the note at the search call below).*)
 
-(*TEMPORARY probe (2026-08-31): the refuter as it runs INSIDE the race -- what
-  residue it hands to Nitpick and what Nitpick answers there.  Goals the race
-  reports `none` for are refuted in 0.3 s when the same functions are called
-  from a scratch theory; the difference must be in the context, so record the
-  in-race residue for comparison.  Text is markup-free.*)
+(*TEMPORARY probe (2026-08-31): the refuter as it runs INSIDE the race -- the
+  residue it hands to Nitpick and what Nitpick answers.  Text is markup-free.*)
 val refuter_probe_category =
   Event_Log.category {name = "refuter_probe", enabled = fn () => true,
     encode = fn {i, n, n_assms, n_prems, n_subst, code, pre_ms, search_ms, residue, msgs,
@@ -231,12 +227,11 @@ val refuter_probe_category =
         ("assms", string_of_int n_assms), ("prems", string_of_int n_prems),
         ("subst", string_of_int n_subst),
         ("code", code), ("pre_ms", string_of_int pre_ms), ("search_ms", string_of_int search_ms),
-        (*bisection on a `none`: the same call again (nondeterminism / Kodkod
-          cache), and the same call under the theory-level context (local
-          context data)*)
+        (*the four rerun columns are constantly "-": their bisection reruns
+          were disabled with the per-racer knife (2026-09-01, unbounded
+          without a uniform outer knife); fields stay until the probe's
+          removal*)
         ("rerun_same", rerun_same), ("rerun_global", rerun_global),
-        (*and: the same call through the EXTERNAL kodkodi process instead of
-          the Scala peer, and the same call serialised behind a global lock*)
         ("rerun_external", #1 rerun_more), ("rerun_locked", #2 rerun_more)],
        [Event_Log.elem_text "residue" residue, Event_Log.elem_text "msgs" msgs,
         Event_Log.elem_text "ml" ml])}
@@ -245,7 +240,7 @@ fun plain_term ctxt t =
   XML.content_of (YXML.parse_body (Print_Mode.setmp []
     (Syntax.string_of_term (ctxt |> Config.put show_types true |> Config.put show_sorts true)) t))
 
-(*serialises the "locked" rerun of the probe across all racers*)
+(*served the disabled "locked" rerun; kept until the probe's removal*)
 val probe_lock = Synchronized.var "refuter_probe_lock" ()
 
 fun nitpick ctxt params (i, n) (subst, assms, goal) =
@@ -258,10 +253,10 @@ fun nitpick ctxt params (i, n) (subst, assms, goal) =
            code = code, pre_ms = pre_ms, search_ms = search_ms, residue = residue, msgs = msgs,
            rerun_same = fst reruns, rerun_global = snd reruns, rerun_more = rerun_more, ml = ml}
       fun plain s = XML.content_of (YXML.parse_body s)
-      fun run ctxt' prems concl =
+      fun run prems concl =
         let val t = Timing.start ()
             val (code, msgs) =
-              Phi_Nitpick.pick_nits_in_term (Proof.init ctxt') params true
+              Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params true
                 Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
          in (code, msgs, Time.toMilliseconds (#elapsed (Timing.result t))) end
       fun timed (code, _, ms) = code ^ "@" ^ string_of_int ms ^ "ms"
@@ -269,32 +264,14 @@ fun nitpick ctxt params (i, n) (subst, assms, goal) =
   (case pre of
      NONE => (log 0 "simp_proved" 0 "-" "-" ("-", "-") ("-", "-") "-"; Provable)
    | SOME (prems, concl) =>
-       let val (code, msgs, search_ms) = run ctxt prems concl
-           val reruns =
-             if code = Phi_Nitpick.noneN
-             then (timed (run ctxt prems concl),
-                   timed (run (Proof_Context.init_global (Proof_Context.theory_of ctxt)) prems concl))
-             else ("-", "-")
-           val rerun_more =
-             if code = Phi_Nitpick.noneN
-             then let (*verbose Normal-mode rerun: capture Nitpick's own per-scope
-                        narrative -- which scopes ran and what Kodkod answered*)
-                      val vparams =
-                        Nitpick_Commands.default_params (Proof_Context.theory_of ctxt)
-                          [("verbose", "true"), ("falsify", "true"), ("expect", ""),
-                           ("max_genuine", "1"), ("max_potential", "0"), ("max_threads", "1"),
-                           ("sat_solver", "SAT4J"), ("batch_size", "smart"),
-                           ("card", "1-6"), ("user_axioms", "false"), ("mono", "true"),
-                           ("timeout", "5.000"), ("tac_timeout", "0.05")]
-                      val (vcode, vmsgs) =
-                        Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) vparams true
-                          Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
-                   in ("verbose:" ^ vcode ^ "|" ^
-                       XML.content_of (YXML.parse_body (cat_lines vmsgs)),
-                       timed (Synchronized.change_result probe_lock
-                                (fn () => (run ctxt prems concl, ()))))
-                  end
-             else ("-", "-")
+       (*no knife here (author ruling 2026-09-01): the model search's bound
+         is Nitpick's own Timeout.apply (timeout + timeout_bonus) inside the
+         vendored phi_nitpick.ML -- a rebase must keep it; the assembly's
+         hang net is the only bound this module owns.  Preprocessing stays
+         uncharged (ruling 2026-08-28).*)
+       let val (code, msgs, search_ms) = run prems concl
+           val reruns = ("-", "-")  (*disabled; see the category's note*)
+           val rerun_more = ("-", "-")
            val _ = log (length prems) code search_ms
                        (plain_term ctxt (Logic.list_implies (prems, concl)))
                        (cat_lines (map plain msgs)) reruns rerun_more
