@@ -1347,8 +1347,11 @@ fun prove_or_refute can_inst ctxt ctxt0 =
         false, unrefuted, wall-clock-dependent).  Admitted guards end
         refuted or undecided only (measured 78/11/0): the race's P-auto is
         a deterministic replay, kept as the sole producer of pauto_finished
-        (<30ms).  Lifts the plan-§5 deferral.*)
-   in timed_tac (Time.fromMilliseconds 30) (solved_states search) ORELSE
+        (<35ms).  Lifts the plan-§5 deferral.  35 not 30 (author ruling
+        2026-09-01): guards proved right at the old boundary flickered in
+        and out of the race log with machine load; the margin absorbs them
+        in place of a gate-side record point.*)
+   in timed_tac (Time.fromMilliseconds 35) (solved_states search) ORELSE
   (fn th =>
     let val timer = Timing.start ()
         val goals = Thm.cprems_of th

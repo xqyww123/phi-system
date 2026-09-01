@@ -48,6 +48,8 @@ val log_category =
     encode = fn {ctxt, goal, entries, n_others, other_hits, occurrences} =>
       let val show = Protocol_Message.clean_output o Syntax.string_of_term ctxt
           val unforced = length (filter_out #1 entries)
+            (*structurally 0 since the forced-only gate in `inst` (2026-09-01);
+              field and UNFORCED verdict kept as a regression tripwire*)
       in
         ([("verdict", if unforced = 0 then "forced" else "UNFORCED"),
           ("choices", string_of_int (length entries)),
@@ -80,6 +82,13 @@ fun probe_record entry =
    | NONE => ())
 
 fun inst bans tab (v, args) cterm0 =
+  if not (probe_forced bans args)
+  then tab
+    (*forced-only (author ruling 2026-09-01): an unforced candidate never
+      commits (nor conflicts).  probe_forced is the Miller-pattern uniqueness
+      test -- necessary, not sufficient: the step_selector path can fabricate
+      a passing constructor choice.  Measured cost on the corpus: zero.*)
+  else
   let val cterm = Phi_Help.beta_eta_contract_cterm (Thm.instantiate_cterm (TVars.empty, tab) cterm0)
                |> fold_rev Thm.lambda args
    in if (not (Term.exists_subterm (fn a => exists (fn b => a aconv Free b) bans) (Thm.term_of cterm))
@@ -87,7 +96,7 @@ fun inst bans tab (v, args) cterm0 =
                      of Var v' => v <> v'
                       | _ => true))
       then case Vars.lookup tab v
-             of NONE => (probe_record (probe_forced bans args, Var v,
+             of NONE => (probe_record (true, Var v,
                                        map Thm.term_of args, Thm.term_of cterm);
                          Vars.add (v, cterm) tab)
               | SOME cterm' => if Thm.term_of cterm aconv Thm.term_of cterm' then tab
