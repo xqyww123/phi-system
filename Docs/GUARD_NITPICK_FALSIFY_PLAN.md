@@ -222,6 +222,18 @@ mode 传 `Auto_Try` 只买到静默，买不到其 scope 截断与单调性强�
 Java，爆炸半径为零）；已知 Scala 侧取消是协作式的（卡住的求解线程等自身
 Event_Timer 到点，有界非即时）。
 
+**（2026-09-02 作者裁定：单路径方向反转，外部进程上线）**路径仍单一、仍无
+回落、三条禁令不变，但改为**无条件 `Config.put Kodkod.kodkod_scala false`**
+——每次调用经 bash_process 服务器启动独立 kodkodi JVM。同树 A/B 实测
+（2026-09-02，安静机器各一整趟）：触达求解器的调用中位 +0.4s（驳斥腿中位
+337ms→744ms），race 总墙钟 +17%，全语料跑批 +6%；key 级驳斥零损失（凡曾被
+驳斥的 key 两侧仍均被驳斥，ever-REFUTED-flips 0），实例级仅已知边缘抖动类
+挪动（净 −4）。JVM 启动计入 Nitpick 内刀之内，防挂网裕度不变。进程内 Scala
+调用是管线中 `Output.Protocol_Message` 的唯一来源，随之消失——上文"无可用
+性守卫"条款的窄接分支已注释保留（意外出现将如实上报 Crashed）；无
+bash_process 服务器的环境中启动失败同样如实上报为该选手 Crashed，仍无可用
+性守卫。
+
 **裁决映射**：`genuine` → `SOME Refuted`（模型式反驳与 Proved 在融洽理论中
 互斥，无需赛后降级）；`quasi_genuine`（不采信）、`potential`（实测会误驳）、
 `none`（**零证据**，可在假命题上 50ms 产出）、`unknown`/超时/异常 → NONE。

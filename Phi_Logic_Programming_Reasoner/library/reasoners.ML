@@ -1229,15 +1229,17 @@ fun pinned_nitpick_params ctxt budget =
      ("timeout", Real.fmt (StringCvt.FIX (SOME 3)) (Time.toReal budget)),
      ("tac_timeout", "0.05")]
 
-(*No availability guard (author ruling 2026-08-26): Kodkod runs single-path
-  over the Scala protocol peer (plan §2.3: kodkod_scala unconditionally on,
-  no external-kodkodi fallback, never overlord, never a *_JNI SAT solver),
-  and in a process WITHOUT a peer the pipeline's protocol call raises
-  Output.Protocol_Message — the one exception absorbed below: the racer
-  just gives up empty-handed (exit Gave_None).  Every declared environment
-  (PIDE, batch build, Isa-REPL via repl_server.sh's isabelle build) has a
-  peer, so the absorbed case costs nothing in practice; where it does
-  fire, the cost is bounded by this racer's own budget.*)
+(*No availability guard, still single-path, but the path is now the EXTERNAL
+  kodkodi process (author ruling 2026-09-02, reversing plan §2.3's in-process
+  ruling): kodkod_scala forced false, so each invocation launches its own JVM
+  ($KODKODI/bin/kodkodi, spawned through the bash_process server; never
+  overlord, never a *_JNI SAT solver).  Measured against in-process on the
+  same tree (A/B 2026-09-02): +0.4s median per solver-reaching call, race
+  wall +17%, corpus wall +6%, zero key-level refutation loss.  The JVM launch
+  runs inside Nitpick's own net, so the hang net's margin is unchanged.  The
+  in-process Scala call was the pipeline's only source of
+  Output.Protocol_Message, so its absorbing arms below are commented out —
+  a stray one now leaves the body and is reported Crashed truthfully.*)
 (*Refuted goes to the ledger, never straight to the winner slot — the ruling
   is argued at the protocol above.  Provable means the preprocessing simplifier
   closed the guard, which is a real proof of the ORIGINAL guard but yields no
@@ -1265,8 +1267,8 @@ fun pinned_nitpick_params ctxt budget =
   NOT_SUPPORTED bare warning is unreachable).*)
 (*TEMPORARY probe (2026-08-31): what does the refuter actually answer inside
   the race?  In isolation the goals that the race reports `none` for are
-  refuted in 0.3 s; this records, per racer run, the verdict (or the absorbed
-  Protocol_Message) and the wall clock, in its own Event_Log category.*)
+  refuted in 0.3 s; this records, per racer run, the verdict and the wall
+  clock, in its own Event_Log category.*)
 val nitpick_probe_category =
   Event_Log.category {name = "nitpick_probe", enabled = fn () => true,
     encode = fn (racer, outcome, ms) =>
@@ -1282,7 +1284,9 @@ fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.rac
               Exn.Res Phi_Guard_Refute.Refuted => "Refuted"
             | Exn.Res Phi_Guard_Refute.Provable => "Provable"
             | Exn.Res Phi_Guard_Refute.Unknown => "Unknown"
-            | Exn.Exn (Output.Protocol_Message _) => "Protocol_Message"
+            (*unreachable since kodkod_scala was forced false (2026-09-02);
+              the generic arm labels a stray one "exn:Protocol_Message"
+            | Exn.Exn (Output.Protocol_Message _) => "Protocol_Message"*)
             | Exn.Exn e => "exn:" ^ General.exnName e)
          val _ = Event_Log.append nitpick_probe_category
                    (name, outcome, Time.toMilliseconds (#elapsed (Timing.result t0)))
@@ -1294,7 +1298,10 @@ fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.rac
                  (if pauto_finished then SOME (Refuted name) else NONE,
                   {pauto_finished = pauto_finished, refuted_by = SOME name}))
          | Exn.Res _ => NONE
-         | Exn.Exn (Output.Protocol_Message _) => NONE
+         (*unreachable since kodkod_scala was forced false (2026-09-02): the
+           in-process Scala call was its only source; a stray one reraises
+           and the engine reports this racer Crashed
+         | Exn.Exn (Output.Protocol_Message _) => NONE*)
          | Exn.Exn e => Exn.reraise e)
       end)
 
@@ -1407,7 +1414,7 @@ fun prove_or_refute can_inst ctxt ctxt0 =
           Time.fromMilliseconds (Config.get ctxt guard_refute_timeout)
         val nitpick_racers =
           let fun tvar_free t = null (Term.add_tvars t [])
-              val nctxt = Config.put Kodkod.kodkod_scala true ctxt
+              val nctxt = Config.put Kodkod.kodkod_scala false ctxt
               val assms0 = map Thm.term_of (Assumption.all_assms_of nctxt)
            in if getenv "NITPICK_SPY" <> "yes" andalso forall tvar_free assms0
               then let val params =
