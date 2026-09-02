@@ -1,7 +1,16 @@
 # The Debt-Ledger Filter Plan (`genuine_modulo_debt`)
 
-Status: draft rev 1, 2026-09-01.  Author approval pending; no code has been
-changed.  Predecessor context: `Docs/GUARD_NITPICK_FALSIFY_PLAN.md` (the
+Status: **CLOSED — project abandoned by author decision, 2026-09-02.**
+No code was ever changed under this plan, and none will be: the ledger
+filter in `phi_nitpick.ML`, the `user_axioms = "smart"` pin, and the
+`genuine_modulo_debt` labeling are not going to be implemented; R-nitpick
+keeps `user_axioms = "false"` and its current comments.  What this plan
+called for in `Debt_Axiom.ML` was delivered separately and survives:
+`Debt_Axiom.is_debt` (by the Polymorphic Debt Support project, phi-system
+commit `2fa67ba6`).  The document is kept for the record; its pending
+review-fix list is void.
+Original status: draft rev 1, 2026-09-01, author approval pending.
+Predecessor context: `Docs/GUARD_NITPICK_FALSIFY_PLAN.md` (the
 guard-race redesign, closed 2026-09-01 at phi-system commit `bcdffbe4`).
 
 > **2026-09-02 annotation — the Polymorphic Debt Support project landed**
@@ -35,6 +44,8 @@ guard-race redesign, closed 2026-09-01 at phi-system commit `bcdffbe4`).
 >   `subst_atomic` of fixed-free equations) cannot touch a debt — debt
 >   propositions carry no term Frees.
 > This plan's own review-fix list remains pending the author's ruling.
+> [Later the same day: the author closed the project — see the Status line;
+> the review-fix list is void.]
 
 ## 0. Essence
 

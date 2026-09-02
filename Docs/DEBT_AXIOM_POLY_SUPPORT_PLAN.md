@@ -578,6 +578,11 @@ the `subst_atomic` note (§6-5).  The filter plan's own pending review
 fixes remain a separate work item.  Nitpick synergy: `is_debt` filters a
 polymorphic debt BEFORE the monomorphic/polymorphic partition, so
 `no_poly_user_axioms` stays true.
+[2026-09-02, after this plan landed: the author ABANDONED the filter
+project — see the CLOSED status at the head of
+`DEBT_AXIOM_FILTER_PLAN.md`.  The corrections above were applied to the
+closed document for the record; `is_debt` stays delivered and exported,
+with no consumer in R-nitpick.]
 
 ## 8. Verification
 
