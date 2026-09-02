@@ -1,0 +1,13 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end; "(no output)" means the command succeeded silently.
+# Theory result: only the designed negative errors.
+
+debt_axiomatization dep1: <(0::nat) < 1>
+  (no output)
+lemma derived: <(0::nat) < 1> by (rule dep1)
+  (clean)
+discharge_debt_axiom dep1 : derived
+  ERROR: Some of the given certification theorems are based on axiomized debts!
+print_debt_axiom
+  1 axiom debt is recorded: Deps.dep1 : 0 < 1

@@ -1,0 +1,268 @@
+val thy0 =
+   {Pure, HOL.Try0, Tools.Code_Generator, HOL.HOL, HOL.Orderings, HOL.Groups,
+     HOL.Lattices, HOL.Boolean_Algebras, HOL.Set, HOL.Fun,
+     HOL.Complete_Lattices, HOL.Ctr_Sugar, HOL.Typedef, HOL.Inductive,
+     HOL.Rings, HOL.Nat, HOL.Product_Type, HOL.Sum_Type, HOL.Fields,
+     HOL.Relation, HOL.Finite_Set, HOL.Transitive_Closure, HOL.Wellfounded,
+     HOL.Wfrec, HOL.Order_Relation, HOL.Hilbert_Choice,
+     HOL.BNF_Wellorder_Relation, HOL.BNF_Wellorder_Embedding, HOL.Zorn,
+     HOL.BNF_Wellorder_Constructions, HOL.BNF_Cardinal_Order_Relation,
+     HOL.BNF_Cardinal_Arithmetic, HOL.Fun_Def_Base, HOL.BNF_Def,
+     HOL.BNF_Composition, HOL.Basic_BNFs, HOL.BNF_Fixpoint_Base,
+     HOL.BNF_Least_Fixpoint, HOL.Meson, HOL.ATP, HOL.Basic_BNF_LFPs,
+     HOL.Metis, HOL.Equiv_Relations, HOL.Transfer, HOL.Lifting, HOL.Num,
+     HOL.Power, HOL.Complete_Partial_Order, HOL.Option, HOL.Argo,
+     HOL.Partial_Function, HOL.SAT, HOL.Quotient, HOL.Groups_Big,
+     HOL.Fun_Def, HOL.Int, HOL.Lattices_Big, HOL.Euclidean_Rings, HOL.Parity,
+     HOL.Numeral_Simprocs, HOL.Semiring_Normalization, HOL.Groebner_Basis,
+     HOL.Set_Interval, HOL.Presburger, HOL.Try0_HOL, HOL.SMT,
+     HOL.Sledgehammer, HOL.Lifting_Set, HOL.List, HOL.Groups_List,
+     HOL.Bit_Operations, HOL.Code_Numeral, HOL.Map, HOL.Enum, HOL.String,
+     HOL.Predicate, HOL.Lazy_Sequence, HOL.Typerep, HOL.Limited_Sequence,
+     HOL.Random, HOL.Code_Evaluation, HOL.Quickcheck_Random, HOL.Random_Pred,
+     HOL.Random_Sequence, HOL.Quickcheck_Exhaustive, HOL.Predicate_Compile,
+     HOL.Record, HOL.GCD, HOL.Nitpick, HOL.Factorial,
+     HOL.Quickcheck_Narrowing, HOL.Mirabelle, HOL.Extraction, HOL.Nunchaku,
+     HOL.BNF_Greatest_Fixpoint, HOL.Filter,
+     HOL.Conditionally_Complete_Lattices, HOL.Binomial, Main}: theory
+val ctxt0 = <context>: Proof.context
+val stripped_sorts = fn:
+   theory ->
+     term ->
+       (typ * typ) list * (((string * int) * class list) * ctyp) list * term
+common.ML:24: warning: Matches are not exhaustive. Found near fn (TFree (_, ...), T) => (T, S)
+val ledger_form = fn: theory -> term -> term
+val ofclass_close_tac = fn: Proof.context -> int -> tactic
+val discharge_tac = fn: Proof.context -> thm list -> tactic
+val prep_cert = fn: thm -> thm
+datatype outcome = FAILED of string | PROVED of bool
+val show = fn: outcome -> string
+val run_prove = fn: term -> tactic -> outcome
+val residue = fn: term -> tactic -> string
+val rp = fn: string -> term
+val prove_cert = fn: string -> (Proof.context -> tactic) -> thm
+val case_run = fn: string -> term -> thm -> unit
+val case_run_goal = fn: string -> term -> thm -> unit
+val add_commute =
+   "HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?a ?b) (Groups.plus_class.plus ?b ?a))":
+   thm
+val mult_commute =
+   "HOL.Trueprop
+       (HOL.eq (Groups.times_class.times ?a ?b)
+         (Groups.times_class.times ?b ?a))": thm
+val conjI =
+   "\<lbrakk>HOL.Trueprop ?P; HOL.Trueprop ?Q\<rbrakk>
+      \<Longrightarrow> HOL.Trueprop (HOL.conj ?P ?Q)": thm
+val refl = "HOL.Trueprop (HOL.eq ?t ?t)": thm
+== CASE G1a (bare var, debt sort stronger than cert's)
+  ledger goal: OFCLASS('a, comm_monoid_add_class) \<Longrightarrow>
+(\<And>x y. x + y = y + x)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE G1b (bare var, debt sort = cert sort)
+  ledger goal: OFCLASS('a, ab_semigroup_add_class) \<Longrightarrow>
+(\<And>x y. x + y = y + x)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_g1c =
+   "HOL.Trueprop
+       (HOL.conj
+         (HOL.eq (Groups.plus_class.plus ?x ?y)
+           (Groups.plus_class.plus ?y ?x))
+         (HOL.eq (Groups.times_class.times ?p ?q)
+           (Groups.times_class.times ?q ?p)))": thm
+cert_g1c: ?x + ?y = ?y + ?x \<and> ?p * ?q = ?q * ?p
+== CASE G1c (two vars, different sorts)
+  ledger goal: \<lbrakk>OFCLASS('a, comm_monoid_add_class);
+ OFCLASS('b, comm_monoid_mult_class)\<rbrakk>
+\<Longrightarrow> (\<And>x y p q. x + y = y + x \<and> p * q = q * p)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_g1d =
+   "HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?x ?y) (Groups.plus_class.plus ?x ?y))":
+   thm
+cert_g1d: ?x + ?y = ?x + ?y
+== CASE G1d (chain: debt comm_monoid_add, cert plus)
+  ledger goal: OFCLASS('a, comm_monoid_add_class) \<Longrightarrow>
+(\<And>x y. x + y = x + y)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+G1 DONE
+val order_refl = "HOL.Trueprop (Orderings.ord_class.less_eq ?x ?x)": thm
+val finite_UNIV = "HOL.Trueprop (Finite_Set.finite Orderings.top_class.top)":
+   thm
+== CASE G2a (composite 'a set, class preorder)
+  ledger goal: OFCLASS('a, type_class) \<Longrightarrow> (\<And>x. x \<le> x)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE G2b (composite 'a option, class finite)
+  ledger goal: OFCLASS('a, finite_class) \<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE G2c (composite 'a * 'b, 'a::finite, 'b::{finite,linorder})
+  ledger goal: \<lbrakk>OFCLASS('a, finite_class); OFCLASS('b, finite_class);
+ OFCLASS('b, linorder_class)\<rbrakk>
+\<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+G2 DONE
+val add_0_right =
+   "HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?a Groups.zero_class.zero) ?a)": thm
+val less_imp_le =
+   "HOL.Trueprop (Orderings.ord_class.less ?x ?y) \<Longrightarrow>
+      HOL.Trueprop (Orderings.ord_class.less_eq ?x ?y)": thm
+== CASE G3a (mono debt, poly cert add_0_right)
+  ledger goal: \<And>n. n + 0 = n
+  production ares_tac: PROVED (exact aconv: yes)
+  new recipe:          PROVED (exact aconv: yes)
+== CASE G3b (mono premised debt, poly cert less_imp_le)
+  ledger goal: \<And>n m. n < m \<Longrightarrow> n \<le> m
+  production ares_tac: FAILED [THM: Proof failed.
+ 1. \<And>n m. n < m \<Longrightarrow> n < m]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_g3c =
+   "HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?n Groups.zero_class.zero) ?n)": thm
+cert_g3c: ?n + 0 = ?n
+== CASE G3c (mono debt, mono cert)
+  ledger goal: \<And>n. n + 0 = n
+  production ares_tac: PROVED (exact aconv: yes)
+  new recipe:          PROVED (exact aconv: yes)
+G3 DONE
+val order_refl = "HOL.Trueprop (Orderings.ord_class.less_eq ?x ?x)": thm
+== CASE G4 (composite over ground: nat set, class preorder)
+  ledger goal: \<And>x. x \<subseteq> x
+  production ares_tac: PROVED (exact aconv: yes)
+  new recipe:          PROVED (exact aconv: yes)
+G4 DONE
+val equal_eq =
+   "HOL.Trueprop (HOL.eq (HOL.equal_class.equal ?x ?y) (HOL.eq ?x ?y))": thm
+== CASE G5 (mixed 'a * nat, class equal)
+  ledger goal: OFCLASS('a, equal_class) \<Longrightarrow>
+(\<And>x y. equal_class.equal x y = (x = y))
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+G5 DONE
+val add_commute =
+   "HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?a ?b) (Groups.plus_class.plus ?b ?a))":
+   thm
+val finite_UNIV = "HOL.Trueprop (Finite_Set.finite Orderings.top_class.top)":
+   thm
+== CASE N-a (underivable composite: 'a set :: finite from 'a::type)
+  ledger goal: OFCLASS('a, type_class) \<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          FAILED [THM: Proof failed.
+ 1. OFCLASS('a, type_class) \<Longrightarrow> OFCLASS('a set, finite_class)]
+  new-recipe residue (1 subgoals):
+ 1. OFCLASS('a, type_class) \<Longrightarrow> OFCLASS('a set, finite_class)
+== CASE N-b (debt semigroup_add, cert needs ab_semigroup_add)
+  ledger goal: OFCLASS('a, semigroup_add_class) \<Longrightarrow>
+(\<And>x y. x + y = y + x)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          FAILED [THM: Proof failed.
+ 1. \<And>x y.
+       OFCLASS('a, semigroup_add_class) \<Longrightarrow>
+       OFCLASS('a, ab_semigroup_add_class)]
+  new-recipe residue (1 subgoals):
+ 1. \<And>x y.
+       OFCLASS('a, semigroup_add_class) \<Longrightarrow>
+       OFCLASS('a, ab_semigroup_add_class)
+val nc_goal =
+   Const ("Pure.all", "('a \<Rightarrow> prop) \<Rightarrow> prop") $
+     Abs ("x", "'a",
+       Const ("Pure.all", "('a \<Rightarrow> prop) \<Rightarrow> prop") $
+         Abs ("y", "'a",
+           Const ("HOL.Trueprop", "HOL.bool \<Rightarrow> prop") $
+             (Const ("HOL.eq", "'a ... 'a ... ...") $
+               (Const ("Groups.plus_class.plus", "... ... ...") $ Bound 1 $
+                 Bound 0) $
+               (Const ("Groups.plus_class.plus", "...") $ Bound 0 $ Bound 1)))):
+   term
+== CASE N-c (obligation TFree with no OFCLASS hyp)
+  ledger goal: \<And>x y. x + y = y + x
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          FAILED [THM: Proof failed.
+ 1. \<And>x y. OFCLASS('a, ab_semigroup_add_class)]
+  new-recipe residue (1 subgoals):
+ 1. \<And>x y. OFCLASS('a, ab_semigroup_add_class)
+N DONE
+val add_commute =
+   "HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?a ?b) (Groups.plus_class.plus ?b ?a))":
+   thm
+val finite_UNIV = "HOL.Trueprop (Finite_Set.finite Orderings.top_class.top)":
+   thm
+val conjI =
+   "\<lbrakk>HOL.Trueprop ?P; HOL.Trueprop ?Q\<rbrakk>
+      \<Longrightarrow> HOL.Trueprop (HOL.conj ?P ?Q)": thm
+val refl = "HOL.Trueprop (HOL.eq ?t ?t)": thm
+== CASE P3-1 (function type 'a => 'b, class finite)
+  ledger goal: \<lbrakk>OFCLASS('a, finite_class); OFCLASS('b, finite_class)\<rbrakk>
+\<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE P3-2 ('a::{finite,linorder} option, class finite)
+  ledger goal: \<lbrakk>OFCLASS('a, finite_class); OFCLASS('a, linorder_class)\<rbrakk>
+\<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_p3 =
+   "OFCLASS(?'a, Groups.ab_semigroup_add_class) \<Longrightarrow>
+      HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?a ?b) (Groups.plus_class.plus ?b ?a))":
+   thm
+cert_p3 (already unconstrained): OFCLASS(?'a, ab_semigroup_add_class) \<Longrightarrow> ?a + ?b = ?b + ?a
+== CASE P3-3 (cert already carries OFCLASS premise)
+  ledger goal: OFCLASS('a, comm_monoid_add_class) \<Longrightarrow>
+(\<And>x y. x + y = y + x)
+  production ares_tac: FAILED [THM: Proof failed.
+ 1. \<And>x y.
+       OFCLASS('a, comm_monoid_add_class) \<Longrightarrow>
+       OFCLASS('a, ab_semigroup_add_class)]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_p4 =
+   "HOL.Trueprop
+       (HOL.conj
+         (HOL.eq (Groups.plus_class.plus ?x ?y)
+           (Groups.plus_class.plus ?y ?x))
+         (HOL.eq (Groups.plus_class.plus ?u ?v)
+           (Groups.plus_class.plus ?v ?u)))": thm
+cert_p4: ?x + ?y = ?y + ?x \<and> ?u + ?v = ?v + ?u
+== CASE P3-4 (duplicate obligations on one debt var)
+  ledger goal: OFCLASS('a, ab_semigroup_add_class) \<Longrightarrow>
+(\<And>x y. x + y = y + x \<and> x + y = y + x)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE P3-5 (same var twice: 'a * 'a, class finite)
+  ledger goal: OFCLASS('a, finite_class) \<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_p6 =
+   "HOL.Trueprop (Finite_Set.finite Orderings.top_class.top) \<Longrightarrow>
+      HOL.Trueprop (HOL.eq Groups.zero_class.zero Groups.zero_class.zero)":
+   thm
+cert_p6: finite UNIV \<Longrightarrow> 0 = 0
+== CASE P3-6 (cert TVar not in conclusion -> TVar obligation)
+  ledger goal: 0 = 0
+  production ares_tac: FAILED [THM: Proof failed.
+ 1. finite UNIV]
+  new recipe:          FAILED [THM: Proof failed.
+ 1. OFCLASS(?'a, finite_class)
+ 2. finite top]
+  new-recipe residue (2 subgoals):
+ 1. OFCLASS(?'a, finite_class)
+ 2. finite top
+val cert_p7 =
+   "HOL.Trueprop
+       (HOL.conj (Finite_Set.finite Orderings.top_class.top)
+         (Finite_Set.finite Orderings.top_class.top))": thm
+cert_p7: finite UNIV \<and> finite UNIV
+== CASE P3-7 (two composite obligations, same var: 'a option and 'a set)
+  ledger goal: OFCLASS('a, finite_class) \<Longrightarrow> finite top \<and> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+P3 DONE

@@ -1,0 +1,25 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end.
+# Theory result: CLEAN -- every check is a hard ML pattern binding
+# (val true = ... / val false = ...), so a mismatch would error the theory.
+
+debt_axiomatization d1: <n < m ==> n <= (m::nat)>  /  d2: <x + y = y + (x::'a::comm_monoid_add)>
+  (d2 carries the standard type-variable warning)
+unspecified_type utype  /  specify_type ubij: utype = nat
+  (no output)
+ML block 1 (queries via Spec_Rules.get, the consumer's literal input space):
+  IsDebt PRE-discharge checks PASS
+  p_d1 = ?n < ?m ==> ?n <= ?m (nat, export shape); is_debt = true
+  p_d2 = ?x + ?y = ?y + ?x (?'a, export shape);   is_debt = true
+  p_d2 at nat instance: is_debt = false;  add.commute: false;  ubij(1): false
+lemma d1_cert ... by (rule less_imp_le)
+  (clean)
+discharge_debt_axiom d1 : d1_cert   [premised mono discharge, real command]
+  (no output; SUCCESS)
+ML block 2:
+  IsDebt POST-discharge checks PASS
+  (d1's Spec_Rules entry SURVIVES its discharge; is_debt on it is now false;
+   d2 still true)
+print_debt_axiom
+  1 axiom debt is recorded: IsDebt.d2 : OFCLASS('a, comm_monoid_add_class) ==> (!!x y. x + y = y + x)

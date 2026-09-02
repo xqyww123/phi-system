@@ -1,0 +1,39 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end.
+# Theory result: only the three designed command-level failures error; the ML
+# assertion block (String.isSubstring on markup-stripped messages, error on
+# mismatch) passes.
+
+debt_axiomatization glue1: <(1::nat) + 1 = 2>
+  (no output)
+discharge_debt_axiom glue1 : conj_commute
+  ERROR: discharge_debt_axiom: discharging "Glue.glue1" by conj_commute failed:
+  Proof failed.
+   1. 1 + 1 = 2
+discharge_debt_axiom glue1 : <(1::nat) + 1 = 2>   [literal-fact certificate]
+  ERROR: discharge_debt_axiom: discharging "Glue.glue1" by literal fact
+  "(1::nat) + 1 = 2" failed: Failed to retrieve literal fact: 1 + 1 = 2
+discharge_debt_axiom glue1 : [[rule_format]]      [attributes-only certificate]
+  ERROR: discharge_debt_axiom: discharging "Glue.glue1" by the certificate
+  given at <the position's clickable here-marker, invisible in this plain
+  capture> failed: Proof failed.
+   1. 1 + 1 = 2
+  (K2: the command token carries an id-only position, so Position.here
+  yields the PIDE here-marker; with no position at all -- the ML assertion
+  below, Position.none -- the fallback reads "the given certificate", and
+  with a line/file position it reads "given at (line N of ...)" /
+  "(file ...)", reasoned from position.ML:278-287.)
+ML assertion block (message texts, markup-stripped; exact captured values):
+  Glue ML assertions PASS
+  m1 = "discharge_debt_axiom: discharging \"Glue.glue1\" by conj_commute failed:\nProof failed.\n 1. 1 + 1 = 2"
+  m2 = "discharge_debt_axiom: discharging \"Glue.glue1\" by literal fact \"(1::nat) + 1 = 2\" failed:\nFailed to retrieve literal fact:\n1 + 1 = 2"
+  m3 = "discharge_debt_axiom: discharging \"Glue.glue1\" by the given certificate failed:\nProof failed.\n 1. 1 + 1 = 2"
+  m5 = "\"Glue.glue1\" is named twice in one discharge"
+  m4 = "add_debt_axiom: free term variables in P"
+debt_axiomatization glue2: <A ==> A>
+  (no output)
+discharge_debt_axiom glue2 : refl
+  (no output; SUCCESS -- the assume leg of the ares_tac head)
+print_debt_axiom
+  1 axiom debt is recorded: Glue.glue1 : 1 + 1 = 2

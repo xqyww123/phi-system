@@ -1,0 +1,11 @@
+# Section 8.3-2 baseline: full-chain corpus run on the CLEAN tree (production
+# Debt_Axiom), cslh19, 2026-09-02, via hard_restart.sh + run_probe.py (both
+# archived beside this file; Phi_Examples/PhiEx_All.thy on the
+# Phi_System_Base REPL heap).  Driver stdout (~/exp2_baseline_driver.log):
+ERRORS RETURNED: None
+ELAPSED 900.3 s
+# hard_restart.sh output (hr_baseline.log):
+#   killing: 2907144 2907243 
+#   poly left: 0   port: 0
+#   REPL up (~20s)
+#   driver: 2984541

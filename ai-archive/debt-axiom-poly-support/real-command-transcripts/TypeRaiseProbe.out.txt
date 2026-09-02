@@ -1,0 +1,10 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end; "(no output)" means the command succeeded silently.
+# is_debt totality boundary (review items m6/R5).  Before R5 the second call
+# raised TYPE: Undeclared class: "TypeRaiseProbe.tiny" (recorded in the
+# review); after R5 both calls are hard val-false bindings and the theory is
+# CLEAN.
+
+ML block:
+  TypeRaiseProbe assertions PASS (total on undeclared-sort query)

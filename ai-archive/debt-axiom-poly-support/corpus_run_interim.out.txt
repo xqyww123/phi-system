@@ -1,0 +1,14 @@
+# Section 8.3-2 full-chain corpus run on the PATCHED tree (cslh19, 2026-09-02)
+# Provenance: stdout of ~/exp2_baseline_driver.log (run_probe.py driving
+# Phi_Examples/PhiEx_All.thy on the Phi_System_Base REPL, started by
+# hard_restart.sh right after the two-file patch rsync), captured over ssh at
+# run completion by the implementing session.  The file on cslh19 was later
+# overwritten by an unrelated experiment's hard_restart.sh run; this copy is
+# the surviving record.
+ERRORS RETURNED: None
+ELAPSED 833.9 s
+--- hard_restart.log ---
+killing: 2706320 2706420 
+poly left: 0   port: 0
+REPL up (~20s)
+driver: 2853378

@@ -127,4 +127,56 @@ print_debt_axiom \<comment> \<open>Good job! No debt axiom is recorded.\<close>
 text \<open>It rejects impredicativeness properly thanking to the circular dependence checking by
   Isabelle's kernel.\<close>
 
+
+section \<open>Polymorphic Debt Axioms\<close>
+
+text \<open>Debt axioms may be polymorphic, with arbitrary sort constraints on their type
+  variables.  We declare a debt over two type variables with nontrivial sorts:\<close>
+
+debt_axiomatization le_add: \<open>x \<le> x \<and> y + 0 = y\<close>
+  for x :: \<open>'a::linorder\<close> and y :: \<open>'b::comm_monoid_add\<close>
+
+text \<open>The fact \<open>le_add\<close> is usable at any instance of its sorts, like any polymorphic
+  theorem:\<close>
+
+lemma \<open>(3::nat) \<le> 3 \<and> (b::int) + 0 = b\<close> by (rule le_add)
+lemma \<open>(i::int) \<le> i \<and> (n::nat) + 0 = n\<close> by (rule le_add)
+
+text \<open>@{command print_debt_axiom} prints the \<^emph>\<open>ledger normal form\<close> of the debt:
+  the sort constraints are detached from the type variables and re-attached as
+  \<open>OFCLASS\<close> premises, one premise per class.  This printed proposition is the exact
+  text the ML kernel compares against the certificate at discharge time --- what you
+  see is what must be proved.\<close>
+
+print_debt_axiom
+  \<comment> \<open>\<open>Debt_Axiom_Doc.le_add :
+       OFCLASS('a, linorder_class) \<Longrightarrow> OFCLASS('b, comm_monoid_add_class) \<Longrightarrow>
+       (\<And>x y. x \<le> x \<and> y + 0 = y)\<close>\<close>
+
+text \<open>The type variables in the printed entry carry the \<^emph>\<open>empty\<close> sort, which the
+  default printer renders indistinguishably from \<open>'a::type\<close> --- the transcript above
+  is the default printer's output.  A \<open>show_sorts\<close> rendering, explicitly enabled,
+  makes the empty sort \<open>'a::{}\<close> visible:\<close>
+
+declare [[show_sorts = true]]
+print_debt_axiom
+  \<comment> \<open>\<open>Debt_Axiom_Doc.le_add :
+       OFCLASS('a::{}, linorder_class) \<Longrightarrow> OFCLASS('b::{}, comm_monoid_add_class) \<Longrightarrow>
+       (\<And>(x::'a::{}) y::'b::{}. x \<le> x \<and> y + 0 = y)\<close>\<close>
+declare [[show_sorts = false]]
+
+text \<open>A polymorphic debt is discharged like any other debt.  The certificate may be
+  proved at a \<^emph>\<open>weaker\<close> sort than the debt demands --- here \<open>preorder\<close> in place of
+  \<open>linorder\<close> and \<open>monoid_add\<close> in place of \<open>comm_monoid_add\<close>; the residual \<open>OFCLASS\<close>
+  obligations are closed automatically through the class order.  The certificate of
+  a @{command discharge_debt_axiom} must be a \<^emph>\<open>named\<close> global fact: a literal fact
+  certificate (\<open>discharge_debt_axiom le_add : \<open>\<dots>\<close>\<close>) can never resolve there.\<close>
+
+lemma le_add_cert: \<open>(x::'a::preorder) \<le> x \<and> (y::'b::monoid_add) + 0 = y\<close>
+  by simp
+
+discharge_debt_axiom le_add : le_add_cert
+
+print_debt_axiom \<comment> \<open>Good job! No debt axiom is recorded.\<close>
+
 end

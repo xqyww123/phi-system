@@ -1,0 +1,26 @@
+# Captured 2026-09-02 on the FINAL post-review code via the headless PIDE
+# front end (Isabelle-MCP; Isabelle2025-2, HOL heap, Debt_Axiom loaded from
+# source).  Checklist item 4: the example theory evaluated CLEAN with zero
+# warnings.  All six print_debt_axiom outputs are recorded below; the two new
+# polymorphic ones (thy 151, 162) carry comment transcripts in the theory,
+# re-verified verbatim against these outputs, as do thy 74 (entry only, house
+# style) and thy 124/180 ("Good job!").  This run is the one exercise of the
+# for-fixes declaration form (for x :: 'a::linorder and y ::
+# 'b::comm_monoid_add -- the raw_fixes slot of gen_axioms) and of the
+# two-variable weaker-sort discharge (preorder for linorder AND monoid_add
+# for comm_monoid_add).
+
+print_debt_axiom  [thy line 74, the monomorphic tour]
+  1 axiom debt is recorded: Debt_Axiom_Doc.mk_int_inj : !!i. dest_int (mk_int i) = i
+print_debt_axiom  [thy line 104, after the array module]
+  2 axiom debts are recorded: Debt_Axiom_Doc.mk_int_inj : !!i. dest_int (mk_int i) = i   Debt_Axiom_Doc.mk_array_inj : !!x. dest_array (mk_array x) = x
+print_debt_axiom  [thy line 124, after both monomorphic discharges]
+  Good job! No debt axiom is recorded.
+print_debt_axiom  [thy line 151, default printer; comment transcript verbatim]
+  1 axiom debt is recorded: Debt_Axiom_Doc.le_add : OFCLASS('a, linorder_class) ==> OFCLASS('b, comm_monoid_add_class) ==> (!!x y. x <= x /\ y + 0 = y)
+print_debt_axiom  [thy line 162, show_sorts enabled; comment transcript verbatim]
+  1 axiom debt is recorded: Debt_Axiom_Doc.le_add : OFCLASS('a::{}, linorder_class) ==> OFCLASS('b::{}, comm_monoid_add_class) ==> (!!(x::'a::{}) y::'b::{}. x <= x /\ y + 0 = y)
+discharge_debt_axiom le_add : le_add_cert   [two-variable weaker-sort discharge]
+  (no output; SUCCESS)
+print_debt_axiom  [thy line 180]
+  Good job! No debt axiom is recorded.

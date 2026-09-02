@@ -1,0 +1,12 @@
+# Section 8.3-2: full-chain corpus run on the FINAL post-review patched tree
+# (the two rsynced files md5-verified against the local worktree:
+# Debt_Axiom.ML 413e90a2..., Debt_Axiom_Doc.thy 6cc92629...), cslh19,
+# 2026-09-02, same harness, launched right after the pre-dump capture.
+# Driver stdout (~/exp2_baseline_driver.log):
+ERRORS RETURNED: None
+ELAPSED 885.3 s
+# hard_restart.sh output (hr_patched.log):
+#   killing: 3022699 3022799 
+#   poly left: 0   port: 0
+#   REPL up (~20s)
+#   driver: 3063850

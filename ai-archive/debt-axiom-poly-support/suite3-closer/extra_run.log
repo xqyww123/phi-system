@@ -1,0 +1,75 @@
+val thy0 =
+   {Pure, HOL.Try0, Tools.Code_Generator, HOL.HOL, HOL.Orderings, HOL.Groups,
+     HOL.Lattices, HOL.Boolean_Algebras, HOL.Set, HOL.Fun,
+     HOL.Complete_Lattices, HOL.Ctr_Sugar, HOL.Typedef, HOL.Inductive,
+     HOL.Rings, HOL.Nat, HOL.Product_Type, HOL.Sum_Type, HOL.Fields,
+     HOL.Relation, HOL.Finite_Set, HOL.Transitive_Closure, HOL.Wellfounded,
+     HOL.Wfrec, HOL.Order_Relation, HOL.Hilbert_Choice,
+     HOL.BNF_Wellorder_Relation, HOL.BNF_Wellorder_Embedding, HOL.Zorn,
+     HOL.BNF_Wellorder_Constructions, HOL.BNF_Cardinal_Order_Relation,
+     HOL.BNF_Cardinal_Arithmetic, HOL.Fun_Def_Base, HOL.BNF_Def,
+     HOL.BNF_Composition, HOL.Basic_BNFs, HOL.BNF_Fixpoint_Base,
+     HOL.BNF_Least_Fixpoint, HOL.Meson, HOL.ATP, HOL.Basic_BNF_LFPs,
+     HOL.Metis, HOL.Equiv_Relations, HOL.Transfer, HOL.Lifting, HOL.Num,
+     HOL.Power, HOL.Complete_Partial_Order, HOL.Option, HOL.Argo,
+     HOL.Partial_Function, HOL.SAT, HOL.Quotient, HOL.Groups_Big,
+     HOL.Fun_Def, HOL.Int, HOL.Lattices_Big, HOL.Euclidean_Rings, HOL.Parity,
+     HOL.Numeral_Simprocs, HOL.Semiring_Normalization, HOL.Groebner_Basis,
+     HOL.Set_Interval, HOL.Presburger, HOL.Try0_HOL, HOL.SMT,
+     HOL.Sledgehammer, HOL.Lifting_Set, HOL.List, HOL.Groups_List,
+     HOL.Bit_Operations, HOL.Code_Numeral, HOL.Map, HOL.Enum, HOL.String,
+     HOL.Predicate, HOL.Lazy_Sequence, HOL.Typerep, HOL.Limited_Sequence,
+     HOL.Random, HOL.Code_Evaluation, HOL.Quickcheck_Random, HOL.Random_Pred,
+     HOL.Random_Sequence, HOL.Quickcheck_Exhaustive, HOL.Predicate_Compile,
+     HOL.Record, HOL.GCD, HOL.Nitpick, HOL.Factorial,
+     HOL.Quickcheck_Narrowing, HOL.Mirabelle, HOL.Extraction, HOL.Nunchaku,
+     HOL.BNF_Greatest_Fixpoint, HOL.Filter,
+     HOL.Conditionally_Complete_Lattices, HOL.Binomial, Main}: theory
+val ctxt0 = <context>: Proof.context
+val stripped_sorts = fn:
+   theory ->
+     term ->
+       (typ * typ) list * (((string * int) * class list) * ctyp) list * term
+common.ML:24: warning: Matches are not exhaustive. Found near fn (TFree (_, ...), T) => (T, S)
+val ledger_form = fn: theory -> term -> term
+val ofclass_close_tac = fn: Proof.context -> int -> tactic
+val discharge_tac = fn: Proof.context -> thm list -> tactic
+val prep_cert = fn: thm -> thm
+datatype outcome = FAILED of string | PROVED of bool
+val show = fn: outcome -> string
+val run_prove = fn: term -> tactic -> outcome
+val residue = fn: term -> tactic -> string
+val rp = fn: string -> term
+val prove_cert = fn: string -> (Proof.context -> tactic) -> thm
+val case_run = fn: string -> term -> thm -> unit
+val case_run_goal = fn: string -> term -> thm -> unit
+val equal_eq =
+   "HOL.Trueprop (HOL.eq (HOL.equal_class.equal ?x ?y) (HOL.eq ?x ?y))": thm
+val finite_UNIV = "HOL.Trueprop (Finite_Set.finite Orderings.top_class.top)":
+   thm
+val refl = "HOL.Trueprop (HOL.eq ?t ?t)": thm
+of_sort ('a::equal) list :: equal: true
+== CASE E1 (composite 'a list, class equal)
+  ledger goal: OFCLASS('a, equal_class) \<Longrightarrow>
+(\<And>x y. equal_class.equal x y = (x = y))
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE E2 (nested composite 'a option option, class finite)
+  ledger goal: OFCLASS('a, finite_class) \<Longrightarrow> finite top
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+val cert_e3 =
+   "HOL.Trueprop (HOL.eq ?x ?y) \<Longrightarrow>
+      HOL.Trueprop
+       (HOL.eq (Groups.plus_class.plus ?x Groups.zero_class.zero) ?y)": thm
+cert_e3: ?x = ?y \<Longrightarrow> ?x + 0 = ?y
+== CASE E3 (poly + premised: debt comm_monoid_add, cert monoid_add)
+  ledger goal: OFCLASS('a, comm_monoid_add_class) \<Longrightarrow>
+(\<And>x y. x = y \<Longrightarrow> x + 0 = y)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+== CASE E4 (bare var at sort {type}, cert refl)
+  ledger goal: OFCLASS('a, type_class) \<Longrightarrow> (\<And>x. x = x)
+  production ares_tac: FAILED [ERROR: Tactic failed]
+  new recipe:          PROVED (exact aconv: yes)
+EXTRA DONE

@@ -1,0 +1,19 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end; "(no output)" means the command succeeded silently.
+# Theory result: CLEAN (the premised monomorphic discharge SUCCEEDS after the
+# patch; before the patch this same file failed at the discharge, see
+# TRANSCRIPTS.md).
+
+print_debt_axiom  [before declaration]
+  Good job! No debt axiom is recorded.
+debt_axiomatization before1: <n < m ==> n <= (m::nat)>
+  (no output)
+print_debt_axiom
+  1 axiom debt is recorded: Before_T1.before1 : !!n m. n < m ==> n <= m
+lemma before1_cert ... by (rule less_imp_le)
+  (clean)
+discharge_debt_axiom before1 : before1_cert
+  (no output; SUCCESS)
+print_debt_axiom
+  Good job! No debt axiom is recorded.

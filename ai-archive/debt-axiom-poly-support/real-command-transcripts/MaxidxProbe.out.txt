@@ -1,0 +1,12 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end; "(no output)" means the command succeeded silently.
+# Endpoint demonstration for the maxidx formula/observation gap: the noted
+# global fact keeps maxidx -1 while the theorem the recovery chain returns
+# carries the varifyT_global bump to 0.  The full source trace of the cause
+# (Goal.norm_result -> Drule.zero_var_indexes -> Thm.adjust_maxidx_thm ~1 in
+# the noting pipeline) is recorded in ledger_dump.diff.
+
+ML block:
+  noted maxidx = ~1
+  chain maxidx = 0

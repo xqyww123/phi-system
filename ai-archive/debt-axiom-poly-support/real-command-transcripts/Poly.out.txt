@@ -1,0 +1,43 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end.
+# Theory result: only the designed negative (line 44) errors; the four
+# debt_axiomatization lines carry Isabelle's standard "Introduced fixed type
+# variable(s)" warning (specification mechanism, unrelated to the patch).
+
+debt_axiomatization comm: <x + y = y + (x::'a::comm_monoid_add)>   [= suite 1 C1's input]
+  warning: Introduced fixed type variable(s): 'a in "x" or "y"
+thm comm
+  ?x + ?y = ?y + ?x
+declare [[show_sorts = true]] ; thm comm ; declare [[show_sorts = false]]
+  (?x::?'a::comm_monoid_add) + (?y::?'a::comm_monoid_add) = ?y + ?x
+  (K6: 8.4-1's "returned theorem = user-stated sorted form" witnessed in
+  situ -- the sort survives on the returned fact)
+print_debt_axiom
+  1 axiom debt is recorded: Poly.comm : OFCLASS('a, comm_monoid_add_class) ==> (!!x y. x + y = y + x)
+debt_axiomatization two: <(x::'a::linorder) <= x /\ (y::'b::comm_monoid_add) + 0 = y>
+  warning: (as above)
+thm two
+  ?x <= ?x /\ ?y + 0 = ?y
+print_debt_axiom
+  2 axiom debts are recorded: Poly.two : OFCLASS('a, linorder_class) ==> OFCLASS('b, comm_monoid_add_class) ==> (!!x y. x <= x /\ y + 0 = y)   Poly.comm : (as above)
+lemma use_nat / use_int ... by (rule comm)
+  (clean -- the polymorphic debt used at nat and int)
+discharge_debt_axiom comm : add.commute   [strictly weaker certificate sort]
+  (no output; SUCCESS)
+print_debt_axiom
+  1 axiom debt is recorded: Poly.two : (as above)
+debt_axiomatization setrefl: <(x::'a set) <= x>
+  warning: (as above)
+discharge_debt_axiom setrefl : order_refl   [composite obligation OFCLASS('a set, preorder)]
+  (no output; SUCCESS)
+debt_axiomatization neg: <x + y = y + (x::'a::ab_semigroup_add)>
+  warning: (as above)
+lemma strong_comm ... by (rule add.commute)
+  (clean)
+discharge_debt_axiom neg : strong_comm   [certificate sort strictly exceeds]
+  ERROR: discharge_debt_axiom: discharging "Poly.neg" by strong_comm failed:
+  Proof failed.
+   1. !!x y. OFCLASS('a, ab_semigroup_add_class) ==> OFCLASS('a, comm_monoid_add_class)
+print_debt_axiom
+  2 axiom debts are recorded: Poly.neg : ...   Poly.two : ...

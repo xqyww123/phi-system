@@ -1,0 +1,3 @@
+### spec-rule props (Spec_Rules.get, all classifications): 1945, disagreements: 0
+### global-fact props (Global_Theory.all_thms_of thy false): 24875, disagreements: 0
+### DONE

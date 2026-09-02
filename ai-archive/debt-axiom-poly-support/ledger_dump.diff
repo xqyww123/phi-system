@@ -1,0 +1,78 @@
+# Ledger dump comparison verdict (plan section 8.3-1)
+
+Date: 2026-09-02.  Captures: cslh19, Phi_System_Base REPL heap, both dumps
+produced by `Ledger_Dump.thy` (importing `PhiEx_All`) via `ledger_dump.py`;
+comparison by `compare_dumps.py` (this directory).
+
+This is the FINAL pair, taken after the implementation review's approved
+fixes landed (M4, m7, m8, R2-R5): `ledger_dump.pre.txt` on the clean tree
+(production Debt_Axiom, right after the baseline corpus run,
+`corpus_run_baseline.out.txt`); then the two patched files rsynced
+(md5-verified on both ends: Debt_Axiom.ML 413e90a2..., Debt_Axiom_Doc.thy
+6cc92629...; `git status -- Debt_Axiom/` on cslh19 shows exactly these two
+modified); REPL restarted by `hard_restart.sh`, whose corpus run is the
+section 8.3-2 evidence (`corpus_run_patched.out.txt`); then
+`ledger_dump.post.txt` on the patched REPL.  Between the captures the
+worktree differs only by the patch; heap and imported theory set are
+unchanged.  An interim pair taken on the pre-review patch was superseded by
+this one and is not kept; its corpus run survives as
+`corpus_run_interim.out.txt`.
+
+## Verdict: PASS — zero observable deviation, on two independent witnesses
+
+- 110 ledger entries in both captures; entry-name sets identical.
+- Per LEDGER ENTRY: `prop_ml` (exact ML constructor syntax, all types and
+  sorts) byte-identical; `Term.maxidx_of_term` unchanged (all 110 are -1:
+  every corpus debt is monomorphic — polymorphic declaration was impossible
+  before this patch).  `prop_pretty` byte-identical after normalizing the
+  two session-local serial families (below) — the rendering-level witness
+  (review adoption R6), a REQUIRED check, not informational.
+- Per DEBT FACT: `prop_ml`, tags, shyps, hyps count, and `Thm.maxidx_of`
+  ALL identical — zero flips, strictly less deviation than the plan's
+  acceptance formula `maxidx' = Int.max (0, maxidx)` allowed.
+- The 3 `FACT: NONE` entries (ledger names with no like-named global fact;
+  the resource_space creation path) are the same 3 in both captures.
+
+## Root cause of the maxidx formula/observation gap (source trace)
+
+Every noted fact passes through `Goal.norm_result`
+(`Generic_Target.notes`, generic_target.ML:363), which ends in
+`Drule.zero_var_indexes` (goal.ML:93-97), which ends in
+`Thm.adjust_maxidx_thm ~1` (drule.ML:206-220) — the cached maxidx bound is
+recomputed exactly.  So section 8.1 C3's chain-level flip (`varifyT_global`
+bumps the returned theorem's bound to 0 even when it is the identity) never
+reaches the stored fact.  `real-command-transcripts/MaxidxProbe.thy`
+exhibits the two endpoints (chain 0, noted -1); the trace above, not the
+probe, is the verification.
+
+## The session-local serial families in prop_pretty
+
+`prop_pretty` strings carry PIDE YXML markup with two per-session serial
+families: `entity ref=<serial>` (assigned when an entity is printed) and
+`def_id=<serial>` (a per-theory-load Document_ID allocated inside the
+parallel theory schedule, thy_info.ML:361-363, surfaced by position.ML:232).
+`compare_dumps.py` normalizes both and then requires byte equality; the
+residue on this pair is zero.  Visible text and structure are identical
+either way, and `prop_ml` independently proves the underlying terms equal.
+
+## Scope note
+
+The corpus contains no `discharge_debt_axiom` command, so the dump diff and
+the corpus runs are DECLARATION-path evidence only; the discharge path's
+evidence is `real-command-transcripts/` (asserted message texts, the
+premised/weaker-sort/composite discharges, and the negatives).
+
+## Post-acceptance touch-ups (2026-09-02, re-review findings K2/K3)
+
+After this pair was captured (Debt_Axiom.ML at md5 413e90a2...), two
+re-review cleanups changed Debt_Axiom.ML (final md5 d1e1d605...):
+K2 replaces the certificate-description position guard with a case on
+`Position.here`'s own result — a string builder on the discharge ERROR path,
+which the corpus never reaches (no `discharge_debt_axiom` in it); K3 rebuilds
+`ledger_form`'s recover closure with the exhaustive `map2` over the
+name/sort lists instead of destructuring `strip` — value-identical by
+construction, since `strip = map (apply2 TFree) (tfrees ~~ tfrees')` makes
+the two traversals enumerate the same pairs in the same order.  Neither can
+affect a declaration-path capture, so this pair remains the valid section
+8.3-1 artifact for the final code; all real-command transcripts and their
+`.out.txt` captures WERE re-run on the final (d1e1d605) code.

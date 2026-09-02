@@ -1,0 +1,16 @@
+# Captured 2026-09-02 on the FINAL post-review code (Isabelle2025-2, HOL heap,
+# headless PIDE; Debt_Axiom loaded from source).  Per-command outputs as
+# returned by the front end; "(no output)" means the command succeeded silently.
+# Theory result: CLEAN (mono debt x polymorphic library certificate still
+# succeeds -- the production-baseline regression guard).
+
+print_debt_axiom  [before declaration]
+  Good job! No debt axiom is recorded.
+debt_axiomatization before2: <(x::nat) + y = y + x>
+  (no output)
+print_debt_axiom
+  1 axiom debt is recorded: Before_T2.before2 : !!x y. x + y = y + x
+discharge_debt_axiom before2 : add.commute
+  (no output; SUCCESS)
+print_debt_axiom
+  Good job! No debt axiom is recorded.
