@@ -231,21 +231,22 @@ fun eval_line' (cfg, auto_lev, auto_lev_no_input) toks stat0 =
      |> apfst (Phi_Opr_Stack.Data.put (#1 opr_ctxt))
     end
 
-(*record point (EVENT_LOG_PLAN 7): the outermost funnel of every \<phi>
-  statement command -- the traceless backstop for exceptions no capture site
-  below has seen (one that was already recorded below appears twice, with the
-  two sites telling the story; the frame-carrying variant of this site is the
-  PLAN 10.4 experiment)*)
+(*record point (EVENT_LOG_PLAN 7 / PLAN 10.4, made frame-carrying 2026-09-02):
+  the outermost funnel of every \<phi> statement command.  Now the outermost
+  FRAME capture on the statement thread: any exception that escapes every
+  deeper capture site is recorded here WITH its stack -- the net that finally
+  catches the ancient traceless `the NONE` (exn Option).  Consequence of the
+  single-slot frame trace_var (verified in exn_debugger.ML): this owns the
+  slot, so same-thread deeper sites (e.g. Phi_Reasoner.reason) pass through
+  and no longer record separately -- their frames now ride this record under
+  one generic site name instead of their own.  Racer sites run on fork
+  threads (own trace_var) and are unaffected.  Happy-path cost is O(1) per
+  statement (start/stop_trace only fire in the exception branch).*)
 fun eval_line args toks =
   Phi_CP_IDE.call_of_state_sequent (fn stat0 =>
-    (case Exn.capture_body (fn () => eval_line' args toks stat0) of
-       Exn.Res r => r
-     | Exn.Exn exn =>
-         ((if Exception_Log.default_record exn
-           then Event_Log.append Exception_Log.category
-                  {site = "\<phi> statement", exn = exn, trace = []}
-           else ());
-          Exn.reraise exn)))
+    Exception_Log.capture
+      {site = "\<phi> statement", record = Exception_Log.default_record}
+      (fn () => eval_line' args toks stat0))
 
 (*
 
