@@ -18,11 +18,14 @@ definition op_sel :: "TY \<Rightarrow> (VAL \<times> VAL \<times> VAL, VAL) proc
 
 subsection \<open>Branch\<close>
 
-definition op_if :: "'ret proc
+definition op_if :: "TY list
+                  \<Rightarrow> 'ret::FIX_ARITY_VALs proc
                   \<Rightarrow> 'ret proc
                   \<Rightarrow> (VAL,'ret) proc'"
-  where "op_if brT brF v =
-    \<phi>M_getV \<bool'> sem_dest_bool v (\<lambda>c. (if c then brT else brF))"
+  where "op_if TY brT brF v =
+    \<phi>M_getV \<bool'> sem_dest_bool v (\<lambda>c. (if c then brT else brF)) \<bind> (\<lambda>v.
+    \<phi>M_assert (v \<in> Well_Typed_Vals TY) \<then>
+    Return v)"
 
 subsection \<open>While Loop\<close>
 
@@ -110,20 +113,29 @@ lemma branch_\<phi>app:
   \<open> (\<premise>   C \<longrightarrow> \<proc> br\<^sub>T \<lbrace> X \<longmapsto> Y\<^sub>T \<rbrace> \<throws> E\<^sub>T )
 \<Longrightarrow> (\<premise> \<not> C \<longrightarrow> \<proc> br\<^sub>F \<lbrace> X \<longmapsto> Y\<^sub>F \<rbrace> \<throws> E\<^sub>F )
 \<Longrightarrow> (\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<transforms> Y v @tag invoke_br_join)
-\<Longrightarrow> \<proc> op_if br\<^sub>T br\<^sub>F rawc \<lbrace> C \<Ztypecolon> \<val>[rawc] \<bool>\<heavy_comma> X \<longmapsto> Y \<rbrace> \<throws> (\<lambda>e. (E\<^sub>T e \<subj> C) + (E\<^sub>F e \<subj> \<not> C)) \<close>
-  unfolding op_if_def Premise_def Action_Tag_def
-  by (cases rawc; cases C; simp; rule; simp add: \<phi>expns WT_bool;
-      insert \<phi>CONSEQ view_shift_by_implication view_shift_refl; blast)
+\<Longrightarrow> Semantic_Types Y\<^sub>T TY
+\<Longrightarrow> Semantic_Types Y\<^sub>F TY
+\<Longrightarrow> \<proc> op_if TY br\<^sub>T br\<^sub>F rawc \<lbrace> C \<Ztypecolon> \<val>[rawc] \<bool>\<heavy_comma> X \<longmapsto> Y \<rbrace> \<throws> (\<lambda>e. (E\<^sub>T e \<subj> C) + (E\<^sub>F e \<subj> \<not> C)) \<close>
+  unfolding op_if_def Premise_def Action_Tag_def Semantic_Types_def
+  by ((cases rawc; cases C; simp; rule), rule, simp add: \<phi>expns, blast, simp,
+    (insert "_\<phi>cast_proc_return_internal_rule_" \<r>Success_I, blast)[1],
+    rule, simp, blast, simp,
+    (insert "_\<phi>cast_proc_return_internal_rule_" \<r>Success_I, blast)[1])
 
 proc "if":
   requires C: \<open>\<proc> cond \<lbrace> X \<longmapsto> \<val> C \<Ztypecolon> \<bool>\<heavy_comma> X1 \<rbrace> \<throws> E \<close>
       and brT: \<open>\<premise>   C \<longrightarrow> \<proc> brT \<lbrace> X1 \<longmapsto> Y\<^sub>T \<rbrace> \<throws> E\<^sub>T \<close>
       and brF: \<open>\<premise> \<not> C \<longrightarrow> \<proc> brF \<lbrace> X1 \<longmapsto> Y\<^sub>F \<rbrace> \<throws> E\<^sub>F \<close>
       and BC: \<open>(\<And>v. If C (Y\<^sub>T v) (Y\<^sub>F v) \<transforms> Y v @tag invoke_br_join)\<close>
+      and HT1: \<open>Semantic_Types Y\<^sub>T TY\<close>
+      and HT2: \<open>Semantic_Types Y\<^sub>F TY\<close>
   input  \<open>X\<close>
   output \<open>Y\<close>
   throws \<open>E + E\<^sub>T + E\<^sub>F\<close>
-  \<medium_left_bracket> C branch brT brF BC \<medium_right_bracket> .
+  for Y\<^sub>T :: \<open>'a::FIX_ARITY_VALs \<phi>arg \<Rightarrow> assn\<close>
+  \<medium_left_bracket> C
+    apply_rule branch[OF _ _ _ HT1 HT2] brT brF BC
+  \<medium_right_bracket> .
 
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>if\<close>, 3))\<close>
 

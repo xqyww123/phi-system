@@ -502,9 +502,16 @@ lemma [\<phi>reason 1200]:
 \<Longrightarrow> Semantic_Types_i (\<lambda>vs. S\<heavy_comma> R vs) TYs\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def by clarsimp
 
-lemma [\<phi>reason 2000]:
-  \<open> Semantic_Types_i (\<lambda>_::unit \<phi>arg. Void) []\<close>
+lemma [\<phi>reason 2000 for \<open>Semantic_Types_i (\<lambda>_. ?X) _\<close>]:
+  \<open> Semantic_Types_i (\<lambda>_::unit \<phi>arg. X) []\<close>
   unfolding Semantic_Types_i_def Semantic_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
+
+lemma [\<phi>reason 2000 for \<open>Semantic_Types (\<lambda>_. ?X) _\<close>]:
+  \<comment> \<open>A unit-arity specification carries no value, so its type list is \<open>[]\<close> whether or not
+      it is satisfiable; the satisfiability guard of the generic rule would otherwise leave
+      the list schematic when every branch of an \<open>if\<close> returns.\<close>
+  \<open> Semantic_Types (\<lambda>_::unit \<phi>arg. X) []\<close>
+  unfolding Semantic_Types_def Well_Typed_Vals_def to_vals_unit_def by clarsimp
 
 lemma [\<phi>reason 1020 except \<open>Semantic_Types_i (\<lambda>vs. ?A vs\<heavy_comma> ?B vs) _\<close>]:
   \<open> Semantic_Types_i (\<lambda>vs. R vs\<heavy_comma> Void) TYs
