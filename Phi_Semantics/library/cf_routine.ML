@@ -72,9 +72,9 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
     val ctxt' = Context.proof_map (
                         Generic_Variable_Access.Process_of_Argument.put
                            (SOME Generic_Variable_Access.store_value_and_clean)) ctxt0
-   in sequent1
-   |> Phi_Reasoner.reason NONE NONE ctxt0
-   |> (fn SOME ret => (ctxt', ret)
+   in (ctxt0, sequent1)
+   |> Phi_Reasoner.reason NONE NONE
+   |> (fn SOME (_, ret) => (ctxt', ret)
         | NONE => Phi_Reasoner.error "Fail to apply the routine modifier.")
   end
 

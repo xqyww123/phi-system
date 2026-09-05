@@ -14,8 +14,9 @@ fun make_zero_value ctxt goal =
   in @{thm \<phi>deduce_zero_value}
   |> Thm.incr_indexes idx
   |> Drule.infer_instantiate ctxt [(("TY",idx),TY), (("T",idx),T), (("x",idx),x)]
-  |> Phi_Reasoner.reason NONE (SOME 1) ctxt
-  |> (fn SOME s => s
+  |> pair ctxt
+  |> Phi_Reasoner.reason NONE (SOME 1)
+  |> (fn SOME (_, s) => s
        | NONE => error (Pretty.string_of (Pretty.block [
            Pretty.str "The rule of the semantic type of ",
            Syntax.pretty_term ctxt (Thm.term_of T),

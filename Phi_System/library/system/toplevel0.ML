@@ -193,8 +193,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                     (*This beta eta contraction may be not good, cuz it may remove names of quantified
                       variables but I cannot find a better and simpler way to do this implication
                       elimination.*)
-                val sequent'3 = Phi_Reasoner.reason NONE (SOME 1) ctxt sequent''
-                       |> (fn SOME X => X
+                val sequent'3 = Phi_Reasoner.reason NONE (SOME 1) (ctxt, sequent'')
+                       |> (fn SOME (_, X) => X
                             | NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
                                   Pretty.str "Fail to reason the finalization reasoning tasks:",
                                   Syntax.pretty_term ctxt (Thm.major_prem_of sequent'')
@@ -294,10 +294,10 @@ fun gen_finish_proc prep_term qed spec int stat =
                     attack_obligations ctxt (Phi_Envir.solve_obligation Phi_ID.no_key ctxt sequent)
                  | _ => sequent
             val sequent_pre2 = attack_obligations ctxt sequent_pre1
-            in Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
+            in snd (Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
                     Pretty.str "Fail to solve pending antecedents:",
                     Thm.pretty_thm ctxt sequent_pre2
-               ])) NONE NONE ctxt sequent_pre2
+               ])) NONE NONE (ctxt, sequent_pre2))
             end
         val (ctxt',sequent') = Phi_Sys.move_lemmata Position.none (ctxt, sequent)
         val (ctxt'',sequent'') = sequent'

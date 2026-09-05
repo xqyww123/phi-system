@@ -21,8 +21,8 @@ fun gen_memoize_safe f (ctxt, sequent) =
    then NONE
    else case Phi_Reasoner.reason (SOME (fn _ => Phi_Reasoner.bad_config "\<r>Success is not allowed during memoization reasoning",
                                         Phi_Reasoner.default_global_cut_handler))
-                                 NONE ctxt (Goal.init goal)
-     of SOME ret' =>
+                                 NONE (ctxt, Goal.init goal)
+     of SOME (_, ret') =>
           let val ret = Goal.conclude ret'
               val save = ret
                       |> Thm.forall_intr_vars

@@ -15,7 +15,7 @@ open Phi_CoP_Simp
 
 fun force_invoke (ctxt, mode) sequent =
   let val sequent' = @{thm' \<A>simp_invoke} RS (sequent RS' (ctxt, #transformation_rule mode))
-   in Phi_Reasoner.reason1 (fn () => "Simplification fails") NONE (SOME 1) ctxt sequent'
+   in snd (Phi_Reasoner.reason1 (fn () => "Simplification fails") NONE (SOME 1) (ctxt, sequent'))
   end
 
 fun invoke_when_needed (ctxt, mode) sequent =

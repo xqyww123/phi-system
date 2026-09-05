@@ -494,9 +494,9 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                  case is_reasoning_goal
                                    of SOME err_term =>
                                       thm'2 |> Thm.permute_prems 0 i
+                                            |> pair (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
                                             |> Phi_Reasoner.reason NONE (SOME delt)
-                                                                   (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
-                                            |> (fn SOME th => th
+                                            |> (fn SOME (_, th) => th
                                                  | NONE =>
                                                     let open Pretty
                                                      in case err_term

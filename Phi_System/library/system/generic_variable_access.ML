@@ -349,7 +349,9 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                        | _ => @{thm transformation_bi_frame}
                               val m = Thm.nprems_of rule
                            in (rule RS (bi_prod_rule RS thm))
-                           |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m) ctxt
+                           |> pair ctxt
+                           |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m)
+                           |> snd
                            |> gen_rule (num - 1)
                           end
                        | _ => gen_rule num (@{thm transformation_left_frame} RS thm)
@@ -362,7 +364,9 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                           let val rule = if remove then remove_rule else no_remove_rule
                               val m = Thm.nprems_of rule
                            in (rule RS thm)
-                           |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m) ctxt
+                           |> pair ctxt
+                           |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m)
+                           |> snd
                           end
                        | _ => @{thm transformation_refl} RS thm
                       )

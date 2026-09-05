@@ -539,6 +539,7 @@ text \<open>Below we provide a set of predefined reasoner groups serving for def
 section \<open>Introduction\<close>
 
 ML_file \<open>library/tools/statistics.ML\<close>
+ML_file \<open>library/context_export.ML\<close>
 ML_file \<open>library/reasoner.ML\<close>
 ML_file \<open>library/tools/helpers1.ML\<close>
 

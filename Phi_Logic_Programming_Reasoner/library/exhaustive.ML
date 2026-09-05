@@ -61,12 +61,14 @@ fun reason_exhaustively goals_num (ctxt,sequent) =
      val ctxt' = ctxt
               |> Config.put PLPR_exhaustive_mode true
               |> Reached_Branches.map (fn L => branches :: L)
+     (*each branch's context is exported and dropped: the branches have no single context
+       to return, so reason_exhaustively keeps returning a theorem only*)
      fun success_handler (ctxt',sequent) = (
                     Synchronized.change (hd (Reached_Branches.get ctxt'))
-                              (fn L => singleton (Proof_Context.export ctxt' ctxt) sequent :: L) ;
+                              (fn L => snd (PLPR_Context_Export.export_state ctxt' ctxt sequent) :: L) ;
                     raise Phi_Reasoner.Explorative_Backtrack )
      val _ = Phi_Reasoner.reason (SOME (success_handler, Phi_Reasoner.default_global_cut_handler))
-                                 NONE ctxt' sequent'
+                                 NONE (ctxt', sequent')
            |> (fn SOME _ => error "Internal bug b4c19005-f87c-4c03-9012-8fa0280a3154"
                 | NONE => ())
 

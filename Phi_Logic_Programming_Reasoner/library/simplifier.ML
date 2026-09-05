@@ -72,9 +72,9 @@ fun simplification {simp_conj_items, fix_vars} fallback F ctxt sequent = Seq.mak
    |> (fn th => case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
                   of SOME ret => SOME (ret, Seq.empty)
                    | NONE => 
-                (case Phi_Reasoner.reason NONE (SOME 1) ctxt
-                        (@{thm End_Simplification''} RS' (ctxt, th))
-                   of SOME ret => SOME (ret, Seq.empty)
+                (case Phi_Reasoner.reason NONE (SOME 1)
+                        (ctxt, @{thm End_Simplification''} RS' (ctxt, th))
+                   of SOME (_, ret) => SOME (ret, Seq.empty)
                     | NONE => Seq.pull (fallback th)))
   end
 )

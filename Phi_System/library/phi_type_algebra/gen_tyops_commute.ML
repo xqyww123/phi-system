@@ -151,8 +151,8 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
       val idx_F = Thm.maxidx_of_cterm F_cterm + 1
       val rule = apply2 (Drule.infer_instantiate ctxt [(("F",idx_F),F_cterm)] o Thm.incr_indexes idx_F) rule
 
-      fun gen_rule th = case Phi_Reasoner.reason NONE NONE ctxt th
-                          of SOME ret => ret
+      fun gen_rule th = case Phi_Reasoner.reason NONE NONE (ctxt, th)
+                          of SOME (_, ret) => ret
                            | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR fails"])
       val rule = apply2 gen_rule rule
 

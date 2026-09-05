@@ -78,7 +78,7 @@ fun try_apply [] _ _ = NONE
         "Reasoning generic applications..." ^ Position.here \<^here>);
       PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning ctxt sequent) apps)
         |> (fn NONE => NONE
-             | SOME ret => (
+             | SOME (_, ret) => (
                  (if exists (fn app => can Phi_Syntax.dest_procedure (Thm.concl_of app)) apps
                   then (
                     PLPR_Statistics.stop_recording_a_semantic_operation ctxt ;

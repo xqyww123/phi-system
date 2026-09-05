@@ -114,24 +114,20 @@ signature NU_REASONER = sig
              -> int option (*N*)
              -> context_state
              -> context_state option
+  (*the run boundary: the result is exported onto the given context by
+    PLPR_Context_Export.export_state, so the context part carries whatever the
+    registered hooks transplant out of the run.  A caller that does not need the
+    context writes the discard (\<open>Option.map snd\<close> / \<open>snd\<close>) itself.*)
   val reason  : handlers option
              -> int option (*N*)
-             -> Proof.context -> thm -> thm option
+             -> context_state -> context_state option
   val reason1 : (unit -> string) (*error message*)
              -> handlers option
              -> int option (*N*)
-             -> Proof.context -> thm -> thm
-  val internal_reason_s :
-                 handlers option
-              -> Proof.context (*the context for accessing reasoner db*)
-              -> (Proof.context -> 'a * context_state Seq.seq)
-              -> 'a * context_state option
-  val reason_sXXX : 
-                 handlers option
-              -> Proof.context (*the context for accessing reasoner db*)
-              -> (Proof.context -> 'a * context_state Seq.seq)
-              -> 'a * thm option
-  (*Note it returns at most one state in the returned sequence.*)
+             -> context_state -> context_state
+  (*Note it returns at most one state in the returned sequence.
+    The result is exported onto the context of the goal state (not the method's
+    static context).*)
   val reason_tac : handlers option
               -> int option (*N*)
               -> Proof.context (*the context for accessing reasoner db*)
@@ -944,35 +940,24 @@ fun reason_record exn =
   | Explorative_Backtrack => false
   | _ => true)
 
-fun reason handlers num ctxt sequent =
+fun reason handlers num (ctxt, sequent) =
   Exception_Log.capture {site = "Phi_Reasoner.reason", record = reason_record}
     (fn () =>
       case internal_reason handlers num (ctxt,sequent)
         of SOME (ctxt', sequent') =>
-                   SOME (singleton (Proof_Context.export ctxt' ctxt) sequent')
+                   SOME (PLPR_Context_Export.export_state ctxt' ctxt sequent')
          | NONE => NONE)
 
-fun reason1 G handlers N ctxt sequent =
+fun reason1 G handlers N s =
   Exception_Log.capture {site = "Phi_Reasoner.reason1", record = reason_record}
     (fn () =>
-      case reason handlers N ctxt sequent of SOME x => x | NONE => error (G ()))
-
-fun internal_reason_s handlers ctxt seqs =
-  let val (ret,seqs') = seqs ctxt
-   in (ret, gen_reason' handlers ctxt 0 [[ seqs' ]])
-  end
-
-fun reason_sXXX handlers ctxt seqs =
-  case internal_reason_s handlers ctxt seqs
-    of (ret, SOME ( ctxt', sequent')) =>
-               (ret, SOME (singleton (Proof_Context.export ctxt' ctxt) sequent'))
-     | (ret, NONE) => (ret, NONE)
+      case reason handlers N s of SOME x => x | NONE => error (G ()))
 
 fun reason_tac handlers N ctxt stat = Seq.make (fn () =>
       gen_reason' handlers ctxt (num_of_protected_prems (snd stat) N)
                   [[ (Seq.single stat) ]]
-       |> Option.map ( Seq.Result
-                    #> rpair Seq.empty)
+       |> Option.map (fn (ctxt', sequent') =>
+              (Seq.Result (PLPR_Context_Export.export_state ctxt' (fst stat) sequent'), Seq.empty))
     )
 
 
@@ -1429,7 +1414,7 @@ val _ = Theory.setup (
 
 #> Attrib.setup \<^binding>\<open>\<phi>reasoned\<close> (Scan.lift Parse.nat >> (fn N =>
     Thm.rule_attribute [] (fn ctxt => fn rule =>
-      reason1 (fn () => "\<phi>-LPR reasoning fails") NONE (SOME N) (Context.proof_of ctxt) rule)))
+      snd (reason1 (fn () => "\<phi>-LPR reasoning fails") NONE (SOME N) (Context.proof_of ctxt, rule)))))
   "Eliminate leading N antecedents by \<phi>-LPR reasoning"
 
 #> Method.setup \<^binding>\<open>\<phi>reason\<close>

@@ -278,7 +278,9 @@ fun gen_constructor kind settings cfg stat =
                         ((("constructor", 0), \<^typ>\<open>VAL list \<Rightarrow> VAL\<close>), ctor),
                         ((("args", 0), \<^typ>\<open>VAL \<phi>arg list\<close>), args)
                       ])
-                  |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1) ctxt''
+                  |> pair ctxt''
+                  |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1)
+                  |> snd
          in (oprs, (ctxt' (*not ctxt''!*), Phi_Apply.apply1 [rule'] ctxt'' sequent))
         end
         | invoke _ _ = error "BUG 2CG4WNzYQqirWulpFUkQQA"

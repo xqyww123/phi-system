@@ -68,9 +68,9 @@ fun extract_implied_fact {wrap_all} ctxt statement0 =
               Pretty.str "Extracting implied pure facts from:",
               Syntax.pretty_term ctxt (Thm.prop_of statement)
           ])
-   in (statement RS' (ctxt, Do_Extract_Implied_Facts))
-   |> Phi_Reasoner.reason NONE (SOME 1) ctxt
-   |> Option.map (fn th =>
+   in (ctxt, statement RS' (ctxt, Do_Extract_Implied_Facts))
+   |> Phi_Reasoner.reason NONE (SOME 1)
+   |> Option.map (fn (_, th) =>
         let val ths = PLPR_Syntax.elim_ant_sequence_or_HOL_conj th
             val simp = Simplifier.full_simplify (Inhabitance_SS.enhance ctxt addsimps Useful_Thms.get ctxt)
                     #> PLPR_Syntax.elim_ant_sequence_or_HOL_conj
@@ -111,8 +111,8 @@ fun generate_extraction_rule ctxt0 thm0 =
               |> Thm.permute_prems 0 n
               |> Thm.permute_prems 2 (~n)
    in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE NONE
-                           (Config.put is_generating_extraction_rule true ctxt)
-                           state
+                           (Config.put is_generating_extraction_rule true ctxt, state)
+   |> snd
    |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
         HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt)
    |> singleton (Variable.export ctxt ctxt0)

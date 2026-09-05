@@ -2511,8 +2511,8 @@ setup \<open>Context.theory_map (
                                                  chunks [para "Fail to solve a \<phi>-LPR antecedent",
                                                          Thm.pretty_thm ctxt sequent]
                                                ) end)
-                                     NONE (SOME 1) ctxt sequent
-                |> (fn sequent =>
+                                     NONE (SOME 1) (ctxt, sequent)
+                |> (fn (_, sequent) =>
                         raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, sequent)) ))
              else (ctxt, sequent0)
           end

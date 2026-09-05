@@ -238,7 +238,6 @@ val default_reasoning :
 *)
 val pure_PLPR_reasoning : int -> reasoning
 
-val pure_PLPR_reasoner : reasoner
 val exhaustive_PLPR_reasoner : int option -> (int -> term -> unit) (*chk*) -> reasoner (*TODO: supports chk*)
 val exhaustive_PLPR_reasoner_by_rule : thm -> (int -> term -> unit) (*chk*) -> reasoner
   (*The chk may check if the ith argument of the target reasoning goal is in a good form and
@@ -1031,8 +1030,9 @@ fun Guess_Framework mk_goal_term_and_parse_result (phi0 : phi_type) ctxt =
             case Thm.term_of ctm
               of Abs _ => Conv.abs_conv (repeat_abs_conv cv o snd) ctxt ctm
                | _ => cv ctxt ctm*)
-      val reason = Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
-                                                |> Expansion.map' (fn ctxt => ctxt addsimps (#equations phi0)))
+      val ctxt_reason = Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
+                     |> Expansion.map' (fn ctxt => ctxt addsimps (#equations phi0))
+      val reason = fn th => Option.map snd (Phi_Reasoner.reason NONE NONE (ctxt_reason, th))
       (*fun reason thm = thm
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (funpow unfold_place Conv.fun_conv (Conv.arg1_conv (
                   repeat_abs_conv (fn ctxt =>
@@ -2068,17 +2068,8 @@ fun conv_chk_unfolded bads (phi : phi_type) ctxt ctm =
       (chk_unfolded bads ctxt phi (Thm.term_of ctm); Conv.all_conv ctm)
 
 fun pure_PLPR_reasoning num ctxt sequent =
-  case Phi_Reasoner.reason NONE (SOME num) ctxt sequent
-    of SOME th => th
-     | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR reasoning fails"])
-
-fun pure_PLPR_reasoner ctxt sequent =
-  case sequent
-    |> Thm.implies_intr \<^cprop>\<open>\<obligation> True\<close>
-    |> Thm.implies_intr \<^cprop>\<open>\<r>Success\<close>
-    |> Thm.permute_prems 0 2
-    |> Phi_Reasoner.reason NONE NONE ctxt
-    of SOME th => th
+  case Phi_Reasoner.reason NONE (SOME num) (ctxt, sequent)
+    of SOME (_, th) => th
      | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR reasoning fails"])
 
 fun exhaustive_PLPR_reasoner num chk_unfolds ctxt sequent =
@@ -2131,8 +2122,8 @@ fun simplifier_by_LPR configure rule =
     let val sequent = th RS' (ctxt, rule)
         open Pretty
         val _ = Phi_Reasoner.info_pretty ctxt 2 (fn () => str "\<phi>-LPR based simplification")
-     in case Phi_Reasoner.reason NONE NONE (configure phi_facts ctxt) sequent
-     of SOME ret => ret
+     in case Phi_Reasoner.reason NONE NONE (configure phi_facts ctxt, sequent)
+     of SOME (_, ret) => ret
       | NONE => raise Automation_Fail (fn () => [para "\<phi>-LPR based simplification fails"])
     end)
 

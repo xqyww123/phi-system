@@ -6,7 +6,9 @@ val internal_finish : context_state -> context_state Seq.seq
 val report_cost : int (*incremental-distance*) * int (*maximal-distance*)
               -> context_state -> context_state Seq.seq
 
-val best_among : (Proof.context * thm list) -> thm option
+(*the run boundary: the winning branch is exported onto the given context by
+  PLPR_Context_Export.export_state*)
+val best_among : (Proof.context * thm list) -> context_state option
 
 end
 
@@ -125,7 +127,7 @@ fun gen_start ctxt candidates = Seq.make (fn () =>
 fun internal_start (ctxt,sequent) = gen_start ctxt [sequent]
 
 fun best_among (_, []) = NONE
-  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE NONE ctxt thm
+  | best_among (ctxt, [thm]) = Phi_Reasoner.reason NONE NONE (ctxt, thm)
   | best_among (ctxt,candidates) =
     ( Phi_Reasoner.info_pretty ctxt 1 (fn _ => Pretty.chunks (
           Pretty.str "PLPR_Optimum_Solution: reasoning the optimal solution from candidates:" ::
@@ -134,7 +136,7 @@ fun best_among (_, []) = NONE
      (Seq.pull (gen_start ctxt candidates)
         |> Option.map fst
       handle Phi_Reasoner.Success s => SOME s)
-        |> Option.map (fn (ctxt', th) => singleton (Proof_Context.export ctxt' ctxt) th)
+        |> Option.map (fn (ctxt', th) => PLPR_Context_Export.export_state ctxt' ctxt th)
     )
 
 end

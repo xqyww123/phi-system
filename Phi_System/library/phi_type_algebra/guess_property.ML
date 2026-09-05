@@ -38,8 +38,8 @@ fun guess_entire_property ctxt0 (phi : phi_type) property_const =
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg1_conv (
                   Simplifier.rewrite (ctxt addsimps #equations phi)))))) 1
 
-   in Phi_Reasoner.reason NONE NONE ctxt goal
-   |> Option.map (fn ret =>
+   in Phi_Reasoner.reason NONE NONE (ctxt, goal)
+   |> Option.map (fn (_, ret) =>
         case Thm.prop_of ( Goal.conclude ret
                         |> Simplifier.simplify (ctxt addsimps
                               @{thms' Premise_norm[where mode=\<open>default\<close>]
@@ -79,13 +79,13 @@ fun guess_conditions ctxt0 (const, is_covar) phi T_term0 =
             |> Goal.init
             |> Conv.gconv_rule (HOLogic.Trueprop_conv (Conv.fun_conv (Conv.fun_conv (Conv.arg1_conv (
                   Simplifier.rewrite (ctxt addsimps #equations phi)))))) 1
-   in case goal
-        |> Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
-                                        |> Phi_Type_Derivers.Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)))
+   in case Phi_Reasoner.reason NONE NONE ( Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt
+                                          |> Phi_Type_Derivers.Expansion.map' (fn ctxt => ctxt addsimps (#equations phi)),
+                                          goal)
    of NONE => raise Automation_Fail (fn () => let open Pretty in
                       [para "Fail to guess the property. \<phi>-LPR process of \<open>Guess_Property\<close> fails."]
                 end)
-    | SOME ret =>
+    | SOME (_, ret) =>
         let val filter' = filter flt o PLPR_Syntax.dest_ant_sequence_or_HOL_conj
             val name = Term.declare_free_names (Thm.prop_of ret) Name.context
             val (x_name, _) = Name.variant "\<x>" name

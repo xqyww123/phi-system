@@ -63,9 +63,9 @@ val _ = Theory.setup (Context.theory_map (
                       [(("eqs",0),eqs), (("F",0), Fi), (("F'",0), Fi'), (("T",0), Ti),
                        (("U",0), Ti') , (("x",0), xi), (("y" ,0), xi')]
         val rule = rulexx OF [prop, prop]
-        val rule = rule
-                |> Phi_Reasoner.reason NONE NONE ctxt
-                |> (fn SOME ret => ret
+        val rule = (ctxt, rule)
+                |> Phi_Reasoner.reason NONE NONE
+                |> (fn SOME (_, ret) => ret
                           |> oblg_solver (base_name ^ "/function-congruence") NONE ctxt' 
                      | NONE => raise Automation_Fail (fn () => let open Pretty in
                                  [para "Fail to derive the congruence rule for Isabelle function package.",

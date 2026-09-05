@@ -28,8 +28,9 @@ fun guess_pointer ctxt eqs =
                   of Const(\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ _ => Thm.dest_arg LHS
                    | _ => LHS
          in Drule.infer_instantiate ctxt [(("assn",0), RHS), (("T",0), cT)] derv_rule
-         |> Phi_Reasoner.reason NONE NONE ctxt
-         |> Option.mapPartial (fn th =>
+         |> pair ctxt
+         |> Phi_Reasoner.reason NONE NONE
+         |> Option.mapPartial (fn (_, th) =>
         let val ret = Logic.dest_term (Thm.concl_of th)
             val (T,term) = HOLogic.dest_prod ret
             val frees = Term.add_frees term []
