@@ -154,7 +154,7 @@ fun meta_gen_Tyops_Commute reversed ctxt (phi : phi_type) =
       fun gen_rule th = case Phi_Reasoner.reason NONE NONE ctxt th
                           of SOME ret => ret
                            | NONE => raise Automation_Fail (fn () => [Pretty.str "\<phi>-LPR fails"])
-      val rule = apply2 gen_rule rule |> @{print}
+      val rule = apply2 gen_rule rule
 
       val pattern = apply2 Thm.concl_of rule
 
