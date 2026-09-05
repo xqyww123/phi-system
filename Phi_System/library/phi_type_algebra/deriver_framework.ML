@@ -2109,7 +2109,7 @@ fun default_simplifier conv (phi, ctxt) rule =
       val pures = map_filter (Phi_Reasoners.extract_implied_fact {wrap_all=false} ctxt') lprems
                |> flat
       val rule'2 = fold (fn lp => fn th => Thm.implies_elim th lp) lprems rule'1
-      val rule'3 = conv (phi, pures) ctxt rule'2
+      val rule'3 = conv (phi, pures) ctxt' rule'2
    in rule'3
    |> Assumption.export ctxt' ctxt't1
    |> singleton (Variable.export ctxt't1 ctxt)
