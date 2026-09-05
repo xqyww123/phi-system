@@ -33,8 +33,8 @@ fun add_lemmata pos lemmas ctxt =
                 Lemmata_Processors.invoke (Context.Proof ctxt) pos
                   {input=lemmas, lemmata=[], useful=[], rules=[], ctxt=ctxt}
    in ctxt
-   |> not (null lemmata) ? Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close>) lemmas)
-   |> not (null useful)  ? Context.proof_map (fold Useful_Thms.add_thm lemmas)
+   |> not (null lemmata) ? Context.proof_map (fold (Named_Theorems.add_thm \<^named_theorems>\<open>\<phi>lemmata\<close>) lemmata)
+   |> not (null useful)  ? Context.proof_map (fold Useful_Thms.add_thm useful)
    |> not (null rules)   ? Context.proof_map (Phi_Reasoner.add_rules rules)
   end
 
