@@ -60,4 +60,6 @@ lemma nat_int_mul[iff]: "nat (int a * int b) = a * b"
   using nat_times_as_int by presburger
   
 
+ML_file \<open>codegen/C/pointer_arith_MI.ML\<close>
+
 end

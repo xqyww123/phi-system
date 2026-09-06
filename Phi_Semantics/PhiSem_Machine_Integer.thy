@@ -1128,4 +1128,6 @@ lemma op_upcast_int_\<phi>app:
 
 setup \<open>Context.theory_map (Generic_Variable_Access.Process_of_Argument.put NONE)\<close>
 
+ML_file \<open>codegen/C/int.ML\<close>
+
 end

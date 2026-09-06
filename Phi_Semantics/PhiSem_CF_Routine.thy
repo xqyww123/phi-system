@@ -87,9 +87,11 @@ proc op_routine:
 ML \<open>Synchronized.change Phi_Syntax.semantic_oprs (Symtab.update (\<^const_name>\<open>op_routine\<close>, 0))\<close>
 
 
-abbreviation
-  \<open>op_rec_routine argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
-        op_routine TYPE('ret::FIX_ARITY_VALs) TYPE('arg::FIX_ARITY_VALs) argtys rettys (F \<f>))\<close>
+definition
+  \<open>op_rec_routine TYr TYa argtys rettys F \<equiv> op_fix_point (\<lambda>\<f>.
+        op_routine TYr TYa argtys rettys (F \<f>))\<close>
+
+declare op_rec_routine_def[symmetric, procedure_simps]
 
 
 attribute_setup routine =
@@ -144,11 +146,11 @@ in [
   (\<^const_syntax>\<open>op_rec_routine\<close>, fn ctxt =>
     if Syntax_Group.is_enabled (Proof_Context.theory_of ctxt) @{syntax_group do_notation}
     then
-      fn [TY1, TY2, Appl [Constant "_abs", lf,
+      fn [_, _, TY1, TY2, Appl [Constant "_abs", lf,
                               Appl [Constant "_abs", lret, Appl [Constant "_abs", arg, X]]]] =>
           Appl [Constant \<^syntax_const>\<open>_recursive_routine_\<close>, lf, arg,
                 strip_list TY1, strip_list TY2, tr0 (get_label lret) X]
-       | [TY1, TY2, Appl [Constant "_abs", lf, 
+       | [_, _, TY1, TY2, Appl [Constant "_abs", lf, 
                               Appl [Constant "_abs", lret, Appl [Constant "_abs", arg, X]], Y]] =>
           Appl [
             Appl [Constant \<^syntax_const>\<open>_routine_\<close>, lf, arg,
@@ -157,7 +159,6 @@ in [
     else fn _ => raise Match)
 ] end\<close>
 
-
-
+ML_file \<open>codegen/C/routine.ML\<close>
 
 end

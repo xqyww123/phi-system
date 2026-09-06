@@ -5,9 +5,12 @@ theory PhiTest_Arithmetic
     Phi_Semantics.PhiSem_Variable
     Phi_Semantics.PhiSem_Int_ArbiPrec
     "HOL-Computational_Algebra.Primes"
+    Phi_Semantics.PhiCG_C
 begin
 
-proc test_prime:
+declare [[\<phi>variable_is_typed]]
+
+proc test_prime [\<phi>export test_prime]:
   input  \<open>\<val> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<val> prime x \<Ztypecolon> \<bool>\<close> \<comment> \<open>\<^term>\<open>prime :: nat => bool\<close> is a predicate checking primes\<close>
   is [routine]
@@ -39,7 +42,7 @@ thm test_prime_def \<comment> \<open>Semantic definition\<close>
 thm test_prime_\<phi>app \<comment> \<open>Specification theorem\<close>
 
 
-proc test_prime':
+proc test_prime' [\<phi>export test_prime2]:
   input  \<open>\<val> x \<Ztypecolon> \<nat>\<close>
   output \<open>\<val> prime x \<Ztypecolon> \<bool>\<close>
   is [routine] (*If you don't add this attribute telling the program you are building is a routine,
@@ -82,7 +85,7 @@ proc test_prime':
 \<medium_right_bracket> \<comment> \<open>Close the function body\<close> .
 
 
-proc GCD:
+proc GCD [\<phi>export GCD]:
   input  \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close>
   output \<open>gcd x y \<Ztypecolon> \<val> \<nat>\<close> 
   is [recursive x y] \<comment> \<open>x, y are variable through recursive callings\<close>
@@ -134,5 +137,6 @@ proc binary_search:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+declare [[\<phi>export_code = C]]
 
 end

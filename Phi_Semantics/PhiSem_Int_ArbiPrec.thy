@@ -516,4 +516,6 @@ proc (nodef) op_ge_anat[\<phi>overload \<ge>]:
   $y \<le> $x
 \<medium_right_bracket>.
 
+ML_file \<open>codegen/C/aint.ML\<close>
+
 end

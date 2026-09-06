@@ -1,0 +1,1 @@
+structure C'G_PhiSem_Void = struct val sem_void_T_ = ["void"] end

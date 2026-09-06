@@ -20,5 +20,6 @@ lemma has_Zero_void[simp]:
   unfolding has_Zero_def
   by simp
 
+ML_file \<open>codegen/C/void.ML\<close>
 
 end

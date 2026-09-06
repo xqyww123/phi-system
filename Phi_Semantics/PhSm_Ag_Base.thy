@@ -698,6 +698,6 @@ fn (oprs,(ctxt,sequent)) =>
      | _ => Scan.fail
 \<close>
 
-
+ML_file \<open>codegen/C/agg_base.ML\<close>
 
 end

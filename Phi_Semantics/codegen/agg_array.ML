@@ -1,0 +1,1 @@
+structure C'G_PhiSem_Aggregate_Array = struct fun sem_array_T_ n T = T #> (fn t => t @ ["[",string_of_int n,"]"]) end

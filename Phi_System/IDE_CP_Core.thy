@@ -2189,6 +2189,19 @@ ML_file \<open>library/system/toplevel.ML\<close>
 ML_file \<open>library/tools/CoP_simp_supp.ML\<close>
 ML_file \<open>library/system/generic_element_access2.ML\<close>
 
+subsubsection \<open>Codegen\<close>
+
+ML_file \<open>library/codegen/emit.ML\<close>
+ML_file \<open>library/codegen_nonkernel/emit.ML\<close>
+ML_file \<open>library/codegen_nonkernel/base.sig\<close>
+ML_file \<open>library/codegen/base.ML\<close>
+ML_file \<open>library/codegen/C/Phi_Semantics_Framework.ML\<close>
+ML_file \<open>library/codegen/C/List.ML\<close>
+ML_file \<open>library/codegen/C/misc.ML\<close>
+ML_file \<open>library/codegen/C/Element_Path.ML\<close>
+ML_file \<open>library/codegen_nonkernel/C/base.sig\<close>
+ML_file \<open>library/codegen/C/base.ML\<close>
+
 subsubsection \<open>Setups\<close>
 
 hide_fact "__value_access_0__"

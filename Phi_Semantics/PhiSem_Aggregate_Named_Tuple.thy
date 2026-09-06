@@ -754,5 +754,7 @@ declare synthesis_construct_aggregate_\<phi>app
          \<phi>reason %\<phi>synthesis_ag_NT
              for \<open>\<proc> _ \<lbrace> _ \<longmapsto> \<lambda>\<r>\<e>\<t>. ?x \<Ztypecolon> \<val>[\<r>\<e>\<t>] \<lbrace> SYMBOL_VAR(?s): ?T \<rbrace> \<remains> _ \<rbrace> \<throws> _ @tag synthesis\<close>]
 
+ML_file \<open>codegen_nonkernel/C/agg_ntup.sig\<close>
+ML_file \<open>codegen/C/agg_ntup.ML\<close>
 
 end

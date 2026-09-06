@@ -326,4 +326,7 @@ optional_translations (do_notation)
 
   "_fix_point_ f arg B" <= "CONST op_fix_point (\<lambda>f arg. B)"
 
+ML_file \<open>codegen/C/CF.ML\<close>
+setup \<open>Context.theory_map (Phi_CG_Emit.codegen' {lang="C"} true Symtab.empty @{thms' if_def} \<^theory>)\<close>
+
 end

@@ -1,0 +1,1 @@
+signature C'G_PHISEM_CF_BREAK = sig val op_break_ : Phi_CG.ty -> Phi_CG.ty -> (Phi_CG.ty -> Phi_CG.ty -> Phi_CG.V -> Phi_CG.ctxt -> Phi_CG.V * Phi_CG.ctxt) -> Phi_CG.V -> Phi_CG.ctxt -> Phi_CG.V * Phi_CG.ctxt end

@@ -1048,4 +1048,6 @@ declare_\<phi>lang_operator postfix %\<phi>lang_deref "!" \<comment> \<open>dere
     end)
 \<close>
 
+ML_file \<open>codegen/C/pointer.ML\<close>
+
 end
