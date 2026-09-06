@@ -27,6 +27,7 @@ proc len_dynarr:
   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
   output   \<open>length l \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
+  is [routine]
 \<medium_left_bracket>
   addr.len
 \<medium_right_bracket> .
@@ -37,6 +38,7 @@ proc get_dynarr:
   premises \<open>i < length l\<close>
   output   \<open>l!i \<Ztypecolon> \<val> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
+  is [routine]
 \<medium_left_bracket>
   addr.data[i]
 \<medium_right_bracket> .
@@ -47,6 +49,7 @@ proc set_dynarr:
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr T\<close>
   unfolding DynArr.unfold
+  is [routine]
 \<medium_left_bracket>
   addr.data[i] := v
 \<medium_right_bracket> .
@@ -54,6 +57,7 @@ proc set_dynarr:
 proc Max:
   input  \<open>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   output \<open>max x y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+  is [routine]
 \<medium_left_bracket>
   if (x < y) \<medium_left_bracket> y \<medium_right_bracket> \<medium_left_bracket> x \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -64,6 +68,7 @@ proc push_dynarr:
   premises \<open>length l \<le> 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output   \<open>l + [v] \<Ztypecolon> DynArr addr T\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<semicolon>
   val len \<leftarrow> addr.len \<semicolon>
@@ -90,6 +95,7 @@ proc concat_dynarr:
   premises \<open>length l1 + length l2 < 2^(addrspace_bits-2) \<and> 2 \<le> addrspace_bits\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output  \<open>l1 + l2 \<Ztypecolon> DynArr addr1 T\<heavy_comma> l2 \<Ztypecolon> DynArr addr2 T\<close>
+  is [routine]
 \<medium_left_bracket>
   val len \<leftarrow> len_dynarr (addr2) \<semicolon>
 
@@ -104,6 +110,7 @@ proc pop_dynarr:
   premises \<open>l \<noteq> [] \<and> 2 \<le> addrspace_bits\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output   \<open>last l \<Ztypecolon> \<val> T\<heavy_comma> butlast l \<Ztypecolon> DynArr addr T\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<semicolon>
   val len \<leftarrow> addr.len - 1 \<semicolon>
@@ -129,6 +136,7 @@ proc new_dynarr:
   premises \<open>\<typeof> T \<noteq> \<poison>\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>[] \<Ztypecolon> \<ref> DynArr addr T \<subj> addr. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> data: Ptr[\<array>[0] (\<typeof> T)], len: \<nat>(\<size_t>), cap: \<nat>(\<size_t>) \<rbrace>\<close> \<semicolon>
   ret.data := (calloc (\<open>0 \<Ztypecolon> \<nat>(\<size_t>)\<close>) \<open>T\<close>) \<semicolon>
@@ -140,6 +148,7 @@ proc new_dynarr:
 proc del_dynarr:
   input  \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
   output \<open>Void\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<semicolon>
   mfree (addr.data) \<semicolon>
@@ -216,5 +225,20 @@ thm map_dynarr_def
 thm exists_dynarr_def
 thm fold_map_dynarr_def
 
+
+
+(*The `for` instances of the polymorphic procedures follow the parameter order of
+  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+declare Max_def [\<phi>export]
+declare len_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare get_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare set_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare push_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare concat_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare pop_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare new_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare del_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+
+declare [[\<phi>export_code = C]]
 
 end

@@ -27,6 +27,7 @@ proc init:
   input  Void
   premises \<open>\<typeof> T \<noteq> \<poison>\<close>
   output \<open>[] \<Ztypecolon> \<ref> Linked_Lst 0 T\<close>
+  is [routine]
 \<medium_left_bracket>
   \<makes>(0) \<open>Linked_Lst _ T\<close> \<semicolon>
   NULL
@@ -45,6 +46,7 @@ proc prepend_llist:
   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> v \<Ztypecolon> \<val> T\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T z\<close>
   output \<open>v#l \<Ztypecolon> \<ref> Linked_Lst addr' T \<subj> addr'. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
   val ret \<leftarrow> calloc1 \<open>\<lbrace> nxt: Ptr, data: T \<rbrace>\<close> \<semicolon>
   ret.nxt := addr \<semicolon> 
@@ -76,6 +78,7 @@ proc nth_llist:
   premises \<open>i < length l\<close>
   output   \<open>l \<Ztypecolon> Linked_Lst addr T\<heavy_comma> l!i \<Ztypecolon> \<val> T\<close>
   is [recursive l i addr]
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open>\<open'>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>
@@ -91,6 +94,7 @@ proc hd_llist:
   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<close>
   premises \<open>l \<noteq> []\<close>
   output \<open>hd l \<Ztypecolon> \<val> T\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
+  is [routine]
 \<medium_left_bracket>
   nth_llist (addr, 0)
 \<medium_right_bracket> .
@@ -101,6 +105,7 @@ proc update_nth_llist:
   premises \<open>i < length l\<close>
   output   \<open>l[i := y] \<Ztypecolon> Linked_Lst addr T\<close>
   is [recursive l i addr]
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open>\<open'>(1)\<close> \<semicolon>
   if (i = 0) \<medium_left_bracket>
@@ -137,6 +142,7 @@ proc reverse_aux:
   output \<open>rev l @ l' \<Ztypecolon> \<ref> Linked_Lst addr'' T
           \<subj> addr''. \<top>\<close>
   is [recursive l l' addr addr']
+  is [routine]
 \<medium_left_bracket>
   if (addr = NULL) \<medium_left_bracket>
     transforms_to \<open>\<open'>(0)\<close>
@@ -154,6 +160,7 @@ proc reverse:
   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<close>
   output \<open>rev l \<Ztypecolon> \<ref> Linked_Lst addr'  T
           \<subj> addr'. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
   \<makes>(0) \<open>Linked_Lst 0 T\<close>
   reverse_aux( addr, NULL )
@@ -188,5 +195,22 @@ thm length_of_def
 thm reverse_aux_def
 thm reverse_def
 
+
+
+(*The `for` instances of the polymorphic procedures follow the parameter order of
+  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+declare init_def [\<phi>export]
+declare is_empty_def [\<phi>export]
+declare prepend_llist_def [\<phi>export for "TYPE(nat)" ]
+thm prepend_llist_def$
+declare pop_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare nth_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare hd_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare update_nth_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare length_of_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare reverse_aux_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare reverse_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+
+declare [[\<phi>export_code = C]]
 
 end

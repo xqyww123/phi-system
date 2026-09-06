@@ -9,5 +9,8 @@ theory PhiEx_All
           Bucket_Hash
 begin
 
+declare [[Semantic_Embedding.interpretation_driver = "Codex"]]
+ 
+run_semantic_interpretation
 
 end

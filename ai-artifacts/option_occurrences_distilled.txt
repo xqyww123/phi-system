@@ -1,0 +1,224 @@
+Distilled from ai-artifacts/cslh19-guard-race-archives-2026-09-01.tar.zst
+Every exn="Option" record, with its recorded frame stack.
+
+=== 2026-08-30T22:51:09.909  Phi_Examples.Dynamic_Array:79  command.\&lt;semicolon&gt;
+    site=Phi_Reasoner.reason1
+    task=5675834 (theory:Phi_Examples.Dynamic_Array) 5675834 (theory:Phi_Examples.Dynamic_Array) in 5675832
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(30):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.timed_seq(2)(1)  :927
+      Phi_Reasoners.guard_condition_solver(3)(1)(1)  :1502
+      Phi_Reasoners.oblg_template(6)(1)(1)  :337
+      PLPR_Statistics.measure_time_of_proof_evaluation  :296
+      PLPR_Statistics.measure_time_of_proof_evaluation'  :309
+      Phi_Reasoners.oblg_template(6)(1)  :336
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason(5)loop(5)Z-chk_guard  :848
+      Phi_Reasoner.guarded_RS(5)(1)  :631
+      Phi_Reasoner.guarded_RS  :628
+      Phi_Reasoner.apply_reasoning_rules(2)(2)(1)  :682
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason'(4)(1)  :912
+      PLPR_Statistics.measure_time_of_reasoning  :278
+      Phi_Reasoner.gen_reason'  :910
+      Phi_Reasoner.internal_reason  :928
+      PLPR_Optimum_Solution.gen_start(2)(1)next_candidate  :107
+      PLPR_Optimum_Solution.gen_start(2)(1)  :89
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason'(4)(1)  :912
+      PLPR_Statistics.measure_time_of_reasoning  :278
+      Phi_Reasoner.gen_reason'  :910
+      Phi_Reasoner.internal_reason  :928
+      Phi_Reasoner.reason(4)(1)  :949
+      Phi_Reasoner.reason  :947
+      Phi_Reasoner.reason1(5)(1)  :957
+
+=== 2026-08-30T22:51:09.910  Phi_Examples.Dynamic_Array:79  command.\&lt;semicolon&gt;
+    site=\&lt;phi&gt; statement
+    task=5675834 (theory:Phi_Examples.Dynamic_Array) 5675834 (theory:Phi_Examples.Dynamic_Array) in 5675832
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(0):
+
+=== 2026-08-31T00:41:41.804  Phi_Examples.Dynamic_Array:74  command.\&lt;semicolon&gt;
+    site=guard-racer R-conv
+    task=6402190 (Race.race) 6402190 (Race.race) in 6402186/6402184/5675786
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1012
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1114
+      Phi_Reasoners.r_conv_racer(6)(1)  :1091
+      Phi_Reasoners.prove_or_refute(3)(1)racers-(2)(1)(1)  :1439
+
+=== 2026-08-31T09:58:07.646  Phi_Examples.Binary_Search:55  command.\&lt;medium_left_bracket&gt;
+    site=Phi_Reasoner.reason
+    task=5675780 (theory:Phi_Examples.Binary_Search) 5675780 (theory:Phi_Examples.Binary_Search) in 5675778
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(26):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.timed_seq(2)(1)  :927
+      Phi_Reasoners.guard_condition_solver(3)(1)(1)  :1525
+      Phi_Reasoners.oblg_template(6)(1)(1)  :337
+      PLPR_Statistics.measure_time_of_proof_evaluation  :296
+      PLPR_Statistics.measure_time_of_proof_evaluation'  :309
+      Phi_Reasoners.oblg_template(6)(1)  :336
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason(5)loop(5)Z-chk_guard  :848
+      Phi_Reasoner.guarded_RS(5)(1)  :631
+      Phi_Reasoner.guarded_RS  :628
+      Phi_Reasoner.apply_reasoning_rules(2)(2)(1)  :682
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason(5)loop(5)Z-chk_guard  :848
+      Phi_Reasoner.guarded_RS(5)(1)  :631
+      Phi_Reasoner.guarded_RS  :628
+      Phi_Reasoner.apply_reasoning_rules(2)(2)(1)  :682
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason'(4)(1)  :912
+      PLPR_Statistics.measure_time_of_reasoning  :278
+      Phi_Reasoner.gen_reason'  :910
+      Phi_Reasoner.internal_reason  :928
+      Phi_Reasoner.reason(4)(1)  :949
+
+=== 2026-08-31T09:58:07.646  Phi_Examples.Binary_Search:55  command.\&lt;medium_left_bracket&gt;
+    site=\&lt;phi&gt; statement
+    task=5675780 (theory:Phi_Examples.Binary_Search) 5675780 (theory:Phi_Examples.Binary_Search) in 5675778
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(0):
+
+=== 2026-08-31T11:33:39.150  Phi_Examples.Bucket_Hash:214  command.\&lt;medium_right_bracket&gt;
+    site=guard-racer R-conv
+    task=6423174 (Race.race) 6423174 (Race.race) in (6423170)/6423168/5675806
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1012
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1114
+      Phi_Reasoners.r_conv_racer(6)(1)  :1091
+      Phi_Reasoners.prove_or_refute(3)(1)racers-(2)(1)(1)  :1439
+
+=== 2026-08-31T17:33:57.607  Phi_Examples.Dynamic_Array:74  command.\&lt;semicolon&gt;
+    site=guard-racer R-conv
+    task=6178368 (Race.race) 6178368 (Race.race) in (6178364)/6178362/5675796
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1011
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1113
+      Phi_Reasoners.r_conv_racer(6)(1)  :1090
+      Phi_Reasoners.prove_or_refute(3)(1)racers-(2)(1)(1)  :1486
+
+=== 2026-08-31T21:58:35.885  Phi_Examples.Dynamic_Array:40  command.\&lt;medium_left_bracket&gt;
+    site=guard-racer R-conv
+    task=6395402 (Race.race) 6395402 (Race.race) in (6395398)/6395396/5675924
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1011
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1113
+      Phi_Reasoners.r_conv_racer(6)(1)  :1090
+      Phi_Reasoners.prove_or_refute(3)(1)racers-(2)(1)(1)  :1440
+
+=== 2026-08-31T23:00:03.526  Phi_Examples.Dynamic_Array:40  command.\&lt;medium_left_bracket&gt;
+    site=Phi_Reasoner.reason
+    task=5675926 (theory:Phi_Examples.Dynamic_Array) 5675926 (theory:Phi_Examples.Dynamic_Array) in 5675924
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(20):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.timed_seq(2)(1)  :927
+      Phi_Reasoners.guard_condition_solver(3)(1)(1)  :1524
+      Phi_Reasoners.oblg_template(6)(1)(1)  :337
+      PLPR_Statistics.measure_time_of_proof_evaluation  :296
+      PLPR_Statistics.measure_time_of_proof_evaluation'  :309
+      Phi_Reasoners.oblg_template(6)(1)  :336
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason(5)loop(5)Z-chk_guard  :848
+      Phi_Reasoner.guarded_RS(5)(1)  :631
+      Phi_Reasoner.guarded_RS  :628
+      Phi_Reasoner.apply_reasoning_rules(2)(2)(1)  :682
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason'(4)(1)  :912
+      PLPR_Statistics.measure_time_of_reasoning  :278
+      Phi_Reasoner.gen_reason'  :910
+      Phi_Reasoner.internal_reason  :928
+      Phi_Reasoner.reason(4)(1)  :949
+
+=== 2026-08-31T23:00:03.526  Phi_Examples.Dynamic_Array:40  command.\&lt;medium_left_bracket&gt;
+    site=\&lt;phi&gt; statement
+    task=5675926 (theory:Phi_Examples.Dynamic_Array) 5675926 (theory:Phi_Examples.Dynamic_Array) in 5675924
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(0):
+
+=== 2026-08-31T23:03:56.314  Phi_Examples.Bucket_Hash:161  command.\&lt;semicolon&gt;
+    site=Phi_Reasoner.reason
+    task=5675946 (theory:Phi_Examples.Bucket_Hash) 5675946 (theory:Phi_Examples.Bucket_Hash) in 5675944
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(20):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.timed_seq(2)(1)  :927
+      Phi_Reasoners.guard_condition_solver(3)(1)(1)  :1524
+      Phi_Reasoners.oblg_template(6)(1)(1)  :337
+      PLPR_Statistics.measure_time_of_proof_evaluation  :296
+      PLPR_Statistics.measure_time_of_proof_evaluation'  :309
+      Phi_Reasoners.oblg_template(6)(1)  :336
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason(5)loop(5)Z-chk_guard  :848
+      Phi_Reasoner.guarded_RS(5)(1)  :631
+      Phi_Reasoner.guarded_RS  :628
+      Phi_Reasoner.apply_reasoning_rules(2)(2)(1)  :682
+      Phi_Reasoner.gen_reason(5)loop(5)pull  :802
+      Phi_Reasoner.gen_reason(5)loop  :783
+      Phi_Reasoner.gen_reason'(4)(1)  :912
+      PLPR_Statistics.measure_time_of_reasoning  :278
+      Phi_Reasoner.gen_reason'  :910
+      Phi_Reasoner.internal_reason  :928
+      Phi_Reasoner.reason(4)(1)  :949
+
+=== 2026-08-31T23:03:56.319  Phi_Examples.Bucket_Hash:161  command.\&lt;semicolon&gt;
+    site=\&lt;phi&gt; statement
+    task=5675946 (theory:Phi_Examples.Bucket_Hash) 5675946 (theory:Phi_Examples.Bucket_Hash) in 5675944
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(0):
+
+=== 2026-09-01T10:00:18.839  Phi_Examples.Dynamic_Array_arbi_len:137  command.\&lt;semicolon&gt;
+    site=guard-racer R-conv
+    task=6405408 (Race.race) 6405408 (Race.race) in (6405404)/6405402/5675928
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1011
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1113
+      Phi_Reasoners.r_conv_racer(6)(1)  :1090
+      Phi_Reasoners.prove_or_refute(3)(1)racers-(2)(1)(1)  :1444
+
+=== 2026-09-01T11:02:20.522  Phi_Examples.Matrix_Oprs:120  command.\&lt;semicolon&gt;
+    site=guard-racer R-conv
+    task=6418796 (Race.race) 6418796 (Race.race) in 6418792/6418790/5675936
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1011
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1113
+      Phi_Reasoners.r_conv_racer(6)(1)  :1090
+      Phi_Reasoners.prove_or_refute(3)(1)wrap(3)(1)(1)  :1443
+
+=== 2026-09-01T13:09:14.029  Phi_Examples.Binary_Trees:481  command.\&lt;semicolon&gt;
+    site=guard-racer R-conv
+    task=6425248 (Race.race) 6425248 (Race.race) in 6425244/6425242/5675920
+    msg=exception Option raised (line 84 of "General/basics.ML")
+    frames(5):
+      Phi_Reasoners.norm_tac(2)(1)  :924
+      Phi_Reasoners.search_solved  :1011
+      Phi_Reasoners.r_conv_racer(6)(1)refuted-(1)  :1113
+      Phi_Reasoners.r_conv_racer(6)(1)  :1090
+      Phi_Reasoners.prove_or_refute(3)(1)wrap(3)(1)(1)  :1448
+

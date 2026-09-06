@@ -68,4 +68,9 @@ text \<open>Semantic Representations of the Programs: \<close>
 thm binary_search_array_def
 thm generalized_binary_search_def
 
+
+declare binary_search_array_def [\<phi>export]
+
+declare [[\<phi>export_code = C]]
+
 end

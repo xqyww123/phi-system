@@ -308,12 +308,11 @@ proc calloc1:
   input \<open>Void\<close>
   requires \<open>\<param> T\<close>
        and \<open>Semantic_Zero_Val TY T z\<close>
-  premises \<open>TY \<noteq> \<poison>\<close>
+  
   output \<open>addr \<Ztypecolon> \<val> TypedPtr TY\<heavy_comma> z \<Ztypecolon> \<mem>[addr] (\<mem>-\<coerce> T) \<subj> addr. address_to_base addr\<close>
   including Semantic_Zero_Val_EIF_brute
   unfolding address_to_base_def
 \<medium_left_bracket>
-  semantic_assert \<open>Zero TY \<noteq> None\<close>
   apply_rule FIC.aggregate_mem.allocate_rule[where TY=TY and U=\<open>{the (Zero TY)}\<close>]
 
   \<open>z \<Ztypecolon> MAKE _ (\<mem>-\<blk>[blk] (MAKE _ (\<mem>-\<coerce> T)))\<close>
@@ -324,7 +323,7 @@ proc calloc1:
   have t1: \<open>valid_memaddr (Addr blk [])\<close>
     by (insert \<phi>; auto simp add: Valid_MemBlk_def split: block.split) \<semicolon>
 
-  semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>1) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr TY)\<close>
+  semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>0) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr TY)\<close>
     
 \<medium_right_bracket> .
 

@@ -35,7 +35,7 @@ rules to be applied (we name them candidates) and the current state sequent, and
 resulted sequent. When multiple candidates are given, the ML function reasons the optimal candidate
 which has minimal cost as tagged by \<^const>\<open>Incremental_Cost\<close> and \<^const>\<open>Threshold_Cost\<close>.
 The cost of a candidate is calculated by adding up all Incremental_Cost and Threshold_Cost encountered
-during reasoning the phi-type transformation (ToA) of the application, which means if a candidate’s
+during reasoning the phi-type transformation (ToA) of the application, which means if a candidate's
 precondition matches the state sequent exactly, no serious ToA will be applied so the cost would be zero
 and the candidate be the optimal. The priority of reasoning rules has no influence on deciding
 which candidate is optimal.

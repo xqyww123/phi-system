@@ -331,6 +331,7 @@ print_ast_translation \<open>
 \<close>
 *)
 
+(*
 thm op_var_scope_def
 thm AAA_def
 
@@ -340,6 +341,7 @@ proc
   \<medium_left_bracket>
     if $b \<medium_left_bracket> \<open>32 \<Ztypecolon> \<nat>(32)\<close> \<medium_right_bracket> \<medium_left_bracket> \<open>24 \<Ztypecolon> \<nat>(16)\<close> \<medium_right_bracket>
   \<medium_right_bracket> .
+*)
 
 (*
 proc XXX:

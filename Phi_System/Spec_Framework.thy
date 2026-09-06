@@ -648,7 +648,7 @@ bundle Semantic_Type_by_Synt_Sugar =
 subsection \<open>Zero Value\<close>
 
 definition Semantic_Zero_Val :: "TY \<Rightarrow> (VAL,'a) \<phi> \<Rightarrow> 'a \<Rightarrow> bool"
-  where "Semantic_Zero_Val ty T x \<longleftrightarrow> (ty \<noteq> \<poison> \<longrightarrow> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)))"
+  where "Semantic_Zero_Val ty T x \<longleftrightarrow> (ty \<noteq> \<poison> \<and> (\<exists>v. Zero ty = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T)))"
 
 declare [[\<phi>reason_default_pattern \<open>Semantic_Zero_Val _ ?T _\<close> \<Rightarrow> \<open>Semantic_Zero_Val _ ?T ?varz\<close> (100) ]]
 
@@ -675,7 +675,7 @@ lemma [\<phi>reason default %semantic_zero_val_fail]:
 
 lemma [\<phi>reason %extract_pure]:
   \<open> Abstract_Domain T P
-\<Longrightarrow> \<r>EIF (Semantic_Zero_Val TY T x) (TY \<noteq> \<poison> \<longrightarrow> P x) \<close>
+\<Longrightarrow> \<r>EIF (Semantic_Zero_Val TY T x) (TY \<noteq> \<poison> \<and> P x) \<close>
   unfolding Abstract_Domain_def Semantic_Zero_Val_def \<r>EIF_def Satisfiable_def
   by blast
 
@@ -687,7 +687,7 @@ lemma [\<phi>reason %extract_pure]:
 *)
 
 lemma Semantic_Zero_Val_EIF_sat:
-  \<open> \<r>EIF (Semantic_Zero_Val TY T x) (TY \<noteq> \<poison> \<longrightarrow> (\<exists>v. Zero TY = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))) \<close>
+  \<open> \<r>EIF (Semantic_Zero_Val TY T x) (TY \<noteq> \<poison> \<and> (\<exists>v. Zero TY = Some v \<and> v \<Turnstile> (x \<Ztypecolon> T))) \<close>
   unfolding \<r>EIF_def Semantic_Zero_Val_def
   by blast
 

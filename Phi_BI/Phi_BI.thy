@@ -6198,7 +6198,6 @@ lemma (*TODO-0918*)
 lemma [\<phi>reason %ToA_splitting except \<open>_ \<transforms> _ \<Ztypecolon> (case_sum _ _ ?var) \<OTast> _ \<with> _ @tag \<T>\<P>'\<close>]:
   \<open> (\<And>a. \<condition> x = Inl a \<Longrightarrow> xx \<Ztypecolon> T \<OTast> W\<^sub>a a \<transforms> y\<^sub>a a \<Ztypecolon> U\<^sub>a a \<OTast> R\<^sub>a a \<with> P\<^sub>a a @tag \<T>\<P>')
 \<Longrightarrow> (\<And>b. \<condition> x = Inr b \<Longrightarrow> xx \<Ztypecolon> T \<OTast> W\<^sub>b b \<transforms> y\<^sub>b b \<Ztypecolon> U\<^sub>b b \<OTast> R\<^sub>b b \<with> P\<^sub>b b @tag \<T>\<P>')
-\<Longrightarrow> \<condition> S\<^sub>a \<or> S\<^sub>b
 \<Longrightarrow> xx \<Ztypecolon> T \<OTast> (case_sum W\<^sub>a W\<^sub>b x)
     \<transforms> case_sum y\<^sub>a y\<^sub>b x \<Ztypecolon> (case_sum U\<^sub>a U\<^sub>b x) \<OTast> (case_sum R\<^sub>a R\<^sub>b x) \<with> case_sum P\<^sub>a P\<^sub>b x @tag \<T>\<P>' \<close>
   unfolding Premise_def Try_def

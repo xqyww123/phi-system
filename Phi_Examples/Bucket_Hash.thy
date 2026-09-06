@@ -48,6 +48,7 @@ proc calc_hash:
   input  \<open>k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> N \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   premises \<open>N \<noteq> 0\<close>
   output \<open>hash k N \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+  is [routine]
 \<medium_left_bracket>
   k % N
 \<medium_right_bracket> .
@@ -87,6 +88,7 @@ proc update_hash:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> v \<Ztypecolon> \<val> T\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>f(k \<mapsto> v) \<Ztypecolon> Hash addr T\<close> 
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
@@ -102,6 +104,7 @@ proc bucket_has_key:
   input  \<open>bucket \<Ztypecolon> \<ref> DynArr addr \<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   output \<open>(\<exists>v. (k,v) \<in> set bucket) \<Ztypecolon> \<val> \<bool>\<heavy_comma>
           bucket \<Ztypecolon> DynArr addr \<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>\<close>
+  is [routine]
 \<medium_left_bracket>
   var met \<leftarrow> False \<semicolon>
   iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr(addr))
@@ -115,6 +118,7 @@ proc bucket_has_key:
 proc hash_has_key:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   output \<open>k \<in> dom f \<Ztypecolon> \<val> \<bool>\<heavy_comma> f \<Ztypecolon> Hash addr T\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
   val tabl_addr \<leftarrow> addr.tabl \<semicolon>
@@ -134,6 +138,7 @@ proc lookup_bucket:
   output \<open>v \<Ztypecolon> \<val> T\<heavy_comma>
           bucket \<Ztypecolon> DynArr addr \<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>
           \<subj> v. (k,v) \<in> set bucket\<close>
+  is [routine]
 \<medium_left_bracket>
   var ret \<semicolon>
   iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (addr))
@@ -153,6 +158,7 @@ proc hash_lookup:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   premises \<open>k \<in> dom f\<close>
   output \<open>the (f k) \<Ztypecolon> \<val> T\<heavy_comma> f \<Ztypecolon> Hash addr T\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<exists>bucket_ptrs, base, buckets \<semicolon>
 
@@ -173,6 +179,7 @@ proc new_hash:
        and \<open>\<typeof> T \<noteq> \<poison>\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>Map.empty \<Ztypecolon> \<ref> Hash addr T \<subj> addr. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
   val tabl_addr \<leftarrow> calloc (N) Ptr \<semicolon>
   iterate (\<open>0 \<Ztypecolon> \<nat>(\<size_t>)\<close>, N)
@@ -203,6 +210,7 @@ declare [[\<phi>trace_reasoning = 0]]
 proc del_hash:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<close>
   output \<open>Void\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val N \<leftarrow> $addr.N \<semicolon>
@@ -224,6 +232,7 @@ proc entries_of_hash:
           l \<Ztypecolon> DynArr addr' \<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>\<heavy_comma>
           f \<Ztypecolon> Hash addr T
           \<subj> l addr'. set l = Map.graph f\<close>
+  is [routine]
 \<medium_left_bracket>
   transforms_to \<open'> \<exists>bucket_ptrs, tabl, buckets \<semicolon>
   val dynarr \<leftarrow> apply_rule new_dynarr[where T=\<open>\<lbrace> k: \<nat>(\<size_t>), v: T \<rbrace>\<close>] \<semicolon>
@@ -246,6 +255,7 @@ proc rehash:
        and \<open>\<typeof> T \<noteq> \<poison>\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T zero\<close>
   output \<open>f \<Ztypecolon> \<ref> Hash addr' T \<subj> addr'. \<top>\<close>
+  is [routine]
 \<medium_left_bracket>
   val dynarr \<leftarrow> entries_of_hash (addr) \<semicolon>
   del_hash (addr) \<semicolon>
@@ -288,5 +298,22 @@ thm new_hash_def
 thm del_hash_def
 thm entries_of_hash_def
 thm rehash_def
+
+
+(*The `for` instances of the polymorphic procedures follow the parameter order of
+  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+declare calc_hash_def [\<phi>export]
+declare insert_bucket_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare update_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare bucket_has_key_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare hash_has_key_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare lookup_bucket_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare hash_lookup_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare new_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare del_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare entries_of_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare rehash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+
+declare [[\<phi>export_code = C]]
 
 end

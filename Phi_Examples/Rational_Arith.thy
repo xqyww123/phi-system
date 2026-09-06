@@ -18,6 +18,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   proc rat_add:
     input \<open>\<val> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
     output \<open>\<val> q1 + q2 \<Ztypecolon> \<rat>\<close>
+  is [routine]
   \<medium_left_bracket>  
     val q1 = (q1 transforms_to \<open'>) \<semicolon>
     val q2 = (q2 transforms_to \<open'>) \<semicolon>
@@ -30,6 +31,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   proc rat_sub:
     input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
     output \<open>q1 - q2 \<Ztypecolon> \<val> \<rat>\<close>
+  is [routine]
   \<medium_left_bracket>
     val q1 = (q1 transforms_to \<open'>) \<semicolon>
     val q2 = (q2 transforms_to \<open'>) \<semicolon>
@@ -42,6 +44,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   proc rat_mul:
     input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
     output \<open>q1 * q2 \<Ztypecolon> \<val> \<rat>\<close>
+  is [routine]
   \<medium_left_bracket>  
     val q1 = (q1 transforms_to \<open'>) \<semicolon>
     val q2 = (q2 transforms_to \<open'>) \<semicolon>
@@ -55,6 +58,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
     input \<open>\<val> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
     premises \<open>q2 \<noteq> 0\<close>
     output \<open>\<val> q1 / q2 \<Ztypecolon> \<rat>\<close>
+  is [routine]
   \<medium_left_bracket>  
     val q1 \<leftarrow> (q1 transforms_to \<open'>) \<semicolon>
     val q2 \<leftarrow> (q2 transforms_to \<open'>) \<semicolon>
@@ -67,6 +71,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
 proc rat_lt [\<phi>overload <]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 < q2 \<Ztypecolon> \<val> \<bool>\<close>
+  is [routine]
 \<medium_left_bracket>
   val q1 \<leftarrow> (q1 transforms_to \<open'>) \<semicolon>
   val q2 \<leftarrow> (q2 transforms_to \<open'>) \<semicolon>
@@ -78,6 +83,7 @@ proc rat_lt [\<phi>overload <]:
 proc rat_le [\<phi>overload \<le>]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 \<le> q2 \<Ztypecolon> \<val> \<bool>\<close>
+  is [routine]
 \<medium_left_bracket>
   val q1 \<leftarrow> (q1 transforms_to \<open'>) \<semicolon>
   val q2 \<leftarrow> (q2 transforms_to \<open'>) \<semicolon>
@@ -89,6 +95,7 @@ proc rat_le [\<phi>overload \<le>]:
 proc rat_gt [\<phi>overload >]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 > q2 \<Ztypecolon> \<val> \<bool>\<close>
+  is [routine]
 \<medium_left_bracket>
   q2 < q1
 \<medium_right_bracket> .
@@ -96,6 +103,7 @@ proc rat_gt [\<phi>overload >]:
 proc rat_ge [\<phi>overload >]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 \<ge> q2 \<Ztypecolon> \<val> \<bool>\<close>
+  is [routine]
 \<medium_left_bracket>
   q2 \<le> q1
 \<medium_right_bracket> .
@@ -114,5 +122,17 @@ thm rat_add_def
 thm rat_sub_def
 thm rat_mul_def
 thm rat_div_def
+
+
+declare rat_add_def [\<phi>export]
+declare rat_sub_def [\<phi>export]
+declare rat_mul_def [\<phi>export]
+declare rat_div_def [\<phi>export]
+declare rat_lt_def [\<phi>export]
+declare rat_le_def [\<phi>export]
+declare rat_gt_def [\<phi>export]
+declare rat_ge_def [\<phi>export]
+
+declare [[\<phi>export_code = C]]
 
 end

@@ -101,7 +101,7 @@ subsubsection \<open>Semantic Zero Value\<close>
 context begin
 
 private lemma \<phi>TA_Semantic_Zero_Val_rule:
-  \<open> (Ant \<Longrightarrow> \<premise> (TY \<noteq> \<poison> \<longrightarrow> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T))))
+  \<open> (Ant \<Longrightarrow> \<premise> (TY \<noteq> \<poison> \<and> Zero TY \<noteq> None \<and> (\<forall>v. Zero TY = Some v \<longrightarrow> v \<Turnstile> (z \<Ztypecolon> T))))
 \<Longrightarrow> \<r>Success
 \<Longrightarrow> \<obligation> True
 \<Longrightarrow> Ant @tag \<phi>TA_ANT

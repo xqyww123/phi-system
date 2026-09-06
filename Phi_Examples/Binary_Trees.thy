@@ -392,6 +392,7 @@ proc (nodef) insert_bst:
 proc Max:
   input  \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close>
   output \<open>max x y \<Ztypecolon> \<val> \<nat>\<close>
+  is [routine]
 \<medium_left_bracket>
   if (x < y) \<medium_left_bracket> y \<medium_right_bracket> \<medium_left_bracket> x \<medium_right_bracket>
 \<medium_right_bracket> .
@@ -642,5 +643,18 @@ thm maintain_i_def
 thm insert_avl_i_def
 
 end
+
+
+(*The `for` instances of the polymorphic procedures follow the parameter order of
+  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+declare Max_def [\<phi>export]
+declare lookup_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+declare defined_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+declare insert_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+declare height_of_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+declare maintain_i_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+declare insert_avl_i_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+
+declare [[\<phi>export_code = C]]
 
 end

@@ -7,7 +7,6 @@ begin
 
 declare [[auto_sledgehammer_params = "try0 = false",
           linarith_split_limit = 20]]
-declare [[\<phi>variable_is_typed]]
 
   proc qsort:
     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<int'>\<heavy_comma>
@@ -156,5 +155,11 @@ declare [[\<phi>infer_requirements]]
     \<medium_right_bracket>
   \<medium_right_bracket> .
 *)
+
+
+declare qsort_def [\<phi>export]
+declare qsort_rat_def [\<phi>export]
+
+declare [[\<phi>export_code = C]]
 
 end

@@ -10,6 +10,9 @@ theory PhiSem_C
           PhiSem_Mem_C_Ar_MI
 begin
 
+declare [[\<phi>variable_is_typed]]
+  \<comment> \<open>C local variables carry their semantic type; the C emitter needs it to print declarations.\<close>
+
 debt_axiomatization
   where ptr_neq_int_t'  [simp]: \<open>\<ptr> \<noteq> sem_int_T n\<close>
     and ptr_neq_struct [simp]: \<open>\<ptr> \<noteq> sem_ntup_T f\<close>

@@ -26,6 +26,7 @@ proc zero_mat:
   premises \<open>i + m \<le> M \<and> j + n \<le> N \<and> M < 2 ^ addrspace_bits \<and> N < 2 ^ addrspace_bits\<close>
   output   \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a i j m n\<close>
   unfolding MatSlice.unfold
+  is [routine]
 \<medium_left_bracket>
   map_slice(m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_slice(n) \<medium_left_bracket> for h \<rightarrow> val h  \<semicolon>
@@ -44,6 +45,7 @@ proc new_mat:
             0\<^sub>m M N \<Ztypecolon> MatSlice a 0 0 M N
             \<subj> a. address_to_base a\<close>
   unfolding MatSlice.unfold
+  is [routine]
 \<medium_left_bracket>
   calloc1 \<open>\<Array>[M] \<Array>[N] \<int>\<^sup>r(\<int'>)\<close>
 \<medium_right_bracket> .
@@ -53,6 +55,7 @@ proc del_mat:
   premises \<open>m = M \<and> n = N \<and> i = 0 \<and> j = 0 \<and> address_to_base a\<close>
   output   \<open>Void\<close>
   unfolding MatSlice.unfold
+  is [routine]
 \<medium_left_bracket>
   mfree (a)
 \<medium_right_bracket> .
@@ -71,6 +74,7 @@ proc copy_mat:
 
   output   \<open>y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
   unfolding MatSlice.unfold
+  is [routine]
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
@@ -93,6 +97,7 @@ proc add_mat:
 
   output   \<open>x + y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
   unfolding MatSlice.unfold
+  is [routine]
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h
@@ -115,6 +120,7 @@ proc sub_mat:
 
   output   \<open>x - y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
   unfolding MatSlice.unfold
+  is [routine]
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
@@ -170,6 +176,7 @@ proc strassen:
             buf\<^sub>2 \<Ztypecolon> MatSlice a\<^sub>D i\<^sub>D j\<^sub>D (2^n) (2^n)
             \<subj> buf\<^sub>1 buf\<^sub>2. \<top>\<close>
   is [recursive]
+  is [routine]
 \<medium_left_bracket>
   if (n = 0)
   \<medium_left_bracket>
@@ -288,6 +295,7 @@ proc strassen_mul:
   premises \<open>n < addrspace_bits\<close>
   output   \<open>A * B \<Ztypecolon> MatSlice a\<^sub>x 0 0 (2^n) (2^n)\<heavy_comma>
             B \<Ztypecolon> MatSlice a\<^sub>y 0 0 (2^n) (2^n) \<close>
+  is [routine]
 \<medium_left_bracket>
   \<open>literal n \<Ztypecolon> \<nat>(\<size_t>)\<close> \<rightarrow> val n \<semicolon>
   1 << n \<rightarrow> val N \<semicolon>
@@ -320,5 +328,19 @@ thm add_mat_def
 thm sub_mat_def
 thm strassen_def
 thm strassen_mul_def
+
+
+(*The `for` instances of the polymorphic procedures follow the parameter order of
+  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+declare zero_mat_def [\<phi>export for 4 4]
+declare new_mat_def [\<phi>export for 4 4]
+declare del_mat_def [\<phi>export for 4 4]
+declare copy_mat_def [\<phi>export for 4 4 4 4]
+declare add_mat_def [\<phi>export for 4 4 4 4]
+declare sub_mat_def [\<phi>export for 4 4 4 4]
+declare strassen_def [\<phi>export for 4]
+declare strassen_mul_def [\<phi>export for 2]
+
+declare [[\<phi>export_code = C]]
 
 end
