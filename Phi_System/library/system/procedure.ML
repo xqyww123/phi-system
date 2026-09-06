@@ -141,7 +141,7 @@ fun norm_def ctxt (m,n,instance) def = let
       |> Drule.eta_contraction_rule
   end
 
-fun closure ctxt substT f =
+fun closure precond substT f =
   let
   (*val tvars = Term.add_tvars f []
     val (subst,_) = Term.fold_types Term.declare_typ_names f Name.context
@@ -156,7 +156,15 @@ fun closure ctxt substT f =
     fun trim ((i as \<^term>\<open>\<phi>V_none\<close>), (x as Abs (_, \<^typ>\<open>unit \<phi>arg\<close>, X)))
           = if Term.is_open X then ([i], x) else ([], X)
       | trim (i,x) = ([i],x)
-    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" false NONE f |> trim
+
+    val vals = Procedure_Syntax.collect_vals false precond
+    fun sort [] _ = []
+      | sort (v::vs) xs = if member (op =) xs v then v :: sort vs xs else sort vs xs
+    fun sort' vs xs = let val ret = sort vs xs
+                       in if length ret = length xs then ret else error "BUG 8fd43cf2"
+                      end
+
+    val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" false (sort' vals) NONE f |> trim
     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
                              | _ => I) f'' []
     fun abst i (Var v) =
@@ -197,11 +205,11 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
   let
     val ((substT, sequent), lthy) = importT_proc sequent0 lthy0
 
-    val (f,_,_,_) = Thm.concl_of sequent |> Phi_Syntax.dest_procedure
+    val (f,precond,_,_) = Thm.concl_of sequent |> Phi_Syntax.dest_procedure
 
     (*all variables are in the procedure body*)
     (*then f' is the standard form of a definition*)
-    val (arity_ins,f') = closure lthy substT f
+    val (arity_ins,f') = closure precond substT f
                       |> apsnd (Raw_Simplifier.rewrite_term (Proof_Context.theory_of lthy)
                                 @{thms \<phi>V_simps[folded atomize_eq]} [])
 
