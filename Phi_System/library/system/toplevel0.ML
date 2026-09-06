@@ -206,8 +206,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
              in (ctxt, sequent'4)
              end
              handle Internal_Match_Fail msg =>
-              (case Phi_Apply.try_apply [th2] ctxt sequent
-                 of SOME s' => (ctxt, s')
+              (case Phi_Apply.try_apply [th2] (ctxt, sequent)
+                 of SOME s' => s'
                   | _ => error msg)
       in if is_top
          then stat
@@ -360,7 +360,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                     Thm.pretty_thm ctxt' sequent',
                     Pretty.block (Pretty.here \<^here>)
                   ]))
-                val result = Phi_Apply.apply1 [sequent'] ctxt' goal'
+                val result = snd (Phi_Apply.apply1 [sequent'] (ctxt', goal'))
                           |> Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt'
                 val _ = PLPR_Statistics.stop_recording_a_semantic_operation ctxt'
               in result end

@@ -170,7 +170,7 @@ fun rw_access (read_rule_name, write_rule_name) read_or_write idx_input cfg (opr
                 let val rules = map (Drule.infer_instantiate ctxt'1 [(("input_index", 0), idx)]) rules0
                     val s' = s
                          |> apfst (Generic_Element_Access.enable_report_unprocessed_element_index prohibit_remains_idx)
-                         |> Phi_Reasoners.wrap'' (Phi_Apply.apply rules)
+                         |> Phi_Apply.apply rules
                          |> post_app cfg
                     handle THM ("Application Fail", _, _) =>
                         raise Generic_Element_Access.Remaining_Eleidx idx
@@ -271,7 +271,7 @@ fun gen_constructor kind settings cfg stat =
                   end ) args0
 
             val ctxt'' = Generic_Variable_Access.register_value_spec_thms_no_dup (K I) pos_rules ctxt'
-            val rule' =
+            val (ctxt'3, rule') =
                 @{thm' op_construct_aggregate_\<phi>app}
                   |> Thm.transfer' ctxt''
                   |> Thm.instantiate (TVars.empty, Vars.make [
@@ -280,8 +280,10 @@ fun gen_constructor kind settings cfg stat =
                       ])
                   |> pair ctxt''
                   |> Phi_Reasoner.reason1 (fn () => "Fail to construct " ^ kind') NONE (SOME 1)
-                  |> snd
-         in (oprs, (ctxt' (*not ctxt''!*), Phi_Apply.apply1 [rule'] ctxt'' sequent))
+            val (ctxt'4, sequent') = Phi_Apply.apply1 [rule'] (ctxt'3, sequent)
+            (*the value registrations of ctxt'' stay behind (not ctxt''!); only what the
+              hooks own comes back from the two runs*)
+         in (oprs, (PLPR_Context_Export.export_context ctxt'4 ctxt', sequent'))
         end
         | invoke _ _ = error "BUG 2CG4WNzYQqirWulpFUkQQA"
    in Phi_Opr_Stack.meta_apply cfg settings @{priority %\<phi>lang_push_val} invoke stat

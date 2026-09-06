@@ -1025,8 +1025,8 @@ setup \<open>Context.theory_map (
                          else bad_Addr_Of pos
      | (oprs, s) =>
         if read_or_write
-        then (oprs, Phi_Reasoners.wrap'' (Phi_Apply.apply
-                      (Phi_App_Rules.get_overloadings (#1 s) @{\<phi>overloading "&"})) s)
+        then (oprs, Phi_Apply.apply
+                      (Phi_App_Rules.get_overloadings (#1 s) @{\<phi>overloading "&"}) s)
         else (oprs, s))
 )\<close>
 

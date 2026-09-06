@@ -18,9 +18,11 @@ signature PHI_APPLICATION = sig
 (*Depending on application rules, most of the resulted sequent (except resolution) has
 an additional obligation antecedent at the last of the antecedent list,
 storing proof obligations generated during NToA, no matter whether the obligations are trivial.*)
-  val try_apply : thm list (*applied rules*) -> Proof.context -> thm (*sequent*) -> thm option
-  val apply : thm list (*rules to be applied*) -> Proof.context -> thm (*sequent*) -> thm
-  val apply1 : thm list -> Proof.context -> thm -> thm
+(*The context of the result is the run's context exported onto the given one
+  (PLPR_Context_Export); apply1's failure-reason environment stays inside.*)
+  val try_apply : thm list (*applied rules*) -> context_state -> context_state option
+  val apply : thm list (*rules to be applied*) -> context_state -> context_state
+  val apply1 : thm list -> context_state -> context_state
 
 (*
   (*Advanced Modus Pones using logic programming about antecedent \<^term>\<open>\<phi>Application_Conv\<close>
@@ -72,13 +74,13 @@ fun mk_app_reasoning ctxt sequent app =
             mk_app_reasoning_RS ctxt (normalize_app_rule ctxt app) sequent
      | _ => mk_app_reasoning_normal (normalize_app_rule ctxt app) sequent
 
-fun try_apply [] _ _ = NONE
-  | try_apply apps ctxt sequent =
+fun try_apply [] _ = NONE
+  | try_apply apps (ctxt, sequent) =
      (Phi_Reasoner.info_print ctxt 2 (fn _ =>
         "Reasoning generic applications..." ^ Position.here \<^here>);
       PLPR_Optimum_Solution.best_among (ctxt, map (mk_app_reasoning ctxt sequent) apps)
         |> (fn NONE => NONE
-             | SOME (_, ret) => (
+             | SOME ret => (
                  (if exists (fn app => can Phi_Syntax.dest_procedure (Thm.concl_of app)) apps
                   then (
                     PLPR_Statistics.stop_recording_a_semantic_operation ctxt ;
@@ -86,22 +88,24 @@ fun try_apply [] _ _ = NONE
                   else ()) ;
                  SOME ret )) )
 
-fun apply applications ctxt sequent =
-  case try_apply applications ctxt sequent
+fun apply applications (s as (_, sequent)) =
+  case try_apply applications s
     of SOME stat' => stat'
      | NONE => raise THM ("Application Fail", 0, sequent::applications)
 
-fun apply1 applications ctxt sequent =
-  let val ctxt = Phi_Reasoners.setup_failure_reason_environ [] ctxt
-   in case try_apply applications ctxt sequent
-   of SOME stat' => stat'
+fun apply1 applications (ctxt, sequent) =
+  let (*the failure-reason environment lives on ctxt_run only; the result is
+        re-based onto the parameter ctxt so that the environment does not leak*)
+      val ctxt_run = Phi_Reasoners.setup_failure_reason_environ [] ctxt
+   in case try_apply applications (ctxt_run, sequent)
+   of SOME (ctxt'', th) => (PLPR_Context_Export.export_context ctxt'' ctxt, th)
     | NONE => error (let open Pretty in string_of (
                 chunks (
                  [block (text "Application Fail"),
-                  block (text "State sequent: " @ [Thm.pretty_thm ctxt sequent]),
+                  block (text "State sequent: " @ [Thm.pretty_thm ctxt_run sequent]),
                   block (text "Applicants:")] @
-                  map (fn app => item [Thm.pretty_thm ctxt app]) applications @
-                  Phi_Reasoners.failure_reasons_of' ctxt
+                  map (fn app => item [Thm.pretty_thm ctxt_run app]) applications @
+                  Phi_Reasoners.failure_reasons_of' ctxt_run
                   )
             ) end)
   end

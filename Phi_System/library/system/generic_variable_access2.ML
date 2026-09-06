@@ -155,7 +155,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   val decl = rev decl'
 
   (*apply the assignment procedure*)
-  val proc'2 = Phi_Apply.apply [rule] ctxt sequent
+  val proc'2 = snd (Phi_Apply.apply [rule] (ctxt, sequent))
   fun is_prem_of P (Abs (_,_,X)) = is_prem_of P X
     | is_prem_of P (\<^const>\<open>Trueprop\<close> $ X) = is_prem_of P X
     | is_prem_of P (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_prem_of P X
