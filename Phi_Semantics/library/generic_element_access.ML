@@ -131,10 +131,10 @@ fun rw_access (read_rule_name, write_rule_name) read_or_write idx_input cfg (opr
                     end
               in if read_or_write
                  then attempt false idx_input
-                            (Phi_Reasoners.wrap'' o Generic_Variable_Access.get_value vname)
+                            (Generic_Variable_Access.get_value vname)
                             (oprs', (ctxt,sequent))
                  else attempt false empty_input
-                                (Phi_Reasoners.wrap'' o Generic_Variable_Access.get_value vname)
+                                (Generic_Variable_Access.get_value vname)
                                 (oprs', (ctxt,sequent))
                    |> (fn (oprs',(_, s')) => (oprs', (idx_input, s'))) 
                 (*let (*the commented programs allows ":=" to assign / alter a variable *)

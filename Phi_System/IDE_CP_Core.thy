@@ -2393,13 +2393,13 @@ fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg =
                                of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => true
                                 | _ => false)
    in if mode_subproc
-   then (oprs, Phi_Reasoners.wrap'' (Phi_Sys.synthesis term) (ctxt, sequent))
+   then (oprs, Phi_Sys.synthesis term (ctxt, sequent))
    else Phi_Opr_Stack.push_meta_operator cfg
             ((@{priority %\<phi>lang_push_val}, @{priority loose %\<phi>lang_push_val},
                       (VAR_ARITY_IN_SEQUENT, VAR_ARITY_IN_SEQUENT)), ("<synthesis>", pos), NONE,
             (fn (_,_,_,vals) =>
                 (apsnd ( Generic_Variable_Access.push_values vals
-                      #> Phi_Reasoners.wrap'' (Phi_Sys.synthesis term)
+                      #> Phi_Sys.synthesis term
                        )))) (oprs, (ctxt, sequent))
   end
 
@@ -2416,7 +2416,7 @@ fun phi_synthesis_parser (oprs, (ctxt, sequent)) F (raw_term, pos) cfg =
   fn (oprs,(ctxt,sequent)) => \<^keyword>\<open>$\<close> |--
         Parse.position (Phi_CP_IDE.long_idt_to_triangle (Parse.short_ident || Parse.number))
   >> (fn (var,pos) => fn cfg =>
-    let val get = Phi_Reasoners.wrap'' (Generic_Variable_Access.get_value var Generic_Element_Access.empty_input)
+    let val get = Generic_Variable_Access.get_value var Generic_Element_Access.empty_input
         val mode_subproc = Phi_Opr_Stack.precedence_of (#1 oprs) < 0 andalso
                           (case Thm.prop_of sequent
                              of Const (\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ => true

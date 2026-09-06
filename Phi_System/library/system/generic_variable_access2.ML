@@ -8,7 +8,7 @@ exception ASSIGN_FAIL of assign_fail_reason * (unit -> Pretty.T)
 
 (** Get **)
 
-val get_value : string -> element_index_input -> Proof.context -> thm -> thm
+val get_value : string -> element_index_input -> context_state -> context_state
 
 (** Assignment **)
 
@@ -45,7 +45,7 @@ open Generic_Variable_Access
 
 (*** Get Value ***)
 
-fun get_value name element_index ctxt sequent =
+fun get_value name element_index (ctxt, sequent) =
   let val vname = dereference_generic_var1 ctxt (Free (name, dummyT))
       val idx = Int.max (Thm.maxidx_of_cterm vname, Thm.maxidx_of_cterm element_index) + 1
       val Ty = TVar(("'x",idx), \<^sort>\<open>type\<close>)
@@ -61,7 +61,7 @@ fun get_value name element_index ctxt sequent =
                                     $ Var (("x",idx), Ty)))
               vname)
               element_index
-   in Phi_Sys.synthesis target ctxt sequent
+   in Phi_Sys.synthesis target (ctxt, sequent)
    handle THM ("Application Fail", _, _) =>
       Generic_Element_Access.error_unprocessed_element_index ctxt element_index
   end

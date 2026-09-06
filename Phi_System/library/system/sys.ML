@@ -17,7 +17,7 @@ signature PHI_SYS = sig
   val set_param_cmd : string -> context_state -> context_state
   val set_label : string -> context_state -> context_state
 
-  val synthesis : cterm -> Proof.context -> thm -> thm
+  val synthesis : cterm -> context_state -> context_state
 
   val obligation_proof :  (Proof.context -> (string * string) * (string * thm list) list -> unit)
         -> Proof_Context.mode -> string -> Method.text option
@@ -222,7 +222,7 @@ fun set_label name (ctxt,sequent) = (ctxt, Phi_Syntax.mk_label_thm name RS seque
 
 
 
-fun synthesis term ctxt sequent =
+fun synthesis term (ctxt, sequent) =
   let
     val i_s = Thm.maxidx_of sequent + 1
     val i_t = Thm.maxidx_of_cterm term + 1
@@ -232,9 +232,9 @@ fun synthesis term ctxt sequent =
                                            (("sequent",i_s + i_t), Thm.cprop_of sequent)]
           |> (fn rule => Thm.implies_elim rule sequent)
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning synthesis..." ^ Position.here \<^here>)
-  in snd (Phi_Reasoner.reason1 (fn () =>
+  in Phi_Reasoner.reason1 (fn () =>
         error ("fail to synthesis "^Syntax.string_of_term ctxt (Thm.term_of term))
-      ) NONE NONE (ctxt, sequent'))
+      ) NONE NONE (ctxt, sequent')
   end
 
 (*the sequent must be leaded by a premises antecedent*)
