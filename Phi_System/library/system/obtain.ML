@@ -12,10 +12,9 @@ end
 
 structure NuObtain : NU_OBTAIN = struct
 
-fun eliminate_term ctxt xs thm =
+fun eliminate_term ctxt mode xs thm =
   let open Phi_Envir Phi_Syntax Phi_Help
     val tm = Thm.prop_of thm
-    val mode = Phi_Working_Mode.mode1 ctxt
     val vs = map (dest_Free o Thm.term_of) xs;
     fun collect vs tm = Term.fold_aterms (fn Free v =>
                         if member (op =) vs v then insert (op =) v else I | _ => I) tm []
@@ -23,9 +22,9 @@ fun eliminate_term ctxt xs thm =
   in #introduce_existence_in_assembling mode bads (ctxt, thm) |> snd
   end
 
-fun eliminate ctxt rule xs As thm'' =
+fun eliminate ctxt mode rule xs As thm'' =
   let
-    val thm = eliminate_term ctxt xs thm''
+    val thm = eliminate_term ctxt mode xs thm''
     val _ = Object_Logic.is_judgment ctxt (Thm.concl_of thm) orelse
       error "Conclusion in obtained context must be object-logic judgment"
 
@@ -41,10 +40,11 @@ fun eliminate ctxt rule xs As thm'' =
     |> singleton (Variable.export ctxt' ctxt)
   end;
 
-fun eliminate_nusys ctxt rule xs As th =
-  \<^try>\<open>eliminate ctxt rule xs As th
+fun eliminate_nusys ctxt mode rule xs As th =
+  \<^try>\<open>eliminate ctxt mode rule xs As th
     catch e => Exn.reraise (@{print} e)\<close>
-fun obtain_export ctxt rule xs _ As = (eliminate_nusys ctxt rule xs As, I)
+fun obtain_export ctxt mode rule xs =
+  Phi_Working_Mode.block_export mode (fn As => eliminate_nusys ctxt mode rule xs As)
 
 local
 fun expand_exE ctxt th =
@@ -91,9 +91,10 @@ fun choose inst_names stat =
     val meta' = Thm.assume  meta'_term
     val rule = expand_exE ctxt major
     val cinsts = map (Thm.cterm_of ctxt) insts;
+    val mode = Phi_Working_Mode.mode1 ctxt
   in
     stat |> Proof.map_context
-              (Assumption.add_assms (obtain_export ctxt rule cinsts) [meta'_term] #> snd)
+              (Assumption.add_assms (obtain_export ctxt mode rule cinsts) [meta'_term] #> snd)
          |> Phi_Envir.set_state_sequent meta'
   end
 

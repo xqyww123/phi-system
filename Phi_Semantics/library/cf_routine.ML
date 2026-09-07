@@ -69,12 +69,12 @@ fun routine_mod mk_F_Ty mk_F_Tm routine_rule (ctxt01,sequent) =
 
     val norm_sequent = Phi_Conv.simplify_leading_antecedent_hhf_concl simp_ctxt sequent
     val sequent1 = (rule RS norm_sequent)
-    val ctxt' = Context.proof_map (
+    val set_process = Context.proof_map (
                         Generic_Variable_Access.Process_of_Argument.put
-                           (SOME Generic_Variable_Access.store_value_and_clean)) ctxt0
+                           (SOME Generic_Variable_Access.store_value_and_clean))
    in (ctxt0, sequent1)
    |> Phi_Reasoner.reason NONE NONE
-   |> (fn SOME (_, ret) => (ctxt', ret)
+   |> (fn SOME (ctxt', ret) => (set_process ctxt', ret)
         | NONE => Phi_Reasoner.error "Fail to apply the routine modifier.")
   end
 

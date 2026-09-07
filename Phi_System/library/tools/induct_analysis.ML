@@ -1,6 +1,6 @@
 signature IDECP_INDUCT_ANALYSIS = sig
 
-val case_analysis : bool * (term option list list * thm option) -> Proof.context * thm -> thm
+val case_analysis : bool * (term option list list * thm option) -> context_state -> context_state
 val case_analysis_processor : Phi_Opr_Stack.context -> (Phi_CP_IDE.eval_cfg -> Phi_Opr_Stack.context) parser
 
 end
@@ -48,15 +48,15 @@ val case_synt = Scan.lift (Args.mode Induct.no_simpN) --
 
 end
 
-fun case_analysis_phityp (ctxt,sequent) =
-      snd (Phi_Apply.apply1 [@{thm' "_cases_app_rule_"}] (ctxt, sequent))
+val case_analysis_phityp = Phi_Apply.apply1 [@{thm' "_cases_app_rule_"}]
 
+(*no run: the incoming context is the result's*)
 fun case_analysis_system (no_simp, (insts, opt_rule)) (ctxt,sequent) =
   let val mode = Phi_Working_Mode.mode1 ctxt
       val sequent' = (sequent RS' (ctxt, #transformation_rule mode))
                   |> Goal.protect 1
    in case Seq.pull (Induct.cases_tac ctxt (not no_simp) insts opt_rule [] 1 sequent')
-        of SOME (ret, _) => ret
+        of SOME (ret, _) => (ctxt, ret
                          |> Conv.fconv_rule (Phi_Conv.hhf_conv
                               (fn ctxt =>
                                 Simplifier.asm_rewrite (Simplifier.clear_simpset ctxt) then_conv
@@ -64,7 +64,7 @@ fun case_analysis_system (no_simp, (insts, opt_rule)) (ctxt,sequent) =
                                   (fn _ => HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Premise_def[where mode=default, folded atomize_eq, symmetric]}))
                                   (fn _ => HOLogic.Trueprop_conv (Conv.rewr_conv @{thm' Argument_def[symmetric]})) ctxt)
                               (fn _ => Conv.rewr_conv @{thm' Pure.prop_def})
-                              ctxt)
+                              ctxt))
          | NONE => error "Fail to apply the case analysis"
   end
 
@@ -77,6 +77,6 @@ fun case_analysis (no_simp, (insts, opt_rule)) stat =
 
 fun case_analysis_processor (oprs,(ctxt,sequent)) =
   Args.$$$ "case_analysis" |-- Scan.pass (Context.Proof ctxt) case_synt >> (fn data => fn _ =>
-    (oprs, (ctxt, case_analysis data (ctxt,sequent))))
+    (oprs, case_analysis data (ctxt,sequent)))
 
 end

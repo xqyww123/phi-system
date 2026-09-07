@@ -331,13 +331,14 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
             SOME (value_extraction_rule_remove, value_extraction_rule_no_remove)
         | extr_rule _ = NONE
 
-      fun gen_rule num thm =
-        if num = 0 then (@{thm transformation_refl} RS thm) else
+      (*the context is threaded through the extraction runs, one per value*)
+      fun gen_rule num (ctxt, thm) =
+        if num = 0 then (ctxt, @{thm transformation_refl} RS thm) else
         case Phi_Syntax.dest_transformation (Thm.major_prem_of thm)
           of (Const (\<^const_name>\<open>Subjection\<close>, _) $ _ $ _ ,_,_)
-                => gen_rule num (@{thm Subjection_transformation} RS thm)
+                => gen_rule num (ctxt, @{thm Subjection_transformation} RS thm)
            | (Const (\<^const_name>\<open>ExBI\<close>, _) $ _ $ _ ,_,_)
-                => gen_rule num (@{thm ExBI_transformation} RS thm)
+                => gen_rule num (ctxt, @{thm ExBI_transformation} RS thm)
            | (Const (\<^const_name>\<open>times\<close>, _) $ (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm) $ _ ,_,_)
                 => (case extr_rule tm
                       of SOME (remove_rule, no_remove_rule) =>
@@ -351,13 +352,12 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                            in (rule RS (bi_prod_rule RS thm))
                            |> pair ctxt
                            |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m)
-                           |> snd
                            |> gen_rule (num - 1)
                           end
-                       | _ => gen_rule num (@{thm transformation_left_frame} RS thm)
+                       | _ => gen_rule num (ctxt, @{thm transformation_left_frame} RS thm)
                       )
            | (Const (\<^const_name>\<open>times\<close>, _) $ _ $ _ , _, _)
-                => gen_rule num (@{thm transformation_left_frame} RS thm)
+                => gen_rule num (ctxt, @{thm transformation_left_frame} RS thm)
            | (Const (\<^const_name>\<open>\<phi>Type\<close>, _) $ _ $ tm, _ , _)
                 => (case extr_rule tm
                       of SOME (remove_rule, no_remove_rule) =>
@@ -366,13 +366,12 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                            in (rule RS thm)
                            |> pair ctxt
                            |> Phi_Reasoner.reason1 (gen_rule_err rule) NONE (SOME m)
-                           |> snd
                           end
-                       | _ => @{thm transformation_refl} RS thm
+                       | _ => (ctxt, @{thm transformation_refl} RS thm)
                       )
-           | _ => @{thm transformation_refl} RS thm
+           | _ => (ctxt, @{thm transformation_refl} RS thm)
       val initial = sequent RS #transformation_rule mode
-      val rule = gen_rule num_limit initial
+      val (ctxt', rule) = gen_rule num_limit (ctxt, initial)
       val (sequent', vals) = rule
                 |> PLPR_Syntax.elim_ant_seq_or_HOL_conj
                 |> apsnd (fn th => th |> PLPR_Syntax.elim_ant_sequence_or_HOL_conj |> rev
@@ -380,7 +379,7 @@ fun extract_values (num_limit, remove) (ctxt, sequent) =
                                            | (H::L) => case Thm.prop_of H
                                                          of _ $ (Const (\<^const_name>\<open>True\<close>, _)) => L
                                                           | _ => H::L))
-   in (vals, (ctxt, sequent'))
+   in (vals, (ctxt', sequent'))
   end
   end
 

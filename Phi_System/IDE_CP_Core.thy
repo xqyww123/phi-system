@@ -2525,8 +2525,7 @@ setup \<open>Context.theory_map (
                                                          Thm.pretty_thm ctxt sequent]
                                                ) end)
                                      NONE (SOME 1) (ctxt, sequent)
-                |> (fn (_, sequent) =>
-                        raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, sequent)) ))
+                |> (fn s' => raise Phi_CP_IDE.Post_App.ReEntry (arg, s') ))
              else (ctxt, sequent0)
           end
        | _ => (ctxt, sequent0)
@@ -2585,8 +2584,8 @@ end)) end
    (case Phi_Working_Mode.mode ctxt
       of SOME mode =>
             if #constr_is_ready mode prop
-            then (case Phi_CoP_Simp.invoke_when_needed (ctxt,mode) sequent
-                    of SOME sequent' => raise Phi_CP_IDE.Post_App.ReEntry (arg, (ctxt, sequent'))
+            then (case Phi_CoP_Simp.invoke_when_needed mode (ctxt, sequent)
+                    of SOME s' => raise Phi_CP_IDE.Post_App.ReEntry (arg, s')
                      | NONE => (ctxt, sequent))
             else (ctxt, sequent)
        | NONE => (ctxt, sequent))

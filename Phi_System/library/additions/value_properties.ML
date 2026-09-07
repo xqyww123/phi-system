@@ -8,24 +8,23 @@ val dest_Zero_c = PLPR_Syntax.dest_tags_c #> Phi_Help.dest_triop_c \<^const_name
 
 (* Zero Value *)
 
-fun make_zero_value ctxt goal =
-  let val (TY,T,x) = dest_Zero_c goal
+(*block initialisation: the run's context is installed on the proof state*)
+val make_zero_value = Proof.map_context_result (fn ctxt =>
+  let val goal = Phi_Envir.get_thesis ctxt
+      val (TY,T,x) = dest_Zero_c goal
       val idx = Thm.maxidx_of_cterm goal + 1
   in @{thm \<phi>deduce_zero_value}
   |> Thm.incr_indexes idx
   |> Drule.infer_instantiate ctxt [(("TY",idx),TY), (("T",idx),T), (("x",idx),x)]
   |> pair ctxt
   |> Phi_Reasoner.reason NONE (SOME 1)
-  |> (fn SOME (_, s) => s
+  |> (fn SOME (ctxt', s) => (s, ctxt')
        | NONE => error (Pretty.string_of (Pretty.block [
            Pretty.str "The rule of the semantic type of ",
            Syntax.pretty_term ctxt (Thm.term_of T),
            Pretty.str " has not been given, so the proof of its zero value cannot be proceeded."
            ])))
-  end
-
-val make_zero_value' =
-  Proof.map_context_result (fn c => (make_zero_value c (Phi_Envir.get_thesis c), c))
+  end)
 
 val zero_value : Phi_Working_Mode.working_mode = {
   name = \<^const_name>\<open>working_mode_Semantic_Zero_Val\<close>,
@@ -34,7 +33,7 @@ val zero_value : Phi_Working_Mode.working_mode = {
   spec_of = #spec_of Phi_Working_Mode.implication,
   spec_of_c = #spec_of_c Phi_Working_Mode.implication,
   inhabited_rule = #inhabited_rule Phi_Working_Mode.implication,
-  initialize_sequent = make_zero_value',
+  initialize_sequent = make_zero_value,
   transformation_rule = #transformation_rule Phi_Working_Mode.implication,
   view_shift_rule = #view_shift_rule Phi_Working_Mode.implication,
   cast = #cast Phi_Working_Mode.implication,

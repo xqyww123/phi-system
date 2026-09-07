@@ -49,6 +49,15 @@ val cast_exception : cterm -> context_state -> context_state
 
 val infer_working_mode_of_sequent : context_state -> working_mode * context_state
 
+(*The block-boundary export function, shared by every assumption frame a programming block
+  installs.  A theorem #domain mode accepts (the state sequent, the block result) takes
+  on_sequent, the frame's own logic, exactly as before.  Any other theorem passes unchanged
+  unless its proof used a frame assumption: a Premise _ C assumption becomes the untagged
+  antecedent C ==> th; any other assumption raises PLPR_Context_Export.UNEXPORTABLE, and the
+  hook that exports the theorem drops it.  mode is fetched before Assumption.add_assms and
+  closed over: an export function receives no context.*)
+val block_export : working_mode -> (cterm list -> thm -> thm) -> Assumption.export
+
 end
 
 structure Phi_Working_Mode : PHI_WORKING_MODE = struct
@@ -209,6 +218,21 @@ fun vcg_by_cast destination (s as (ctxt, _)) = (
       cast destination s
 )
 
+(* Block-boundary export *)
+
+fun block_export (mode : working_mode) on_sequent : Assumption.export = fn _ => fn asms =>
+  (fn th =>
+     if #domain mode (PLPR_Syntax.dest_tags (Thm.concl_of th)) then on_sequent asms th
+     else fold_rev (fn A => fn th =>
+            if not (member (op aconv) (Thm.hyps_of th) (Thm.term_of A)) then th
+            else case Thm.term_of A
+              of Const (\<^const_name>\<open>Trueprop\<close>, _) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _)
+                   => Thm.implies_intr A th
+                      |> Conv.fconv_rule (Conv.implies_conv
+                            (HOLogic.Trueprop_conv (Conv.rewr_conv @{thm Premise_def})) Conv.all_conv)
+               | _ => raise PLPR_Context_Export.UNEXPORTABLE th) asms th,
+   I)
+
 (* Working Modes *)
 
 (** Procedure Mode **)
@@ -248,8 +272,9 @@ fun initialize_sequent_procedure arg ctxt =
                $ Free (RR, dummyT)
     val init = Thm.cterm_of ctxt (Syntax.check_term ctxt init)
     val init = Thm.apply @{cterm Trueprop} (Thm.apply init arg)
+    val mode = mode1 ctxt
     val ([init],ctxt) = Assumption.add_assms
-          (fn _ => fn [hyp] => (finish_proc hyp o pair ctxt, I)) [init] ctxt
+          (block_export mode (fn [hyp] => finish_proc hyp o pair ctxt)) [init] ctxt
   in
     (ctxt,init)
   end
@@ -537,23 +562,23 @@ fun infer_working_mode_of_sequent (ctxt,sequent) =
                 Pretty.str "Inferring the working mode for the sequent:",
                 Thm.pretty_thm ctxt sequent
             ])
-      val sequent' =
+      val (ctxt', sequent') =
           Phi_Reasoner.reason NONE (SOME 1) (ctxt, @{thm reason_programming} RS sequent)
-              |> (fn SOME (_, TH) => TH
+              |> (fn SOME s => s
                    | NONE => error (Pretty.string_of (Pretty.chunks [
                         Pretty.str "Don't know how to make by programming:",
                         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
                        ])))
       val mode = case Thm.major_prem_of sequent'
                  of Const(\<^const_name>\<open>Pure.term\<close>, _) $ Const (N, _)
-                      => get_by_name1 (Context.Proof ctxt) N
+                      => get_by_name1 (Context.Proof ctxt') N
                   | X => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
                           Pretty.str "Bad mode constant:",
-                          Syntax.pretty_term ctxt X
+                          Syntax.pretty_term ctxt' X
                       ]))
       val sequent'' = (Drule.termI RS sequent')
-                   |> Raw_Simplifier.norm_hhf_protect ctxt
-   in (mode, (ctxt, sequent'')) end
+                   |> Raw_Simplifier.norm_hhf_protect ctxt'
+   in (mode, (ctxt', sequent'')) end
 
 
 end

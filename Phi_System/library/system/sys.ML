@@ -127,8 +127,10 @@ fun accept_proc' (ctxt,sequent) =
             else ()
 
 
+    val mode = Phi_Working_Mode.mode1 ctxt'
     val ([codeblk],ctxt'2) = Assumption.add_assms
-            (fn _ => fn [assm] => (export_codeblock ctxt' param_cterms rule assm, I))
+            (Phi_Working_Mode.block_export mode
+                (fn [assm] => export_codeblock ctxt' param_cterms rule assm))
             [codeblk_cterm] ctxt'
   in
     (ctxt'2, @{thm \<phi>accept_proc} OF [sequent, codeblk])

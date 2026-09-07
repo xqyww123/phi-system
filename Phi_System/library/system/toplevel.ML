@@ -205,13 +205,15 @@ fun gen_begin_proc prep_term prep_prop prep_var prep_attr def_const
     val parse_term = prep_term ctxt_parse
     val parse_prop = prep_prop ctxt_parse
 
-    fun apply_modifier (ctxt,sequent) = (ctxt,sequent)
-         |> fold (fn Mod_by_Rule rule =>
-                          Phi_Modifier.by_rule (singleton (Attrib.eval_thms ctxt) rule)
-                 | Mod_by_Attr attr =>
-                          fold (Phi_Modifier.apply_wrapped_attribute o prep_attr ctxt) attr
+    (*each modifier is evaluated in the context of the current state, so what one modifier's
+      run brought back is visible to the next; the finishing hooks read the final context*)
+    fun apply_modifier s = s
+         |> fold (fn Mod_by_Rule rule => (fn (ctxt, sequent) =>
+                          Phi_Modifier.by_rule (singleton (Attrib.eval_thms ctxt) rule) (ctxt, sequent))
+                 | Mod_by_Attr attr => (fn (ctxt, sequent) =>
+                          fold (Phi_Modifier.apply_wrapped_attribute o prep_attr ctxt) attr (ctxt, sequent))
                ) raw_modifiers
-         |> Finishing_Modifier_Hooks.invoke (Context.Proof ctxt) ()
+         |> (fn s' => Finishing_Modifier_Hooks.invoke (Context.Proof (fst s')) () s')
 
     fun prep_attrterm prep ((b,attrs),(prop, pats)) =
           ((b, map (Attrib.check_src lthy) attrs), (prep prop, map parse_term pats))

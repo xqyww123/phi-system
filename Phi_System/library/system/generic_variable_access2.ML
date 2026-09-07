@@ -155,7 +155,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   val decl = rev decl'
 
   (*apply the assignment procedure*)
-  val proc'2 = snd (Phi_Apply.apply [rule] (ctxt, sequent))
+  val (ctxt, proc'2) = Phi_Apply.apply [rule] (ctxt, sequent)
   fun is_prem_of P (Abs (_,_,X)) = is_prem_of P X
     | is_prem_of P (\<^const>\<open>Trueprop\<close> $ X) = is_prem_of P X
     | is_prem_of P (Const (\<^const_name>\<open>Pure.all\<close>,_) $ X) = is_prem_of P X
@@ -174,10 +174,11 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
             |> Thm.permute_prems 0 2
 
 
-  val proc =
-           snd (Phi_Reasoner.reason1 (fn _ =>
+  val (ctxt, proc'4) =
+           Phi_Reasoner.reason1 (fn _ =>
             "Fail to assign variable(s). Typically, it is due to unsolved semantic types."
-           ) NONE (SOME (Thm.nprems_of proc'3 - 2)) (ctxt, proc'3))
+           ) NONE (SOME (Thm.nprems_of proc'3 - 2)) (ctxt, proc'3)
+  val proc = proc'4
         |> Phi_Reasoners.guard_condition_solver' {can_inst=true} (fn _ =>
             error "Fail to solve proof obligations in the assignment automatically. \
                   \It is a limitation for now that it cannot be proven manually. \
@@ -187,6 +188,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
   in if null vterms andalso null decl'
      then (ctxt, @{thm "\<phi>__Return_rule__"[OF view_shift_refl]} RS proc)
      else let
+      (*the block's working mode, closed over by the assumption frames below*)
+      val mode = Phi_Working_Mode.mode1 ctxt
 
       val (rev_hyps, proc_cterm) = Thm.cprem_of proc 1
                |> fold (fn v => fn prem => Drule.beta_conv (Thm.dest_arg prem) v) vterms
@@ -195,7 +198,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
       (*insert a callback frame for concatenating sequents*)
       fun concact_sequent sequent' =
             Phi_Help.comp_rule_incr_left ctxt (Drule.forall_intr_list vterms sequent') proc
-      val (_, ctxt) = Assumption.add_assms (fn _ => fn _ => (concact_sequent, I)) [] ctxt
+      val (_, ctxt) = Assumption.add_assms
+            (Phi_Working_Mode.block_export mode (fn _ => concact_sequent)) [] ctxt
 
       (*Now we change the goal of the programming context to add the newly generated items if any *)
       val (_,arg_spec,ret_spec,E_spec) = Phi_Syntax.dest_procedure_c proc_cterm
@@ -241,7 +245,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
       val (Hs,ctxt) =
         if null rev_hyps
         then ([], ctxt)
-        else Assumption.add_assms Assumption.presume_export (rev rev_hyps) ctxt
+        else Assumption.add_assms
+                (Phi_Working_Mode.block_export mode Drule.implies_intr_list) (rev rev_hyps) ctxt
       val ctxt = fold2 (fn H => fn D => D H) Hs decl ctxt
 
       (*make the new initial sequent*)
@@ -252,8 +257,8 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
         if is_Var (Term.head_of (Thm.term_of E_spec))
                   (*change log: I added Term.head_of. if no bug, remove this comment*)
         then ([], ctxt)
-        else Assumption.add_assms (fn _ => fn _ =>
-                ((fn sequentx =>
+        else Assumption.add_assms (Phi_Working_Mode.block_export mode (fn _ =>
+                (fn sequentx =>
                     let val (_,_,_,Y,_) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequentx)
                         val thy = Proof_Context.theory_of ctxt
                         val (ctxtA, sequentx1) =
@@ -265,8 +270,7 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
                         (*the two runs' contexts thread on to the guard solver and end here:
                           an assumption export function cannot return a context*)
                          in Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxtB sequentx2
-                        end),
-                 I)) [] ctxt
+                        end))) [] ctxt
       in (ctxt, sequent')
       end
   end

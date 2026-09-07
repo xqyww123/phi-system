@@ -448,8 +448,12 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
           val _ = case bind of SOME (_,b) => if Binding.name_of b = "ToR_scala_assoc_right" then () else ()
                              | _ => ()
 
-          val rule'1 = (0, Thm.transfer' ctxt' template)
-                    |> fold_pad (fn positioned_prop'' => fn (i, thm) =>
+          (*the context is threaded through the antecedents' runs (the accumulator's third
+            component shadows ctxt' inside the body and rebinds it after the fold); each run
+            is exported onto the context before its trace decrement, so the decrement does
+            not compound*)
+          val (rule'1, ctxt') = (0, Thm.transfer' ctxt' template, ctxt')
+                    |> fold_pad (fn positioned_prop'' => fn (i, thm, ctxt') =>
                         let (*datatype mode = Reason | Oblg | Normal*)
                             val prop'' = Option.map snd positioned_prop''
                             
@@ -490,13 +494,14 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                                              item [str "property:", brk 1, Thm.pretty_thm ctxt' prop]])
                                                         end)
                                                    | NONE => (1, thm'1))
-                            val thm'3 =
+                            val (ctxt'', thm'3) =
                                  case is_reasoning_goal
                                    of SOME err_term =>
                                       thm'2 |> Thm.permute_prems 0 i
                                             |> pair (Config.map Phi_Reasoner.trace (fn i=>i-1) ctxt')
                                             |> Phi_Reasoner.reason NONE (SOME delt)
-                                            |> (fn SOME (_, th) => th
+                                            |> (fn SOME (ctxt'r, th) =>
+                                                      (PLPR_Context_Export.export_context ctxt'r ctxt', th)
                                                  | NONE =>
                                                     let open Pretty
                                                      in case err_term
@@ -513,15 +518,14 @@ fun invoke_generation ((template_pos, template), pass, action, bind) (pos, env, 
                                                              Syntax.pretty_term ctxt' (Logic.nth_prem (i+1, Thm.prop_of thm'2))])
                                                       | X => raise TERM("Unrecognizable error text", [X])
                                                     end)
-                                            |> Thm.permute_prems 0 (~i)
+                                            |> apsnd (Thm.permute_prems 0 (~i))
                                   (*| Oblg => Conv.gconv_rule (
                                                 Raw_Simplifier.rewrite ctxt' false @{thms' \<A>_template_condition_def}
                                              ) (i+1) thm'2*)
-                                    | _ => thm'2
-                         in (if is_some is_reasoning_goal then i else i + delt, thm'3)
+                                    | _ => (ctxt', thm'2)
+                         in (if is_some is_reasoning_goal then i else i + delt, thm'3, ctxt'')
                         end) (Thm.nprems_of template) positioned_props
-                    |> snd
-                    |> Phi_Help.beta_eta_contract
+                    |> (fn (_, th, c) => (Phi_Help.beta_eta_contract th, c))
 
           val binding = Option.map (fn (vs, b') =>
                   let val facts = Context.cases Global_Theory.facts_of Proof_Context.facts_of ctxt

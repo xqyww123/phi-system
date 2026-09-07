@@ -110,12 +110,15 @@ fun generate_extraction_rule ctxt0 thm0 =
     val state = (thm RS @{thm Do_Generate_Implication_Reasoning})
               |> Thm.permute_prems 0 n
               |> Thm.permute_prems 2 (~n)
-   in Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE NONE
-                           (Config.put is_generating_extraction_rule true ctxt, state)
-   |> snd
+    val (ctxt'r, rule0) =
+          Phi_Reasoner.reason1 (K "Fail to extract inhabitance rule") NONE NONE
+                               (Config.put is_generating_extraction_rule true ctxt, state)
+    (*re-based onto the import context: the flag stays inside the run*)
+    val ctxt' = PLPR_Context_Export.export_context ctxt'r ctxt
+   in rule0
    |> Conv.fconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
-        HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt)
-   |> singleton (Variable.export ctxt ctxt0)
+        HOLogic.Trueprop_conv (Conv.arg_conv (Simplifier.rewrite (Inhabitance_SS.enhance ctxt)))) ctxt')
+   |> singleton (Variable.export ctxt' ctxt0)
    |> (fn rule => (
       Phi_Reasoner.info_pretty ctxt0 0 (fn _ => Pretty.chunks [
               Pretty.str "Obtain inhabitance rule:",

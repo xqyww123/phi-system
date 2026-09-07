@@ -160,7 +160,11 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
     val goal'  = Logic.strip_imp_concl goal
 
     fun after_qed (ctxt',[[th]]) stat0 =
-      let val stat = Proof.end_block stat0
+      let (*second leg of leaving the block: ctxt' is the terminal method's context, which
+            already carries the block's data (see end_tac); its hook-owned data crosses the
+            frame of the block's declared premises onto the enclosing state here*)
+          val stat = Proof.end_block stat0
+                  |> Proof.map_context (PLPR_Context_Export.export_context ctxt')
           val ctxt'' = Proof.context_of stat
           val th0 = (* Drule.eta_contraction_rule *) th
           val (th1::vars') = (th0::map (Drule.mk_term o Thm.cterm_of ctxt') vars)
@@ -193,8 +197,8 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
                     (*This beta eta contraction may be not good, cuz it may remove names of quantified
                       variables but I cannot find a better and simpler way to do this implication
                       elimination.*)
-                val sequent'3 = Phi_Reasoner.reason NONE (SOME 1) (ctxt, sequent'')
-                       |> (fn SOME (_, X) => X
+                val (ctxt, sequent'3) = Phi_Reasoner.reason NONE (SOME 1) (ctxt, sequent'')
+                       |> (fn SOME s => s
                             | NONE => Phi_Reasoner.error (Pretty.string_of (Pretty.chunks [
                                   Pretty.str "Fail to reason the finalization reasoning tasks:",
                                   Syntax.pretty_term ctxt (Thm.major_prem_of sequent'')
@@ -232,9 +236,21 @@ fun gen_begin_block prep_attr prep_prop (var_bindings,prem_bindings0) int stat =
               |> Config.put phi_allow_source_object_to_be_not_variable true
               |> Config.put Phi_Syntax.chk_source_val false)
       |> Proof.internal_goal (print_results int) Proof_Context.mode_pattern true
-          "" NONE after_qed []
-          (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems)
+          "" NONE after_qed [] []
           [(Binding.empty_atts, [(goal',[])])] |> #2
+      (*the block's declared premises: Pure's goal API offers no custom export, so phi installs
+        the frame itself, on the goal node, under the block-boundary export function -- still
+        under mode_pattern, as internal_goal would have certified them.  `that` is re-noted
+        from the raw assumption theorems, as local_goal does, only when there are premises.*)
+      |> Proof.map_context (fn ctxt_before =>
+            let val (_, ctxt_after) =
+                  Proof_Context.add_assms (Phi_Working_Mode.block_export mode Drule.implies_intr_list)
+                    (map2 (fn (b,pats) => fn prop => (b,[(prop,pats)])) bindings prems) ctxt_before
+             in ctxt_after
+             |> not (null prems) ? (snd o Proof_Context.note_thms ""
+                    ((Binding.name Auto_Bind.thatN, []),
+                     [(Assumption.local_prems_of ctxt_after ctxt_before, [])]))
+            end)
       |> Proof.map_context (fn ctxt => ctxt
             |> Proof_Context.set_mode Proof_Context.mode_default
             |> Config.restore Phi_Syntax.chk_source_val (Proof.context_of stat)
@@ -270,8 +286,6 @@ end
 
 local
 
-fun basic_method r = Method.Basic (fn ctxt => fn _ => CONTEXT_TACTIC (PRIMITIVE (r ctxt)))
-
 fun gen_finish_proc prep_term qed spec int stat =
   let
     val ctxt_ = Proof.context_of stat
@@ -281,9 +295,9 @@ fun gen_finish_proc prep_term qed spec int stat =
   |> Proof.map_context_result (fn ctxt =>
       let
         val sequent_pre1 = Phi_Envir.the_programming_sequent' ctxt
-        val sequent =
+        val (ctxt0, sequent) =
           if Thm.no_prems sequent_pre1
-          then sequent_pre1
+          then (ctxt, sequent_pre1)
           else let
             val _ = Phi_Reasoner.info_print ctxt 2 (fn _ =>
                       "solving pending antecedents before closing the programming block..."
@@ -294,13 +308,13 @@ fun gen_finish_proc prep_term qed spec int stat =
                     attack_obligations ctxt (Phi_Envir.solve_obligation Phi_ID.no_key ctxt sequent)
                  | _ => sequent
             val sequent_pre2 = attack_obligations ctxt sequent_pre1
-            in snd (Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
+            in Phi_Reasoner.reason1 (fn _ => Pretty.string_of (Pretty.chunks [
                     Pretty.str "Fail to solve pending antecedents:",
                     Thm.pretty_thm ctxt sequent_pre2
-               ])) NONE NONE (ctxt, sequent_pre2))
+               ])) NONE NONE (ctxt, sequent_pre2)
             end
-        val (ctxt',sequent') = Phi_Sys.move_lemmata Position.none (ctxt, sequent)
-        val (ctxt'',sequent'') = sequent'
+        val (ctxt',sequent') = Phi_Sys.move_lemmata Position.none (ctxt0, sequent)
+        val (ctxt'',sequent'') = (ctxt', sequent')
               |> (case spec
                     of NONE => I
                      | SOME term =>
@@ -311,7 +325,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                                Syntax.pretty_term ctxt'' (Thm.term_of aim),
                                Pretty.block (Pretty.here \<^here>)
                             ])
-                        in (snd o Phi_Sys.cast aim o pair ctxt')
+                        in Phi_Sys.cast aim
                         (*D58: the provenance line rides the failure-text wrapper, so it
                           reaches the sync error, the forked report and the batch print
                           alike -- no handler here could see the forked failures.  The
@@ -319,18 +333,18 @@ fun gen_finish_proc prep_term qed spec int stat =
                           in play (simprocs inside oblg_template, engine internals): D58
                           wants the provenance on every ERROR.  Wrapper-composed texts
                           already start with the line -- the prefix test skips those.*)
-                        #> (fn sequent =>
+                        #> (fn (ctxt_c, sequent) =>
                               let val provenance =
                                     "While solving the proof obligation generated during " ^
                                     "the cast towards the given specification:"
-                               in Phi_Envir.solve_obligation'
-                                    (fn inner => provenance ^ "\n" ^ inner) Phi_ID.no_key ctxt' sequent
+                               in (ctxt_c,
+                                   Phi_Envir.solve_obligation'
+                                    (fn inner => provenance ^ "\n" ^ inner) Phi_ID.no_key ctxt_c sequent
                                   handle ERROR msg =>
                                     if String.isPrefix provenance msg then Exn.reraise (ERROR msg)
-                                    else error (provenance ^ "\n" ^ msg)
+                                    else error (provenance ^ "\n" ^ msg))
                               end)
                         end)
-              |> pair ctxt'
               |> #vcg_before_assembling mode goal
       in (sequent'', ctxt'')
         (*The transformation shall generate a poof obligation*)
@@ -348,24 +362,34 @@ fun gen_finish_proc prep_term qed spec int stat =
           
         val ctxt'1 = Proof.context_of stat'
         val sequent'1 = singleton (Proof_Context.export ctxt ctxt'1) sequent
-        val end_tac = basic_method (fn ctxt' => fn goal' => (
-            \<^try>\<open>let
-              val sequent' = singleton (Proof_Context.export ctxt'1 ctxt') sequent'1
-              val _ = Phi_Reasoner.info_print ctxt' 2 (fn _ =>
-                  Pretty.string_of (Pretty.chunks [
-                    Pretty.str "Solving the goal by the resulted sequent from the programming.",
-                    Pretty.item [Pretty.str "goal:"],
-                    Syntax.pretty_term ctxt' (fst (Logic.dest_implies (Thm.prop_of goal'))),
-                    Pretty.item [Pretty.str "resulted sequent:"],
-                    Thm.pretty_thm ctxt' sequent',
-                    Pretty.block (Pretty.here \<^here>)
-                  ]))
-                val result = snd (Phi_Apply.apply1 [sequent'] (ctxt', goal'))
-                          |> Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt'
-                val _ = PLPR_Statistics.stop_recording_a_semantic_operation ctxt'
-              in result end
-              catch E => raise (@{print} E)\<close>
-            ))
+        (*The terminal method.  goal_ctxt is the goal node's context (the node the block was
+          opened on); every context of the block descends from it, so the block's live
+          context ctxt (bound above, before end_block popped the block's nodes) can be
+          exported onto it: this first leg carries the block's data across the block's own
+          frames.  apply1 runs on that base and re-bases its result onto it, so its context
+          is the method's result and flows through qed to after_qed (the second leg).
+          A raw context tactic, not Method.CONTEXT_METHOD (which prepends conjunction_tac);
+          THM => Seq.empty reproduces what PRIMITIVE did.*)
+        val end_tac = Method.Basic (fn _ => fn _ => fn (goal_ctxt, goal') =>
+          let val base = PLPR_Context_Export.export_context ctxt goal_ctxt
+           in (\<^try>\<open>let
+                val sequent' = singleton (Proof_Context.export ctxt'1 base) sequent'1
+                val _ = Phi_Reasoner.info_print base 2 (fn _ =>
+                    Pretty.string_of (Pretty.chunks [
+                      Pretty.str "Solving the goal by the resulted sequent from the programming.",
+                      Pretty.item [Pretty.str "goal:"],
+                      Syntax.pretty_term base (fst (Logic.dest_implies (Thm.prop_of goal'))),
+                      Pretty.item [Pretty.str "resulted sequent:"],
+                      Thm.pretty_thm base sequent',
+                      Pretty.block (Pretty.here \<^here>)
+                    ]))
+                val (ctxt'2, result) = Phi_Apply.apply1 [sequent'] (base, goal')
+                val result = Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt'2 result
+                val _ = PLPR_Statistics.stop_recording_a_semantic_operation ctxt'2
+              in Seq.single (Seq.Result (ctxt'2, result)) end
+              catch E => raise (@{print} E)\<close>)
+              handle THM _ => Seq.empty
+          end)
        in
         stat'
           |> qed (SOME (end_tac, Position.no_range), false)
