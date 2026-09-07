@@ -602,10 +602,10 @@ setup \<open>PLPR_Template_Properties.add_property_kinds [
        SOME @{reasoner_group %cutting})\<close>
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>\<simplify>[br_join] _ : _\<close>)
-  = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
+  = \<open> PLPR_Simplifier.simplifier (K Seq.empty)
                          (fn ctxt => ctxt addsimps Useful_Thms.get ctxt
                                   |> Simplifier.del_cong @{thm' if_weak_cong}
-                                  |> Simplifier.add_cong @{thm' if_cong}) {fix_vars=true})
+                                  |> Simplifier.add_cong @{thm' if_cong}) {fix_vars=true}
       o snd\<close>
 
 lemma [\<phi>reason_template default %\<phi>br_join_derived]:

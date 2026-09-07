@@ -100,9 +100,8 @@ subsubsection \<open>Simplification\<close>
     let val lev = Config.get ctxt Phi_Reasoner.auto_level
      in if lev <= 0
      then SOME ((ctxt, @{thm' Simplify_I} RS sequent), Seq.empty)
-     else sequent
-        |> PLPR_Simplifier.simplifier (K Seq.empty) (equip_Phi_Programming_Simp lev) {fix_vars=false} ctxt
-        |> Seq.map (pair ctxt)
+     else (ctxt, sequent)
+        |> PLPR_Simplifier.simplifier (K Seq.empty) (equip_Phi_Programming_Simp lev) {fix_vars=false}
         |> Seq.pull
     end)\<close>
 
@@ -336,10 +335,10 @@ lemmas [procedure_simps] =
             proc_bind_assoc proc_bind_return_none \<phi>V_simps
 
 \<phi>reasoner_ML procedure_equivalence 1200 (\<open>Premise procedure_ss ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=false}) o snd\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=false} o snd\<close>
 
 \<phi>reasoner_ML procedure_ss 1000 (\<open>Simplify procedure_ss ?x ?y\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=true}) o snd\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=true} o snd\<close>
 
 subsection \<open>Misc\<close>
 

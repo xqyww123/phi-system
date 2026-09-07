@@ -2113,12 +2113,12 @@ abbreviation Default_Simplify :: " 'a \<Rightarrow> 'a \<Rightarrow> bool " ("\<
   where "Default_Simplify \<equiv> Simplify default"
 
 \<phi>reasoner_ML Default_Simplify %cutting (\<open>Default_Simplify ?X' ?X\<close>)
-  = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
-                         (fn ctxt => ctxt addsimps Useful_Thms.get ctxt) {fix_vars=false} (*TODO: set this fix_vars to true*))
+  = \<open> PLPR_Simplifier.simplifier (K Seq.empty)
+                         (fn ctxt => ctxt addsimps Useful_Thms.get ctxt) {fix_vars=false} (*TODO: set this fix_vars to true*)
     o snd\<close>
 
 \<phi>reasoner_ML \<open>\<simplify>[\<safe>] x : y\<close> %cutting (\<open>\<simplify>[\<safe>] ?X' : ?X\<close>)
-  = \<open> Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty) Phi_Safe_Simps.equip {fix_vars=true})
+  = \<open> PLPR_Simplifier.simplifier (K Seq.empty) Phi_Safe_Simps.equip {fix_vars=true}
     o snd\<close>
 
 lemma [\<phi>reason %cutting]:
@@ -2206,8 +2206,8 @@ ML_file \<open>library/properties.ML\<close>
 consts \<phi>instantiation :: mode
 
 \<phi>reasoner_ML \<open>Simplify \<phi>instantiation\<close> 1000 (\<open>\<simplify>[\<phi>instantiation] _ : _\<close>)
-  = \<open>Phi_Reasoners.wrap (PLPR_Simplifier.simplifier (K Seq.empty)
-        (PLPR_Rule_Gen.Rule_Gen_SS.enhance) {fix_vars=true}) o snd\<close>
+  = \<open>PLPR_Simplifier.simplifier (K Seq.empty)
+        (PLPR_Rule_Gen.Rule_Gen_SS.enhance) {fix_vars=true} o snd\<close>
 
 lemmas [\<phi>generation_simp] =
   conj_imp_eq_imp_imp sing_times_sing sing_if if_cancel

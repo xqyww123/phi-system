@@ -6,15 +6,17 @@ signature PLPR_SIMPLIFIER = sig
 (* The simplifiers are not always as powerful as expected especially when it contains schematic variables.
    Specific reasoning apps may fix the variables to boost its ability. *)
 
+(* The simplifiers are reasoners: the context of a result state is the inner run's context
+   (the End_Simplification'' reasoning), exported by Phi_Reasoner.reason. *)
 val simplifier : (thm -> thm Seq.seq) -> (Proof.context -> Proof.context)
               -> {fix_vars: bool} (*if to fix schematic variable so enables equation conditions
                                     to be used in the rewrite*)
-              -> Proof.context -> thm -> thm Seq.seq
-val simplifier_by_ss : (thm -> thm Seq.seq) -> simpset -> {fix_vars: bool} -> Proof.context -> thm -> thm Seq.seq
+              -> context_state -> context_state Seq.seq
+val simplifier_by_ss : (thm -> thm Seq.seq) -> simpset -> {fix_vars: bool} -> context_state -> context_state Seq.seq
 val simplifier_by_ss' : (thm -> thm Seq.seq) -> (Proof.context -> simpset)
-                     -> {fix_vars: bool} -> Proof.context -> thm -> thm Seq.seq
+                     -> {fix_vars: bool} -> context_state -> context_state Seq.seq
 val simplifier_only: (thm -> thm Seq.seq) -> (Proof.context -> thm list)
-                  -> {fix_vars: bool} -> Proof.context -> thm -> thm Seq.seq
+                  -> {fix_vars: bool} -> context_state -> context_state Seq.seq
 
 val conjs_to_aseq : conv
 val aseq_to_conjs : conv
@@ -48,7 +50,7 @@ fun aseq_to_conjs ctm =
             aseq_to_conjs ctm
      | _ => Conv.all_conv ctm
 
-fun simplification {simp_conj_items, fix_vars} fallback F ctxt sequent = Seq.make (fn () =>
+fun simplification {simp_conj_items, fix_vars} fallback F (ctxt, sequent) = Seq.make (fn () =>
   let val ((inst, [sequent']), ctxt') = if fix_vars
              then Variable.import true [sequent] ctxt
                   (*TODO optimization: only fix variables in the leading antecedent*)
@@ -70,12 +72,12 @@ fun simplification {simp_conj_items, fix_vars} fallback F ctxt sequent = Seq.mak
         HOLogic.Trueprop_conv (Conv.arg_conv aseq_to_conjs)
       ) ctxt) 1
    |> (fn th => case Phi_Reasoner.single_RS' @{thm End_Simplification} ctxt th
-                  of SOME ret => SOME (ret, Seq.empty)
-                   | NONE => 
+                  of SOME ret => SOME ((ctxt, ret), Seq.empty)
+                   | NONE =>
                 (case Phi_Reasoner.reason NONE (SOME 1)
                         (ctxt, @{thm End_Simplification''} RS' (ctxt, th))
-                   of SOME (_, ret) => SOME (ret, Seq.empty)
-                    | NONE => Seq.pull (fallback th)))
+                   of SOME s' => SOME (s', Seq.empty)
+                    | NONE => Seq.pull (Seq.map (pair ctxt) (fallback th))))
   end
 )
 (*    |> Tactical.HEADGOAL (Phi_Reasoners.simp_tac (F ctxt))
@@ -84,7 +86,8 @@ fun simplification {simp_conj_items, fix_vars} fallback F ctxt sequent = Seq.mak
           (*of NONE => Phi_Reasoner.single_RS' @{thm End_Simplification'} ctxt th
              | some => some*))*)
 
-fun simp_premis F fix_vars ctxt sequent =
+(*starts no run: the incoming context is the result's*)
+fun simp_premis F fix_vars (ctxt, sequent) =
   let val (sequent', ctxt') = if fix_vars
              then case Variable.import false [sequent] ctxt
                     of ((_,[sequent']), ctxt') => (sequent', ctxt')
@@ -92,14 +95,15 @@ fun simp_premis F fix_vars ctxt sequent =
    in (@{thm Premise_I} RS sequent')
    |> Tactical.HEADGOAL (Tactical.SOLVED' (Phi_Reasoners.asm_lr_simp_tac true (F ctxt')))
    |> Seq.map (fix_vars ? singleton (Variable.export ctxt' ctxt))
+   |> Seq.map (pair ctxt)
   end
 
-fun simplifier fallback F {fix_vars} ctxt sequent =
+fun simplifier fallback F {fix_vars} (s as (_, sequent)) =
   case Thm.major_prem_of sequent
     of _ (*Trueprop*) $ (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ _) =>
-            simp_premis F fix_vars ctxt sequent
+            simp_premis F fix_vars s
      | _ (*Trueprop*) $ (Const (\<^const_name>\<open>Simplify\<close>, _) $ _ $ _ $ _) =>
-            simplification {simp_conj_items=true, fix_vars=fix_vars} fallback F ctxt sequent
+            simplification {simp_conj_items=true, fix_vars=fix_vars} fallback F s
      | _ => Seq.empty
 
 

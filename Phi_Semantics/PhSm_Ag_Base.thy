@@ -337,8 +337,7 @@ setup \<open>Context.theory_map (
 
 \<phi>reasoner_ML eval_aggregate_path 1300 ( \<open>\<simplify>[eval_aggregate_path] ?X' : ?X\<close>
                                       | \<open>\<condition>[eval_aggregate_path] ?P\<close> )
-  = \<open>Phi_Reasoners.wrap (
-      PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Eval_Sem_Idx_SS.get' {fix_vars=false}) o snd\<close>
+  = \<open>PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Eval_Sem_Idx_SS.get' {fix_vars=false} o snd\<close>
 
 
 lemmas [eval_aggregate_path] = nth_Cons_0 nth_Cons_Suc fold_simps list.size simp_thms
