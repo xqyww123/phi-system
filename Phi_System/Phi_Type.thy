@@ -4568,8 +4568,7 @@ lemma SE_Module_scalar_assoc_mapper_tgt_template
   unfold \<open>b' = b\<close>
   apply_rule apply_Semimodule_SAssoc\<^sub>E[where s=a and t=c, OF SA\<^sub>E, unfolded A]
     certified by hammer_or_aoa ;;
-  apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst (g\<^sub>E a c) x\<close>]
-    certified by (insert ToA_Mapper_f_expn[OF Tr], auto_sledgehammer) ;;
+  apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>apfst (g\<^sub>E a c) x\<close>] ;;
   fold \<open>a' = a\<close>
 \<medium_right_bracket> by (rule conjunctionI, rule, drule ToA_Mapper_f_expn, clarsimp simp: prod.map_beta)
 
@@ -4607,7 +4606,6 @@ lemma SE_Module_scalar_assoc_mapper_src_template
   unfold \<open>a' = a\<close>
   apply_rule ToA_Mapper_backward[OF Tr, where x=\<open>x\<close>]
   apply_rule apply_Semimodule_SAssoc\<^sub>I[where s=a and t=c, OF SA\<^sub>I, unfolded A]
-  certified by (insert ToA_Mapper_f_expn[OF Tr], auto_sledgehammer)
 \<medium_right_bracket> by (rule conjunctionI, rule, drule ToA_Mapper_f_expn, clarsimp, auto_sledgehammer)
 
 
@@ -5064,11 +5062,7 @@ lemma SE_Module_SDistr_a_dbc_ToA_mapper
     apply (rule conjunctionI, rule, unfold Premise_def conj_imp_eq_imp_imp, rule ballI)
     subgoal premises prems for x proof -
 
-      show ?thesis
-        by (insert ToA_Mapper_f_expn_rev[OF \<open>\<map> g \<otimes>\<^sub>f r : _ \<mapsto> _ \<over> f \<otimes>\<^sub>f w : _ \<mapsto> _ \<with> \<getter> h \<setter> s \<in'> _\<close>,
-                                            simplified, THEN bspec[OF _ \<open>x \<in> D\<close>]]
-                      \<open>\<forall>x. D\<^sub>G x \<longrightarrow> _\<close> [THEN spec[where x=\<open>fst x\<close>]],
-            clarsimp split: prod.split, auto_sledgehammer)
+      show ?thesis by aoa
     qed .
 
 
