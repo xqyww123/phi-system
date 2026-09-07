@@ -256,13 +256,15 @@ fun default_assignment (name_assigner:((binding * element_index_input) * assigne
                 ((fn sequentx =>
                     let val (_,_,_,Y,_) = Phi_Syntax.dest_PendingConstruction (Thm.prop_of sequentx)
                         val thy = Proof_Context.theory_of ctxt
-                        val sequentx1 = if Pattern.matches thy (Thm.term_of ret_spec, Y)
-                                        then sequentx
-                                        else Phi_Sys.cast ret_spec ctxt sequentx
-                        val sequentx2 =
-                              #cast_exception Phi_Working_Mode.programming E_spec ctxt sequentx1
-                                    |> Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxt
-                         in sequentx2
+                        val (ctxtA, sequentx1) =
+                              if Pattern.matches thy (Thm.term_of ret_spec, Y)
+                              then (ctxt, sequentx)
+                              else Phi_Sys.cast ret_spec (ctxt, sequentx)
+                        val (ctxtB, sequentx2) =
+                              #cast_exception Phi_Working_Mode.programming E_spec (ctxtA, sequentx1)
+                        (*the two runs' contexts thread on to the guard solver and end here:
+                          an assumption export function cannot return a context*)
+                         in Phi_Reasoners.guard_condition_solver1 {can_inst=true} ctxtB sequentx2
                         end),
                  I)) [] ctxt
       in (ctxt, sequent')

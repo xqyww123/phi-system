@@ -311,7 +311,7 @@ fun gen_finish_proc prep_term qed spec int stat =
                                Syntax.pretty_term ctxt'' (Thm.term_of aim),
                                Pretty.block (Pretty.here \<^here>)
                             ])
-                        in Phi_Sys.cast aim ctxt'
+                        in (snd o Phi_Sys.cast aim o pair ctxt')
                         (*D58: the provenance line rides the failure-text wrapper, so it
                           reaches the sync error, the forked report and the batch print
                           alike -- no handler here could see the forked failures.  The

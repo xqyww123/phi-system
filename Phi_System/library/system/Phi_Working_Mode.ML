@@ -10,8 +10,8 @@ type working_mode = {
   inhabited_rule: thm,
   transformation_rule : thm,
   view_shift_rule: thm option,
-  cast: cterm (*desired*) -> Proof.context -> thm (*sequent*) -> thm,
-  cast_exception: cterm (*desired*) -> Proof.context -> thm -> thm,
+  cast: cterm (*desired*) -> context_state -> context_state,
+  cast_exception: cterm (*desired*) -> context_state -> context_state,
   vcg_before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
   introduce_existence_in_assembling:
@@ -42,8 +42,10 @@ val mode1 : Proof.context -> working_mode
 val mode_of  : Context.generic -> term -> working_mode option
 val mode_of1 : Context.generic -> term -> working_mode
 
-val cast : cterm -> Proof.context -> thm -> thm
-val cast_exception : cterm -> Proof.context -> thm -> thm
+(*the cast family runs the reasoner: the context of the result is the run's
+  context exported onto the given one (PLPR_Context_Export)*)
+val cast : cterm -> context_state -> context_state
+val cast_exception : cterm -> context_state -> context_state
 
 val infer_working_mode_of_sequent : context_state -> working_mode * context_state
 
@@ -61,8 +63,8 @@ type working_mode = {
   initialize_sequent: Proof.state -> thm * Proof.state,
   transformation_rule : thm,
   view_shift_rule: thm option,
-  cast: cterm -> Proof.context -> thm -> thm,
-  cast_exception: cterm (*desired*) -> Proof.context -> thm -> thm,
+  cast: cterm -> context_state -> context_state,
+  cast_exception: cterm (*desired*) -> context_state -> context_state,
   vcg_before_assembling: cterm (*goal*) -> Proof.context * thm -> Proof.context * thm,
   introduce_existence: (string * typ) list -> Proof.context * thm -> Proof.context * thm,
   introduce_existence_in_assembling:
@@ -121,12 +123,12 @@ val default_initialize_sequent = generic_initialize_sequent (fn _ => error "BUG 
 
 (* Cast *)
 
-fun generic_cast rule place desired_nu ctxt sequent =
+fun generic_cast rule place desired_nu (ctxt, sequent) =
   let
     val _ = Phi_Reasoner.info_print ctxt 2 (fn _ => "reasoning cast..." ^ Position.here \<^here>)
-    val sequent' =
+    val (ctxt', sequent') =
           case Phi_Reasoner.reason NONE NONE (ctxt, sequent RS rule)
-            of SOME (_, ret) => ret
+            of SOME ret => ret
              | NONE => raise Phi_Error.CastFail (place, desired_nu, sequent)
     val _ = case Thm.prop_of sequent'
               of (\<^const>\<open>Trueprop\<close> $ _) => ()
@@ -134,7 +136,7 @@ fun generic_cast rule place desired_nu ctxt sequent =
                     $ (\<^const>\<open>Trueprop\<close> $ (\<^term>\<open>Proof_Obligation\<close> $ _))
                     $ (\<^const>\<open>Trueprop\<close> $ _)) => ()
                | _ => raise Phi_Error.CastFail (place, desired_nu, sequent)
-  in sequent'
+  in (ctxt', sequent')
  end
 
 fun cannot_cast_exception sequent =
@@ -192,19 +194,19 @@ fun introduce_existence_cc extract rule0 xs (ctxt,sequent) =
       end
   else bad_sequent sequent
 
-fun cast desired ctxt sequent =
-      #cast (mode_of1 (Context.Proof ctxt) (Thm.concl_of sequent)) desired ctxt sequent
+fun cast desired (s as (ctxt, sequent)) =
+      #cast (mode_of1 (Context.Proof ctxt) (Thm.concl_of sequent)) desired s
 
-fun cast_exception desired ctxt sequent =
-      #cast_exception (mode_of1 (Context.Proof ctxt) (Thm.concl_of sequent)) desired ctxt sequent
+fun cast_exception desired (s as (ctxt, sequent)) =
+      #cast_exception (mode_of1 (Context.Proof ctxt) (Thm.concl_of sequent)) desired s
 
-fun vcg_by_cast destination ctxt sequent = (
+fun vcg_by_cast destination (s as (ctxt, _)) = (
       Phi_Reasoner.info_pretty ctxt 2 (fn _ => Pretty.block [
         Pretty.str "casting to the target post-condition ",
         Syntax.pretty_term ctxt (Thm.term_of destination),
         Pretty.block (Pretty.here \<^here>)
       ]);
-      cast destination ctxt sequent
+      cast destination s
 )
 
 (* Working Modes *)
@@ -254,7 +256,7 @@ fun initialize_sequent_procedure arg ctxt =
 
 local
 
-fun cast desired ctxt sequent =
+fun cast desired (s as (ctxt, sequent)) =
   let
     val idx = 1 + Thm.maxidx_of_cterm desired
     val concl = Thm.concl_of sequent
@@ -268,10 +270,10 @@ fun cast desired ctxt sequent =
       else raise THM ("Don't know how to apply transformation on the sequent", 0, [sequent]))
         |> Thm.incr_indexes idx
         |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
-  in generic_cast rule "post-condition of the sequent" desired ctxt sequent
+  in generic_cast rule "post-condition of the sequent" desired s
   end
 
-fun cast_exception desired ctxt sequent =
+fun cast_exception desired (s as (ctxt, sequent)) =
   let
     val idx = 1 + Thm.maxidx_of_cterm desired
     val rule =
@@ -280,7 +282,7 @@ fun cast_exception desired ctxt sequent =
       else cannot_cast_exception sequent)
         |> Thm.incr_indexes idx
         |> Drule.infer_instantiate ctxt [(("E'",idx),desired)]
-  in generic_cast rule "post-condition of the sequent" desired ctxt sequent
+  in generic_cast rule "post-condition of the sequent" desired s
   end
 
 fun vcg_before_assembling goal (ctxt,sequent) =
@@ -328,7 +330,7 @@ fun vcg_before_assembling goal (ctxt,sequent) =
                             Syntax.string_of_typ ctxt desired_arg_T^
                             " but it actually returns "^
                             Syntax.string_of_typ ctxt current_arg_T)
-   in (ctxt, vcg_by_cast desired_nu ctxt sequent'')
+   in vcg_by_cast desired_nu (ctxt, sequent'')
   end
 
 in
@@ -418,19 +420,19 @@ in
     initialize_sequent = default_initialize_sequent,
     transformation_rule  = @{thm \<phi>apply_implication},
     view_shift_rule = SOME @{thm \<phi>apply_view_shift},
-    cast = (fn desired => fn ctxt => fn sequent =>
+    cast = (fn desired => fn (s as (ctxt, _)) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule = @{thm "_\<phi>cast_internal_rule_"}
           |> Thm.incr_indexes idx
           |> Drule.infer_instantiate ctxt [(("T'",idx),desired)]
       in
-        generic_cast rule "sequent" desired ctxt sequent
+        generic_cast rule "sequent" desired s
       end
     ),
-    cast_exception = K (K cannot_cast_exception),
-    vcg_before_assembling = (fn goal => fn (ctxt, sequent) =>
-        (ctxt, vcg_by_cast (#4 (Phi_Syntax.dest_CurrentConstruction_c goal)) ctxt sequent)),
+    cast_exception = K (cannot_cast_exception o snd),
+    vcg_before_assembling = (fn goal => fn s =>
+        vcg_by_cast (#4 (Phi_Syntax.dest_CurrentConstruction_c goal)) s),
     introduce_existence = introduce_existence_cc I @{thm introduce_Ex},
     introduce_existence_in_assembling =
       introduce_existence_cc (fn (Const (\<^const_name>\<open>Subjection\<close>, _) $ X $ _) => X
@@ -484,17 +486,17 @@ val implication : working_mode = {
     initialize_sequent = default_initialize_sequent,
     transformation_rule  = @{thm \<phi>apply_implication_impl},
     view_shift_rule = NONE,
-    cast = (fn desired => fn ctxt => fn sequent =>
+    cast = (fn desired => fn (s as (ctxt, _)) =>
       let
         val idx = 1 + Thm.maxidx_of_cterm desired
         val rule = @{thm "_\<phi>cast_implication_"}
           |> Thm.incr_indexes idx
           |> Drule.infer_instantiate ctxt [(("T",idx),desired)]
       in
-        generic_cast rule "sequent" desired ctxt sequent
+        generic_cast rule "sequent" desired s
       end
     ),
-    cast_exception = K (K cannot_cast_exception),
+    cast_exception = K (cannot_cast_exception o snd),
     vcg_before_assembling = (fn goal => fn (ctxt,sequent) =>
         let val goal' =
               case Phi_Syntax.dest_ToA_Construction (Thm.term_of goal)
@@ -507,7 +509,7 @@ val implication : working_mode = {
                             Thm.instantiate_cterm (TVars.empty, Vars.make [(v, \<^cterm>\<open>True\<close>)]) goal
                   end
                  | _ => goal
-         in (ctxt, vcg_by_cast (#2 (Phi_Syntax.dest_ToA_Construction_c goal')) ctxt sequent)
+         in vcg_by_cast (#2 (Phi_Syntax.dest_ToA_Construction_c goal')) (ctxt, sequent)
         end),
     introduce_existence = introduce_ex_ToA I @{thm introduce_Ex_ToA},
     introduce_existence_in_assembling = (fn vs =>

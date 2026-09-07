@@ -8,8 +8,8 @@ signature PHI_SYS = sig
   include PHI_SYS
 
   (** Basic Operations **)
-  val cast : cterm -> Proof.context -> thm -> thm
-  val cast_exception : cterm -> Proof.context -> thm -> thm
+  val cast : cterm -> context_state -> context_state
+  val cast_exception : cterm -> context_state -> context_state
 
   val accept_proc : context_state -> context_state
 
