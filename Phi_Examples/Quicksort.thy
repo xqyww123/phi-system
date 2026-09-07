@@ -8,7 +8,7 @@ begin
 declare [[auto_sledgehammer_params = "try0 = false",
           linarith_split_limit = 20]]
 
-  proc qsort:
+  proc qsort [\<phi>export]:
     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<int'>\<heavy_comma>
             \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<int'>)  \<close>
@@ -59,7 +59,7 @@ thm qsort_def
 (*
 
 
-  proc qsort_rat:
+  proc qsort_rat [\<phi>export]:
     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l>\<heavy_comma>
             \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<rat>\<close>
@@ -155,10 +155,6 @@ declare [[\<phi>infer_requirements]]
     \<medium_right_bracket>
   \<medium_right_bracket> .
 *)
-
-
-declare qsort_def [\<phi>export]
-declare qsort_rat_def [\<phi>export]
 
 declare [[\<phi>export_code = C]]
 

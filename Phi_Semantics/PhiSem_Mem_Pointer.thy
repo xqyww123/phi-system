@@ -784,6 +784,11 @@ proc NULL:
   \<open>0 \<Ztypecolon> TypedPtr TY\<close>
 \<medium_right_bracket> .
 
+text \<open>A null pointer written as \<open>NULL\<close> and one written as the literal \<open>0\<close> reach the code emitter in the
+  same shape, the literal \<open>sem_mk_pointer 0\<close>, so \<open>NULL\<close> is unfolded during procedure post-processing.\<close>
+
+declare NULL_def [procedure_simps]
+
 
 section \<open>Reasoning Configuration\<close>
 

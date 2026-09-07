@@ -73,7 +73,7 @@ proc abst_shift_pointer [\<phi>overload +]:
 \<medium_left_bracket>
   op_shift_pointer ($addr to RawPointer, $n) \<open>TY\<close> to \<open>TypedPtr TY'\<close>
 \<medium_right_bracket> .
-  
 
+ML_file \<open>codegen/C/mem_MI.ML\<close>
 
 end

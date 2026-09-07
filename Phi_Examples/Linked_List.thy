@@ -5,16 +5,16 @@ begin
 abbreviation \<open>link_list TY \<equiv> \<struct> {nxt: \<ptr>, data: TY}\<close>
 
 \<phi>type_def Linked_Lst
-  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<subj> addr = 0 \<and> \<typeof> T \<noteq> \<poison>)\<close>
+  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<subj> addr = 0)\<close>
       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
                                       (nxt, x) \<Ztypecolon> \<obj>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
                                       \<subj> nxt. \<typeof> addr = link_list (\<typeof> T) )\<close>
 
      deriving Basic
           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T)
-                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0) \<and> \<typeof> T \<noteq> \<poison>) \<close>
-          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [] \<and> \<typeof> T \<noteq> \<poison>)\<close>
-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = [] \<and> \<typeof> T \<noteq> \<poison>) (\<lambda>_. addr = 0)\<close>
+                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
+          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
+          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
           and \<open> \<premise> \<typeof> T = \<typeof> U
             \<Longrightarrow> Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U set (\<lambda>_. UNIV) list_all2\<close>
           and \<open> \<premise> \<typeof> T = \<typeof> U
@@ -23,9 +23,8 @@ abbreviation \<open>link_list TY \<equiv> \<struct> {nxt: \<ptr>, data: TY}\<clo
           and Pointer_Of
 
 
-proc init:
+proc init [\<phi>export]:
   input  Void
-  premises \<open>\<typeof> T \<noteq> \<poison>\<close>
   output \<open>[] \<Ztypecolon> \<ref> Linked_Lst 0 T\<close>
   is [routine]
 \<medium_left_bracket>
@@ -33,7 +32,7 @@ proc init:
   NULL
 \<medium_right_bracket> .
 
-proc is_empty:
+proc is_empty [\<phi>export]:
   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<close>
   output \<open>l = [] \<Ztypecolon> \<val> \<bool>\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
   is [routine]
@@ -41,7 +40,6 @@ proc is_empty:
   addr = NULL
 \<medium_right_bracket> .
 
-  
 proc prepend_llist:
   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> v \<Ztypecolon> \<val> T\<close>
   requires \<open>Semantic_Zero_Val (\<typeof> T) T z\<close>
@@ -186,7 +184,6 @@ text \<open>Semantic Representations of the Programs: \<close>
 
 thm init_def
 thm is_empty_def
-thm prepend_llist_def
 thm pop_llist_def
 thm nth_llist_def
 thm hd_llist_def
@@ -195,21 +192,14 @@ thm length_of_def
 thm reverse_aux_def
 thm reverse_def
 
-
-
-(*The `for` instances of the polymorphic procedures follow the parameter order of
-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
-declare init_def [\<phi>export]
-declare is_empty_def [\<phi>export]
-declare prepend_llist_def [\<phi>export for "TYPE(nat)" ]
-thm prepend_llist_def$
-declare pop_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
-declare nth_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
-declare hd_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
-declare update_nth_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
-declare length_of_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
-declare reverse_aux_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
-declare reverse_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+declare prepend_llist_def    [\<phi>export for \<int'>]
+declare pop_llist_def        [\<phi>export for \<int'>]
+declare nth_llist_def        [\<phi>export for \<int'>]
+declare hd_llist_def         [\<phi>export for \<int'>]
+declare update_nth_llist_def [\<phi>export for \<int'>]
+declare length_of_def        [\<phi>export for \<int'>]
+declare reverse_aux_def      [\<phi>export for \<int'>]
+declare reverse_def          [\<phi>export for \<int'>]
 
 declare [[\<phi>export_code = C]]
 

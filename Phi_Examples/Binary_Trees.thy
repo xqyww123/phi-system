@@ -389,7 +389,7 @@ proc (nodef) insert_bst:
 \<medium_right_bracket> .
 
 
-proc Max:
+proc Max [\<phi>export]:
   input  \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close>
   output \<open>max x y \<Ztypecolon> \<val> \<nat>\<close>
   is [routine]
@@ -644,16 +644,20 @@ thm insert_avl_i_def
 
 end
 
-
-(*The `for` instances of the polymorphic procedures follow the parameter order of
-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
-declare Max_def [\<phi>export]
-declare lookup_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
-declare defined_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
-declare insert_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
-declare height_of_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
-declare maintain_i_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
-declare insert_avl_i_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+declare lookup_bintree_def  [\<phi>export for TY_K = \<int'> and TY_V = \<int'>
+                                        and CMP = \<open>\<lambda>u v. op_slt TYPE(int_t) (u\<^bold>, v)\<close>
+                                        and Eq  = \<open>\<lambda>u v. op_equal \<int'> (u\<^bold>, v)\<close>]
+declare defined_bintree_def [\<phi>export for TY_K = \<int'> and TY_V = \<int'>
+                                        and CMP = \<open>\<lambda>u v. op_slt TYPE(int_t) (u\<^bold>, v)\<close>
+                                        and Eq  = \<open>\<lambda>u v. op_equal \<int'> (u\<^bold>, v)\<close>]
+declare insert_bintree_def  [\<phi>export for TY_K = \<int'> and TY_V = \<int'>
+                                        and CMP = \<open>\<lambda>u v. op_slt TYPE(int_t) (u\<^bold>, v)\<close>
+                                        and Eq  = \<open>\<lambda>u v. op_equal \<int'> (u\<^bold>, v)\<close>]
+declare height_of_def       [\<phi>export for TY_K = \<int'> and TY_V = \<int'>]
+declare maintain_i_def      [\<phi>export for TY_K = \<int'> and TY_V = \<int'>]
+declare insert_avl_i_def    [\<phi>export for TY_K = \<int'> and TY_V = \<int'>
+                                        and CMP = \<open>\<lambda>u v. op_slt TYPE(int_t) (u\<^bold>, v)\<close>
+                                        and Eq  = \<open>\<lambda>u v. op_equal \<int'> (u\<^bold>, v)\<close>]
 
 declare [[\<phi>export_code = C]]
 

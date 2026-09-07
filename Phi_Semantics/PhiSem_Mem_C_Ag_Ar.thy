@@ -430,4 +430,6 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
   unfolding Generalized_Semantic_Type_def ..
 *)
 
+ML_file \<open>codegen/C/pointer_arr.ML\<close>
+
 end

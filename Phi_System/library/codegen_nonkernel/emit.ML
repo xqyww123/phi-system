@@ -11,6 +11,10 @@ fun codegen' cfg oself intrfs procs thy ctxt =
                              (Path.basic (Context.theory_name {long=false} thy))
               |> Path.expand |> Path.implode
    in codegen cfg oself path intrfs procs thyname ctxt
+   |> tap (fn _ => if Symtab.is_empty intrfs
+                   then warning ("No procedure of theory " ^ thyname ^ " is tagged [\<phi>export]; " ^
+                                 "the transliteration is compiled but no " ^ #lang cfg ^ " file is written")
+                   else writeln (#lang cfg ^ " program written to " ^ path ^ "." ^ #lang cfg))
   end
 
 val _ = Theory.setup (Theory.at_end (fn thy =>

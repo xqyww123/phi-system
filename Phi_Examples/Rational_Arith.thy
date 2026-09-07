@@ -3,8 +3,6 @@ theory Rational_Arith
           Phi_Semantics.PhiSem_Int_ArbiPrec
 begin
 
-abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<aint>, den: \<aint>}\<close>
-
   
 \<phi>type_def \<phi>Rational ("\<rat>")
   where \<open>(x::rat) \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace> \<subj> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
@@ -15,7 +13,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
        and Semantic_Type
        and Inhabited
 
-  proc rat_add:
+  proc rat_add [\<phi>export]:
     input \<open>\<val> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
     output \<open>\<val> q1 + q2 \<Ztypecolon> \<rat>\<close>
   is [routine]
@@ -28,7 +26,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   \<medium_right_bracket> .
 
 
-  proc rat_sub:
+  proc rat_sub [\<phi>export]:
     input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
     output \<open>q1 - q2 \<Ztypecolon> \<val> \<rat>\<close>
   is [routine]
@@ -41,7 +39,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   \<medium_right_bracket> .
   
   
-  proc rat_mul:
+  proc rat_mul [\<phi>export]:
     input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
     output \<open>q1 * q2 \<Ztypecolon> \<val> \<rat>\<close>
   is [routine]
@@ -54,7 +52,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   \<medium_right_bracket> .
   
   
-  proc rat_div:
+  proc rat_div [\<phi>export]:
     input \<open>\<val> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
     premises \<open>q2 \<noteq> 0\<close>
     output \<open>\<val> q1 / q2 \<Ztypecolon> \<rat>\<close>
@@ -68,7 +66,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
   \<medium_right_bracket> .
 
 
-proc rat_lt [\<phi>overload <]:
+proc rat_lt [\<phi>overload <, \<phi>export]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 < q2 \<Ztypecolon> \<val> \<bool>\<close>
   is [routine]
@@ -80,7 +78,7 @@ proc rat_lt [\<phi>overload <]:
   sel (q1.den > 0 \<oplus> q2.den > 0, a > b, a < b)
 \<medium_right_bracket> .
 
-proc rat_le [\<phi>overload \<le>]:
+proc rat_le [\<phi>overload \<le>, \<phi>export]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 \<le> q2 \<Ztypecolon> \<val> \<bool>\<close>
   is [routine]
@@ -92,7 +90,7 @@ proc rat_le [\<phi>overload \<le>]:
   sel (q1.den > 0 \<oplus> q2.den > 0, a \<ge> b, a \<le> b)
 \<medium_right_bracket>  .
 
-proc rat_gt [\<phi>overload >]:
+proc rat_gt [\<phi>overload >, \<phi>export]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 > q2 \<Ztypecolon> \<val> \<bool>\<close>
   is [routine]
@@ -100,7 +98,7 @@ proc rat_gt [\<phi>overload >]:
   q2 < q1
 \<medium_right_bracket> .
 
-proc rat_ge [\<phi>overload >]:
+proc rat_ge [\<phi>overload >, \<phi>export]:
   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
   output \<open>q1 \<ge> q2 \<Ztypecolon> \<val> \<bool>\<close>
   is [routine]
@@ -122,16 +120,6 @@ thm rat_add_def
 thm rat_sub_def
 thm rat_mul_def
 thm rat_div_def
-
-
-declare rat_add_def [\<phi>export]
-declare rat_sub_def [\<phi>export]
-declare rat_mul_def [\<phi>export]
-declare rat_div_def [\<phi>export]
-declare rat_lt_def [\<phi>export]
-declare rat_le_def [\<phi>export]
-declare rat_gt_def [\<phi>export]
-declare rat_ge_def [\<phi>export]
 
 declare [[\<phi>export_code = C]]
 

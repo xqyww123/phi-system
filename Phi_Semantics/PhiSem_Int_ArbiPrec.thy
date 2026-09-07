@@ -185,6 +185,27 @@ definition op_amod :: "(VAL \<times> VAL, VAL) proc'"
       Return (\<phi>arg (sem_mk_aint (val_a mod val_b)))
   )))"
 
+text \<open>Two divisions are modelled. \<open>op_adiv\<close> and \<open>op_amod\<close> are the floor division of HOL
+  (\<open>div\<close> and \<open>mod\<close>, rounding toward negative infinity); \<open>op_asdiv\<close> and \<open>op_asmod\<close> truncate
+  toward zero (\<open>sdiv\<close> and \<open>smod\<close> of \<^theory>\<open>HOL-Library.Signed_Division\<close>), which is the
+  semantics of \<open>/\<close> and \<open>%\<close> in C and of the hardware division of x86 and ARM.\<close>
+
+definition op_asdiv :: "(VAL \<times> VAL, VAL) proc'"
+  where "op_asdiv =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_aint (val_a sdiv val_b)))
+  )))"
+
+definition op_asmod :: "(VAL \<times> VAL, VAL) proc'"
+  where "op_asmod =
+      \<phi>M_caseV (\<lambda>va vb.
+      \<phi>M_getV \<aint> sem_dest_aint va (\<lambda>val_a.
+      \<phi>M_getV \<aint> sem_dest_aint vb (\<lambda>val_b.
+      Return (\<phi>arg (sem_mk_aint (val_a smod val_b)))
+  )))"
+
 definition op_alshr :: "(VAL \<times> VAL, VAL) proc'"
   where "op_alshr =
       \<phi>M_caseV (\<lambda>va vb.
@@ -385,7 +406,28 @@ lemma op_mod_anat_\<phi>app[\<phi>overload %,
   \<open>\<proc> op_amod (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<nat> \<longmapsto> \<val> x mod y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_mod_aint \<medium_right_bracket>
       certified by (metis nat_int of_nat_0_le_iff zmod_int) .
-    
+
+
+paragraph \<open>Division and Modulo Truncating toward Zero\<close>
+
+text \<open>On natural numbers \<open>sdiv\<close> and \<open>smod\<close> coincide with \<open>div\<close> and \<open>mod\<close>, so only the
+  signed abstractions are given; they are reached through synthesis of \<open>x sdiv y\<close> and
+  \<open>x smod y\<close>, while the operators \<open>/\<close> and \<open>%\<close> keep denoting the floor division.\<close>
+
+lemma op_sdiv_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                    and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x sdiv y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+  \<open>\<proc> op_asdiv (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<int> \<longmapsto> \<val> x sdiv y \<Ztypecolon> \<int> \<rbrace>\<close>
+  unfolding op_asdiv_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
+      rule, simp)
+
+lemma op_smod_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+                                    and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x smod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+  \<open>\<proc> op_asmod (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<int> \<longmapsto> \<val> x smod y \<Ztypecolon> \<int> \<rbrace>\<close>
+  unfolding op_asmod_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
+      rule, simp)
+
 
 
 paragraph \<open>Right Shift\<close>

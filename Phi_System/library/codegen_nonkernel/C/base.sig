@@ -16,5 +16,6 @@ val bk : string -> ty -> ty -> V -> ctxt -> V * ctxt
 val ele : C'G_Phi_Element_Path.agidx list -> string list
 val newvar : T -> ctxt -> string * ctxt
 val defty : string -> T
+val defty_array : string list -> string -> T
 
 end

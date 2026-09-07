@@ -62,8 +62,8 @@ declare [[
 (* RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret *)
 
 proc op_routine:
-  requires Ty_X: \<open>Semantic_Types X TY_ARGs\<close>
-      and  Ty_Y: \<open>Semantic_Types Y TY_RETs\<close>
+  requires Ty_X: \<open>\<condition> list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_ARGs \<Longrightarrow> Semantic_Types X TY_ARGs\<close>
+      and  Ty_Y: \<open>\<condition> list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_RETs \<Longrightarrow> Semantic_Types Y TY_RETs\<close>
       and  \<open>\<r>Success\<close>
       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)
@@ -75,6 +75,7 @@ proc op_routine:
   output \<open>Y\<close>
   throws \<open>E\<close>
 \<medium_left_bracket>
+  semantic_assumption \<open>list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_ARGs \<and> list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_RETs\<close> \<semicolon>
   apply_rule "__routine_basic__"[OF Ty_X Ty_Y \<r>Success_I, where 'names='names,
                                  unfolded named_All, simplified]
   \<medium_left_bracket> for vs 

@@ -16,7 +16,7 @@ structure Phi_Variable : PHI_VARIABLE = struct
 open Phi_Variable
 
 val varname_prefix = "var_"
-val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
+val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K true)
 
 datatype var_state = Uninitialized | Initialized of cterm * cterm | May_Initialized of cterm * cterm
 

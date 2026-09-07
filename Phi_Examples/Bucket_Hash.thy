@@ -4,6 +4,7 @@ theory Bucket_Hash
           "HOL-Data_Structures.AList_Upd_Del"
 begin
 
+
 text \<open>We ignore arithmetic overflow in the length of a dynamic array,
       because otherwise the hash table cannot be specified in the expected way.
       However, we still consider arithmetic overflow in any other cases.\<close>
@@ -44,7 +45,7 @@ deriving \<open> Abstract_Domain T P
 
 declare [[\<phi>trace_reasoning = 1]]
 
-proc calc_hash:
+proc calc_hash [\<phi>export]:
   input  \<open>k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> N \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   premises \<open>N \<noteq> 0\<close>
   output \<open>hash k N \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
@@ -140,7 +141,7 @@ proc lookup_bucket:
           \<subj> v. (k,v) \<in> set bucket\<close>
   is [routine]
 \<medium_left_bracket>
-  var ret \<semicolon>
+  var ret :: \<open>\<typeof> T\<close>\<semicolon>
   iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (addr))
               \<open>\<lambda>i. v \<Ztypecolon> \<may> \<inited> \<var>[ret] T
                    \<subj> v v'. (\<exists>v. (k,v) \<in> set (take i bucket)) \<longrightarrow> v = Some v' \<and> (k,v') \<in> set (take i bucket)\<close>
@@ -205,7 +206,6 @@ proc new_hash:
   ret
 \<medium_right_bracket> .
 
-declare [[\<phi>trace_reasoning = 0]]
 
 proc del_hash:
   input  \<open>f \<Ztypecolon> \<ref> Hash addr T\<close>
@@ -299,20 +299,16 @@ thm del_hash_def
 thm entries_of_hash_def
 thm rehash_def
 
-
-(*The `for` instances of the polymorphic procedures follow the parameter order of
-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
-declare calc_hash_def [\<phi>export]
-declare insert_bucket_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare update_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare bucket_has_key_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare hash_has_key_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare lookup_bucket_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare hash_lookup_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare new_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare del_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare entries_of_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare rehash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare insert_bucket_def   [\<phi>export for \<size_t>]
+declare update_hash_def     [\<phi>export for \<size_t>]
+declare bucket_has_key_def  [\<phi>export for \<size_t>]
+declare hash_has_key_def    [\<phi>export for \<size_t>]
+declare lookup_bucket_def   [\<phi>export for \<size_t>]
+declare hash_lookup_def     [\<phi>export for \<size_t>]
+declare new_hash_def        [\<phi>export for \<size_t>]
+declare del_hash_def        [\<phi>export]
+declare entries_of_hash_def [\<phi>export for \<size_t>]
+declare rehash_def          [\<phi>export for \<size_t>]
 
 declare [[\<phi>export_code = C]]
 

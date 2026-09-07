@@ -44,11 +44,21 @@ and gen_tm' bi c (Const ("Pure.type", Type ("itself", [ty]))) = gen_typ c ty
       = w "(fn b" #> wi (bi+1) #> w " => " #> gen_tm (bi+1) c body #> w ")"
   | gen_tm' bi c (A $ B) = gen_tm bi c A #> w " (" #> gen_tm bi c B #> w ")"
 
-fun gen_proc' c (Const ("Pure.eq",_) $ Const (name, _) $ B)
-      = w "val " #> w_const c name #> w " = " #> gen_tm ~1 c B #> w "\n"
-  | gen_proc' a b = (fn _ => raise Match)
-
-fun gen_proc c = gen_proc' c o Thm.concl_of
+(*A definition made inside a context is \<open>c x\<^sub>1 \<dots> x\<^sub>n \<equiv> body\<close> with the context's parameters
+  x\<^sub>i as schematic variables; it is emitted as the ML function of those parameters.*)
+fun gen_proc c thm =
+  let fun param (Var ((name,i),_)) = w "(fn " #> w' name #> w "_v" #> wi i #> w " => "
+        | param (Free (name,_))    = w "(fn " #> w' name #> w "_v" #> w " => "
+        | param _ = raise THM ("the code emitter needs a definition of the form \<open>c x\<^sub>1 \<dots> x\<^sub>n \<equiv> body\<close>", 0, [thm])
+   in case Thm.concl_of thm
+   of Const ("Pure.eq",_) $ LHS $ B =>
+        (case Term.strip_comb LHS
+           of (Const (name, _), args) =>
+                w "val " #> w_const c name #> w " = " #> fold param args #> gen_tm ~1 c B
+                #> fold (fn _ => w ")") args #> w "\n"
+            | _ => raise THM ("the code emitter needs a definition of the form \<open>c x\<^sub>1 \<dots> x\<^sub>n \<equiv> body\<close>", 0, [thm]))
+    | _ => raise THM ("the code emitter needs a definition of the form \<open>c x\<^sub>1 \<dots> x\<^sub>n \<equiv> body\<close>", 0, [thm])
+  end
 
 fun gen_extractor (c:cfg) open_self path intrfs procs thyname =
   let val c' = (thyname, c)
@@ -58,8 +68,7 @@ fun gen_extractor (c:cfg) open_self path intrfs procs thyname =
         #> open_self ? (w "open " #> w (#lang c) #> w "'G_" #> w thyname #> w "\n")
         #> fold (gen_proc c') procs
         #> not (Symtab.is_empty intrfs) ? CG #> w "end\n"
-      val src = String.concat (rev (gen []))
-  in tracing src; src end
+  in String.concat (rev (gen [])) end
 
 fun codegen c os p i ps t = ML_Context.expression Position.none (ML_Lex.read (gen_extractor c os p i ps t))
 

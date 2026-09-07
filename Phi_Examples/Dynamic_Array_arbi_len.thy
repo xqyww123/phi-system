@@ -245,4 +245,6 @@ thm map_dynarr_def
 thm exists_dynarr_def
 thm fold_map_dynarr_def
 
+declare [[\<phi>export_code = C]]
+
 end

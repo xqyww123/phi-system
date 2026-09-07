@@ -54,5 +54,6 @@ proc memcpy_a:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+ML_file \<open>codegen/C/slice_a.ML\<close>
 
 end

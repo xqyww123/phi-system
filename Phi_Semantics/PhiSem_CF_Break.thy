@@ -197,6 +197,13 @@ lemma [\<phi>reason %ToA_brk_frame]:
   unfolding REMAINS_def
   by (metis mult.assoc mult.commute transformation_left_frame)
 
+lemma [\<phi>reason %ToA_brk_frame]:
+  \<open> A \<transforms> TECHNICAL Brk_Frame l \<remains> R \<with> P1
+\<Longrightarrow> R \<transforms> 1 \<with> P2
+\<Longrightarrow> A \<transforms> TECHNICAL Brk_Frame l \<with> P1 \<and> P2 \<close>
+  unfolding REMAINS_def
+  using transformation_left_frame transformation_trans by fastforce
+
 
 subsection \<open>sift brking frame\<close>
 

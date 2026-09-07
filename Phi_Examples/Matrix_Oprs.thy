@@ -25,8 +25,8 @@ proc zero_mat:
             x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>i + m \<le> M \<and> j + n \<le> N \<and> M < 2 ^ addrspace_bits \<and> N < 2 ^ addrspace_bits\<close>
   output   \<open>0\<^sub>m m n \<Ztypecolon> MatSlice a i j m n\<close>
-  unfolding MatSlice.unfold
   is [routine]
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
   map_slice(m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_slice(n) \<medium_left_bracket> for h \<rightarrow> val h  \<semicolon>
@@ -44,8 +44,8 @@ proc new_mat:
   output   \<open>a \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M N]\<heavy_comma>
             0\<^sub>m M N \<Ztypecolon> MatSlice a 0 0 M N
             \<subj> a. address_to_base a\<close>
-  unfolding MatSlice.unfold
   is [routine]
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
   calloc1 \<open>\<Array>[M] \<Array>[N] \<int>\<^sup>r(\<int'>)\<close>
 \<medium_right_bracket> .
@@ -54,8 +54,8 @@ proc del_mat:
   input    \<open>a \<Ztypecolon> \<val> Ptr[\<m>\<a>\<t> M N]\<heavy_comma> x \<Ztypecolon> MatSlice a i j m n\<close>
   premises \<open>m = M \<and> n = N \<and> i = 0 \<and> j = 0 \<and> address_to_base a\<close>
   output   \<open>Void\<close>
-  unfolding MatSlice.unfold
   is [routine]
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
   mfree (a)
 \<medium_right_bracket> .
@@ -73,8 +73,8 @@ proc copy_mat:
             M\<^sub>y < 2 ^ addrspace_bits \<and> N\<^sub>y < 2 ^ addrspace_bits\<close>
 
   output   \<open>y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
-  unfolding MatSlice.unfold
   is [routine]
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
@@ -96,8 +96,8 @@ proc add_mat:
             M\<^sub>y < 2 ^ addrspace_bits \<and> N\<^sub>y < 2 ^ addrspace_bits\<close>
 
   output   \<open>x + y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
-  unfolding MatSlice.unfold
   is [routine]
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h
@@ -119,8 +119,8 @@ proc sub_mat:
             M\<^sub>y < 2 ^ addrspace_bits \<and> N\<^sub>y < 2 ^ addrspace_bits \<close>
 
   output   \<open>x - y \<Ztypecolon> MatSlice a\<^sub>x i\<^sub>x j\<^sub>x m n\<heavy_comma> y \<Ztypecolon> MatSlice a\<^sub>y i\<^sub>y j\<^sub>y m n\<close>
-  unfolding MatSlice.unfold
   is [routine]
+  unfolding MatSlice.unfold
 \<medium_left_bracket>
   map_2slice (m) \<medium_left_bracket> for k \<rightarrow> val k \<semicolon>
     map_2slice (n) \<medium_left_bracket> for h \<rightarrow> val h \<semicolon>
@@ -329,17 +329,14 @@ thm sub_mat_def
 thm strassen_def
 thm strassen_mul_def
 
-
-(*The `for` instances of the polymorphic procedures follow the parameter order of
-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
-declare zero_mat_def [\<phi>export for 4 4]
-declare new_mat_def [\<phi>export for 4 4]
-declare del_mat_def [\<phi>export for 4 4]
-declare copy_mat_def [\<phi>export for 4 4 4 4]
-declare add_mat_def [\<phi>export for 4 4 4 4]
-declare sub_mat_def [\<phi>export for 4 4 4 4]
-declare strassen_def [\<phi>export for 4]
-declare strassen_mul_def [\<phi>export for 2]
+declare zero_mat_def     [\<phi>export for N = 4]
+declare new_mat_def      [\<phi>export for M = 4 and N = 4]
+declare del_mat_def      [\<phi>export]
+declare copy_mat_def     [\<phi>export for N\<^sub>x = 4 and N\<^sub>y = 4]
+declare add_mat_def      [\<phi>export for N\<^sub>x = 4 and N\<^sub>y = 4]
+declare sub_mat_def      [\<phi>export for N\<^sub>x = 4 and N\<^sub>y = 4]
+declare strassen_def     [\<phi>export for N = 4]
+declare strassen_mul_def [\<phi>export for n = 2]
 
 declare [[\<phi>export_code = C]]
 

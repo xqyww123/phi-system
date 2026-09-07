@@ -39,7 +39,7 @@ proc calloc_aN:
   have t1: \<open>valid_memaddr (Addr blk [])\<close>
     unfolding valid_memaddr_def Valid_MemBlk_def
     using \<open>block.layout blk = \<array>[n] TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] TY)\<close> address_type_def the_\<phi>(8)) \<semicolon>
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] TY)\<close> address_type_def; auto_sledgehammer) \<semicolon>
   
   semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<array>[n] TY))\<close>
 
@@ -75,11 +75,12 @@ proc calloc_aN2:
   have t1: \<open>valid_memaddr (Addr blk [])\<close>
     unfolding valid_memaddr_def Valid_MemBlk_def
     using \<open>block.layout blk = \<array>[n] \<array>[m] TY\<close>
-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] \<array>[m] TY)\<close> address_type_def the_\<phi>(9)) \<semicolon>
+    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] \<array>[m] TY)\<close> address_type_def; auto_sledgehammer) \<semicolon>
   
   semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>3) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<array>[n] \<array>[m] TY))\<close>
 
 \<medium_right_bracket> .
 
+ML_file \<open>codegen/C/mem_AI.ML\<close>
 
 end

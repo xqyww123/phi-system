@@ -5,10 +5,8 @@ theory PhiTest_Arithmetic
     Phi_Semantics.PhiSem_Variable
     Phi_Semantics.PhiSem_Int_ArbiPrec
     "HOL-Computational_Algebra.Primes"
-    Phi_Semantics.PhiCG_C
 begin
 
-declare [[\<phi>variable_is_typed]]
 
 proc test_prime [\<phi>export test_prime]:
   input  \<open>\<val> x \<Ztypecolon> \<nat>\<close>

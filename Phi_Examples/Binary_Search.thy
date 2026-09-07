@@ -3,7 +3,7 @@ theory Binary_Search
 begin
 
 
-proc binary_search_array:
+proc binary_search_array [\<phi>export]:
   input  \<open>arr \<Ztypecolon> \<mem>[ptr] \<Array>[cap] \<nat>(\<int'>)\<heavy_comma>
           ptr \<Ztypecolon> \<val> Ptr[\<array>[cap] \<int'>]\<heavy_comma> lower \<Ztypecolon> \<val> \<nat>(\<int'>)\<heavy_comma> upper \<Ztypecolon> \<val> \<nat>(\<int'>)\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<int'>)\<close>
   premises \<open>arr ! upper \<le> k\<close>
@@ -67,9 +67,6 @@ text \<open>Semantic Representations of the Programs: \<close>
 
 thm binary_search_array_def
 thm generalized_binary_search_def
-
-
-declare binary_search_array_def [\<phi>export]
 
 declare [[\<phi>export_code = C]]
 

@@ -23,11 +23,11 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<struct> {data: \<ptr>, l
 
 
 
-proc len_dynarr:
+proc len_dynarr [\<phi>export]:
   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
   output   \<open>length l \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
-  unfolding DynArr.unfold
   is [routine]
+  unfolding DynArr.unfold
 \<medium_left_bracket>
   addr.len
 \<medium_right_bracket> .
@@ -37,8 +37,8 @@ proc get_dynarr:
   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   premises \<open>i < length l\<close>
   output   \<open>l!i \<Ztypecolon> \<val> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
-  unfolding DynArr.unfold
   is [routine]
+  unfolding DynArr.unfold
 \<medium_left_bracket>
   addr.data[i]
 \<medium_right_bracket> .
@@ -48,13 +48,13 @@ proc set_dynarr:
   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> v \<Ztypecolon> \<val> T\<close>
   premises \<open>i < length l\<close>
   output   \<open>l[i := v] \<Ztypecolon> DynArr addr T\<close>
-  unfolding DynArr.unfold
   is [routine]
+  unfolding DynArr.unfold
 \<medium_left_bracket>
   addr.data[i] := v
 \<medium_right_bracket> .
 
-proc Max:
+proc Max [\<phi>export]:
   input  \<open>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   output \<open>max x y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
   is [routine]
@@ -145,7 +145,7 @@ proc new_dynarr:
 \<medium_right_bracket> .
 
 
-proc del_dynarr:
+proc del_dynarr [\<phi>export]:
   input  \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
   output \<open>Void\<close>
   is [routine]
@@ -225,19 +225,12 @@ thm map_dynarr_def
 thm exists_dynarr_def
 thm fold_map_dynarr_def
 
-
-
-(*The `for` instances of the polymorphic procedures follow the parameter order of
-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
-declare Max_def [\<phi>export]
-declare len_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare get_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare set_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare push_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare concat_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare pop_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare new_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
-declare del_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+declare get_dynarr_def    [\<phi>export for \<size_t>]
+declare set_dynarr_def    [\<phi>export for \<size_t>]
+declare push_dynarr_def   [\<phi>export for \<size_t>]
+declare concat_dynarr_def [\<phi>export for \<size_t>]
+declare pop_dynarr_def    [\<phi>export for \<size_t>]
+declare new_dynarr_def    [\<phi>export for \<size_t>]
 
 declare [[\<phi>export_code = C]]
 

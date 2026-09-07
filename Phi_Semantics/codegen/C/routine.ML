@@ -1,6 +1,6 @@
 structure C'G_PhiSem_CF_Routine = struct local open Phi_C'G in
 
-fun call name T v = if v = V0 then pair v else var T (puts([name,"("] @ pV v @ [");\n"]))
+fun call name T v = var T (puts([name,"("] @ pV v @ [");\n"]))
 
 fun op_rec_routine_ _ aG Ta Tb F = fun_name () (new_fun (fn N =>
   fold_map I Ta #-> (fn ta => fold_map I Tb #-> (fn tb =>

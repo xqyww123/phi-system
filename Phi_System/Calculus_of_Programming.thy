@@ -334,6 +334,20 @@ lemmas [procedure_simps] =
             proc_bind_SKIP proc_bind_SKIP'
             proc_bind_assoc proc_bind_return_none \<phi>V_simps
 
+text \<open>A procedure body is parameterized by semantic types, never by \<phi>-types, so every
+  \<open>\<typeof> T\<close> in it must be unfolded as far as the theory can; the rules for that live in the
+  theory's simpset, not in \<open>procedure_simps\<close>. This simproc is registered in \<open>procedure_simps\<close>
+  only and delegates to the theory's complete simpset.\<close>
+
+simproc_setup passive typeof_in_procedure (\<open>SType_Of T\<close>) = \<open>
+  fn _ => fn ctxt => fn ctm =>
+    let val ctxt' = put_simpset (simpset_of (Proof_Context.init_global (Proof_Context.theory_of ctxt))) ctxt
+        val th = Simplifier.rewrite ctxt' ctm
+     in if Thm.is_reflexive th then NONE else SOME th end
+\<close>
+
+setup \<open>Context.theory_map (Proc_Monad_SS.map (fn ctxt => ctxt addsimprocs [\<^simproc>\<open>typeof_in_procedure\<close>]))\<close>
+
 \<phi>reasoner_ML procedure_equivalence 1200 (\<open>Premise procedure_ss ?P\<close>)
   = \<open>PLPR_Simplifier.simplifier_by_ss' (K Seq.empty) Proc_Monad_SS.get' {fix_vars=false} o snd\<close>
 
