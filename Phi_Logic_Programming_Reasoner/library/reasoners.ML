@@ -943,225 +943,28 @@ fun quick_cut i th =
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>False\<close>, _) => Seq.empty
      | _ => Seq.single th
 
-(*TEMPORARY (`exception Option` hunt, 2026-09-02).  See the note at option_hunt
-  below.  option_mark is the LIGHTWEIGHT half: it records only which tactic
-  constituent the Option passed through, with no goal dump, so it can sit
-  inside the recursive depth search without flooding the log.  The innermost
-  constituent is the earliest record of a burst.*)
-(*What the simplifier last TRIED on this thread.  If one of our own simprocs
-  leaves the traversal in a state Isabelle then trips on, the raise site is
-  Isabelle's but the culprit is the last thing that ran -- this records it.*)
-val last_tried = Thread_Data.var () : string Thread_Data.var
-fun note_tried s = Thread_Data.put last_tried (SOME s)
-fun tried () = the_default "-" (Thread_Data.get last_tried)
-
-val option_hunt_category =
-  Event_Log.category {name = "option_hunt", enabled = fn () => true,
-    encode = fn (stage, nprems, goal) =>
-      ([("stage", stage), ("nprems", string_of_int nprems)],
-       [Event_Log.elem_text "goal" goal])}
-
-(*Dumps the goal the constituent was actually running on.  That matters: the
-  stage-level probe sees only the INPUT of the whole depth search, while the
-  raise happens deep inside it on a goal the search has already transformed --
-  so a replay from the stage input need not meet the same state at all.*)
-fun option_mark ctxt stage tac th =
-  Seq.make (fn () =>
-    Seq.pull (tac th)
-      handle Option.Option =>
-        ((\<^try>\<open>
-             let val gctxt = ctxt |> Config.put show_types true
-                                  |> Config.put show_sorts true
-              in Event_Log.append option_hunt_category
-                   (stage ^ " last=" ^ tried (), Thm.nprems_of th,
-                    Protocol_Message.clean_output
-                      (Syntax.string_of_term gctxt (Thm.prop_of th)))
-             end\<close>);
-         raise Option.Option))
-
-(*TEMPORARY (`exception Option` hunt, 2026-09-03).  W.simp established that the
-  raise is inside Simplifier.asm_full_simp_tac; these are the simplifier's OWN
-  trace hooks, which WRAP each rewrite-rule application and each simproc
-  invocation (raw_simplifier.ML:907-912), so a handler placed here names the
-  exact rule or simproc that raises.  Replaces Pure's trace_ops -- whose default
-  is a pure pass-through (raw_simplifier.ML:917-920) -- so the only thing lost
-  is interactive simp tracing, which is off by default.  Delete with the hunt.*)
-(*positive control for the trace hooks themselves: without it, "RRULE/SIMPROC
-  never fired" cannot be distinguished from "the hooks were never installed"
-  (Trace_Ops merge is first-wins, so an override is possible).  Each hook
-  announces itself once per run.*)
-val rrule_alive = Synchronized.var "option_hunt.rrule_alive" false
-val simproc_alive = Synchronized.var "option_hunt.simproc_alive" false
-fun announce v name =
-  if Synchronized.change_result v (fn b => (b, true)) then ()
-  else (\<^try>\<open>Event_Log.append option_hunt_category
-             ("HOOK_ALIVE:" ^ name, ~1, "")\<close>; ())
-
-val _ = Theory.setup (Raw_Simplifier.set_trace_ops
- {trace_invoke = fn _ => fn ctxt => ctxt,
-  trace_rrule =
-    fn {rrule = {name, ...}, cterm, ...} => fn ctxt => fn cont =>
-      (announce rrule_alive "rrule";
-       note_tried ("rrule:" ^ Thm_Name.print name);
-       cont ctxt
-        handle Option.Option =>
-          ((\<^try>\<open>Event_Log.append option_hunt_category
-                ("RRULE:" ^ Thm_Name.print name, ~1,
-                 Protocol_Message.clean_output
-                   (Syntax.string_of_term ctxt (Thm.term_of cterm)))\<close>);
-           raise Option.Option)),
-  trace_simproc =
-    fn {name, cterm} => fn ctxt => fn cont =>
-      (announce simproc_alive "simproc";
-       note_tried ("simproc:" ^ name);
-       cont ctxt
-        handle Option.Option =>
-          ((\<^try>\<open>Event_Log.append option_hunt_category
-                ("SIMPROC:" ^ name, ~1,
-                 Protocol_Message.clean_output
-                   (Syntax.string_of_term ctxt (Thm.term_of cterm)))\<close>);
-           raise Option.Option))})
-
-(*TEMPORARY (`exception Option` hunt, 2026-09-03).  W.simp put the raise inside
-  asm_full_simp_tac, and the trace hooks then showed it is NOT in a rewrite
-  rule, NOT in a simproc and (since the conditional prover runs inside
-  trace_rrule, raw_simplifier.ML:1076) NOT in the conditional solver.  What the
-  hooks cannot see is the GOAL-LEVEL solver and the LOOPER: generic_simp_tac
-  (simplifier.ML:318-328) runs both outside any hook.  This mirrors that
-  function exactly -- same mode, same safe=false solver choice -- with its three
-  constituents marked.  Every piece is exported (RAW_SIMPLIFIER:88-111).
-  Delete with the hunt.*)
-local
-  (*simplifier.ML:311-315, verbatim*)
-  fun solve_all_tac' solvers ctxt =
-    let val sub = Raw_Simplifier.subgoal_tac (Raw_Simplifier.set_solvers solvers ctxt)
-     in DEPTH_SOLVE ((sub THEN_ALL_NEW (K no_tac)) 1) end
-in
-fun marked_asm_full_simp_tac ctxt =
-  let
-    val lt = Raw_Simplifier.loop_tac ctxt
-    val (unsafe0, _) = Raw_Simplifier.solvers ctxt
-    (*dest_ss's name list is `map solver_name` of this very list
-      (raw_simplifier.ML:334), so the two zip positionally.  Marking each solver
-      by NAME turns "the raise is somewhere in the solver chain" into "it is
-      THIS solver".*)
-    val names = #unsafe_solvers (Raw_Simplifier.dest_ss (Raw_Simplifier.simpset_of ctxt))
-    val unsafe_solvers =
-      if length names = length unsafe0 then
-        map2 (fn nm => fn sv =>
-                Raw_Simplifier.mk_solver nm
-                  (fn ctxt' => fn i =>
-                     option_mark ctxt' ("SOLVER:" ^ nm) (Raw_Simplifier.solver ctxt' sv i)))
-             names unsafe0
-      else unsafe0
-    val solve_tac = FIRST' (map (Raw_Simplifier.solver ctxt) (rev unsafe_solvers))
-    fun mloop i = option_mark ctxt "M.loop" (lt i)
-    fun simp_loop_tac i =
-      option_mark ctxt "M.rewrite"
-        (Raw_Simplifier.generic_rewrite_goal_tac (true, true, true)
-           (fn ctxt' => option_mark ctxt' "M.prover" (solve_all_tac' unsafe_solvers ctxt'))
-           ctxt i)
-      THEN
-      (option_mark ctxt "M.solve" (solve_tac i)
-       ORELSE TRY ((mloop THEN_ALL_NEW simp_loop_tac) i))
-  in PREFER_GOAL (simp_loop_tac 1) end
-end
-
-(*TEMPORARY (`exception Option` hunt, 2026-09-03).  The last untraced region
-  inside the rewriting traversal that has a safe public hook: the mksimps chain
-  that turns assumptions into rewrite rules (asm_full_simp uses it heavily, and
-  neither trace_rrule nor trace_simproc sees it).  get_mksimps_context is
-  exported, so this WRAPS the existing chain rather than replacing it.*)
-fun mark_mksimps ctxt =
-  let val f = Raw_Simplifier.get_mksimps_context ctxt in
-    Raw_Simplifier.set_mksimps_context
-      (fn th => fn ctxt' =>
-         f th ctxt'
-           handle Option.Option =>
-             ((\<^try>\<open>Event_Log.append option_hunt_category
-                   ("MKSIMPS", ~1,
-                    Protocol_Message.clean_output
-                      (Syntax.string_of_term ctxt' (Thm.prop_of th)))\<close>);
-              raise Option.Option))
-      ctxt
-  end
-
-(*The unsafe wrapper `addss` installs, but with the simplifier call MARKED, so
-  a raise inside it is attributed to the simplifier rather than to the
-  classical steps it is APPEND'ed before.  Mirrors Clasimp.addss exactly
-  (Provers/clasimp.ML:52-53: add_wrapper Classical.addbefore
-  "asm_full_simp_tac" Simplifier.asm_full_simp_tac, whose wrapper body is
-  `fn _ => CHANGED o tac ctxt`).*)
-fun addss_marked ctxt =
-  Classical.addbefore (ctxt,
-    ("asm_full_simp_tac",
-     fn _ => fn i => option_mark ctxt "W.simp" (CHANGED (marked_asm_full_simp_tac (mark_mksimps ctxt) i))))
-
 fun slow_step_tac' ctxt =
   Classical.appWrappers ctxt
-    ((fn i => option_mark ctxt "S.instp" (Classical.instp_step_tac ctxt i)) APPEND'
-     (fn i => option_mark ctxt "S.unsafe" (Classical.unsafe_step_tac ctxt i)));
+    (Classical.instp_step_tac ctxt APPEND' Classical.unsafe_step_tac ctxt);
 
 fun nodup_depth_tac ctxt m i st =
   SELECT_GOAL
-    (option_mark ctxt "N.safe_steps" (Classical.safe_steps_tac ctxt 1) THEN_ELSE
+    (Classical.safe_steps_tac ctxt 1 THEN_ELSE
       (DEPTH_SOLVE (nodup_depth_tac ctxt m 1),
-        option_mark ctxt "N.inst0" (Classical.inst0_step_tac ctxt 1) APPEND COND (K (m = 0)) no_tac
-          (option_mark ctxt "N.slow" (slow_step_tac' ctxt 1)
-             THEN DEPTH_SOLVE (nodup_depth_tac ctxt (m - 1) 1)))) i st;
-
-(*TEMPORARY (`exception Option` hunt, 2026-09-02 -- resumes the 2026-08-14
-  hunt, see OPTION_EXCEPTION_IN_PROOF_REPLAY.md).  The captured frame trace
-  stops at norm_tac because everything below it is Pure's classical/simp
-  machinery, which is never ML_debugger-compiled and so contributes no frame;
-  no further FRAME can narrow this.  What can narrow it is the INPUT: record
-  the subgoal state and the tactic stage that was running when Option escaped,
-  turning an observable-only failure into a replayable one.  Logs and
-  reraises -- it never decides a proof.  Delete with the hunt.*)
-fun option_hunt ctxt stage tac th =
-  Seq.make (fn () =>
-    Seq.pull (tac th)
-      handle Option.Option =>
-        ((\<^try>\<open>
-             let val gctxt = ctxt |> Config.put show_types true
-                                  |> Config.put show_sorts true
-              in Event_Log.append option_hunt_category
-                   (stage ^ " last=" ^ tried (), Thm.nprems_of th,
-                    Protocol_Message.clean_output
-                      (Syntax.string_of_term gctxt (Thm.prop_of th)))
-             end\<close>);
-         raise Option.Option))
-
-(*POSITIVE CONTROL (2026-08-14 methodology lesson 1: every round must emit
-  evidence that the instrument is alive, so a round with no records can never
-  be confused with a broken instrument).  Raises Option inside an option_hunt
-  wrapper once at load time; a run whose option_hunt category has no SELFTEST
-  record has a DEAD probe, and its silence says nothing about the bug.*)
-val _ =
-  \<^try>\<open>ignore (Seq.pull (option_hunt \<^context> "SELFTEST"
-                              (fn _ => raise Option.Option) Drule.dummy_thm))\<close>
-
-(*POSITIVE CONTROL for PURE instrumentation (2026-09-03).  Seq.hd on an empty
-  sequence is `the (pull xq)` inside Pure's seq.ML:86 -- the SAME shape of
-  raise we are hunting.  If Pure carries ML_debugger the recorded frame list
-  names seq.ML; if it is empty, Pure is NOT instrumented and every "no frames
-  below the probe" conclusion is worthless.*)
-val _ =
-  \<^try>\<open>Exception_Log.capture
-       {site = "PURE_FRAME_SELFTEST", record = Exception_Log.default_record}
-       (fn () => Seq.hd Seq.empty)\<close>
+        Classical.inst0_step_tac ctxt 1 APPEND COND (K (m = 0)) no_tac
+          (slow_step_tac' ctxt 1 THEN DEPTH_SOLVE (nodup_depth_tac ctxt (m - 1) 1)))) i st;
 
 fun auto_search_tac ctxt =
   let
     val ctxt = Context_Position.set_visible false ctxt
     fun main_tac i =
-        CHANGED (nodup_depth_tac (addss_marked ctxt) 10 i)
+        CHANGED (nodup_depth_tac (addss ctxt) 10 i)
   in
     norm_tac ((
-      option_hunt ctxt "A.safe1" (TRY (Classical.safe_tac ctxt)) THEN
-      option_hunt ctxt "A.depth" (REPEAT_DETERM (FIRSTGOAL main_tac)) THEN
-      option_hunt ctxt "A.safe2" (TRY (Classical.safe_tac (addSss ctxt))) THEN
-      option_hunt ctxt "A.prune" (prune_params_tac ctxt))
+      TRY (Classical.safe_tac ctxt) THEN
+      REPEAT_DETERM (FIRSTGOAL main_tac) THEN
+      TRY (Classical.safe_tac (addSss ctxt)) THEN
+      prune_params_tac ctxt)
       #> Seq.take 1 )
   end;
 
@@ -1175,12 +978,12 @@ fun auto_search_tac ctxt =
 fun p_auto_search_tac ctxt =
   let
     val ctxt = Context_Position.set_visible false ctxt
-    fun main_tac i = CHANGED (nodup_depth_tac (addss_marked ctxt) 10 i)
+    fun main_tac i = CHANGED (nodup_depth_tac (addss ctxt) 10 i)
   in
     norm_tac ((
-      option_hunt ctxt "P.simp" (ALLGOALS (fn i => TRY (Simplifier.asm_full_simp_tac ctxt i))) THEN
-      option_hunt ctxt "P.cut" (ALLGOALS quick_cut) THEN
-      option_hunt ctxt "P.depth" (REPEAT_DETERM (FIRSTGOAL main_tac)))
+      ALLGOALS (fn i => TRY (Simplifier.asm_full_simp_tac ctxt i)) THEN
+      ALLGOALS quick_cut THEN
+      REPEAT_DETERM (FIRSTGOAL main_tac))
       #> Seq.take 1 )
   end;
 
@@ -1799,12 +1602,10 @@ fun guard_condition_solver {can_inst} ctxt0 th0 =
             Guard_Refute_SS.enhance for R-nitpick, which merges).*)
           fun auto_tac ctxt0'' =
               let val ctxt = Guess_Instantiate.add_guess_inst_looper ctxt0'' in
-                option_hunt ctxt "G.simpcut"
-                  (ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut)) THEN
+                ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
                 (if is_F
-                 then option_hunt ctxt "G.isF"
-                        (timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt))
-                 else option_hunt ctxt "G.race" (prove_or_refute can_inst ctxt ctxt0))
+                 then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt)
+                 else prove_or_refute can_inst ctxt ctxt0)
               end
                 (* (timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt)) *)
         (*fun clarsimp_tac ctxt =
