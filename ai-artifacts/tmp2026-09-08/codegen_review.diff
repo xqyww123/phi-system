@@ -1,0 +1,970 @@
+diff --git a/Phi_Examples/Binary_Search.thy b/Phi_Examples/Binary_Search.thy
+index f3845624..4eff288f 100644
+--- a/Phi_Examples/Binary_Search.thy
++++ b/Phi_Examples/Binary_Search.thy
+@@ -3,7 +3,7 @@ theory Binary_Search
+ begin
+ 
+ 
+-proc binary_search_array:
++proc binary_search_array [\<phi>export]:
+   input  \<open>arr \<Ztypecolon> \<mem>[ptr] \<Array>[cap] \<nat>(\<int'>)\<heavy_comma>
+           ptr \<Ztypecolon> \<val> Ptr[\<array>[cap] \<int'>]\<heavy_comma> lower \<Ztypecolon> \<val> \<nat>(\<int'>)\<heavy_comma> upper \<Ztypecolon> \<val> \<nat>(\<int'>)\<heavy_comma> k \<Ztypecolon> \<val> \<nat>(\<int'>)\<close>
+   premises \<open>arr ! upper \<le> k\<close>
+@@ -68,9 +68,6 @@ text \<open>Semantic Representations of the Programs: \<close>
+ thm binary_search_array_def
+ thm generalized_binary_search_def
+ 
+-
+-declare binary_search_array_def [\<phi>export]
+-
+ declare [[\<phi>export_code = C]]
+ 
+ end
+diff --git a/Phi_Examples/Binary_Trees.thy b/Phi_Examples/Binary_Trees.thy
+index ebf331de..e051cb42 100644
+--- a/Phi_Examples/Binary_Trees.thy
++++ b/Phi_Examples/Binary_Trees.thy
+@@ -389,7 +389,7 @@ proc (nodef) insert_bst:
+ \<medium_right_bracket> .
+ 
+ 
+-proc Max:
++proc Max [\<phi>export]:
+   input  \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close>
+   output \<open>max x y \<Ztypecolon> \<val> \<nat>\<close>
+   is [routine]
+@@ -644,16 +644,12 @@ thm insert_avl_i_def
+ 
+ end
+ 
+-
+-(*The `for` instances of the polymorphic procedures follow the parameter order of
+-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+-declare Max_def [\<phi>export]
+-declare lookup_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+-declare defined_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+-declare insert_bintree_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+-declare height_of_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+-declare maintain_i_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
+-declare insert_avl_i_def [\<phi>export for TYPE(nat) TYPE(nat) \<open>\<nat>(\<int'>)\<close> \<open>\<nat>(\<int'>)\<close>]
++declare lookup_bintree_def  [\<phi>export for \<int'> \<int'>]
++declare defined_bintree_def [\<phi>export for \<int'> \<int'>]
++declare insert_bintree_def  [\<phi>export for \<int'> \<int'>]
++declare height_of_def       [\<phi>export for \<int'> \<int'>]
++declare maintain_i_def      [\<phi>export for \<int'> \<int'>]
++declare insert_avl_i_def    [\<phi>export for \<int'> \<int'>]
+ 
+ declare [[\<phi>export_code = C]]
+ 
+diff --git a/Phi_Examples/Bucket_Hash.C b/Phi_Examples/Bucket_Hash.C
+index 1e072d97..e6e19115 100644
+--- a/Phi_Examples/Bucket_Hash.C
++++ b/Phi_Examples/Bucket_Hash.C
+@@ -1,130 +1,25 @@
+ #include <stdbool.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <string.h>
+ 
+-typedef int TY;
+-
+-struct KV_Entry {
+-  int k;
+-  TY v;
+-};
+-
+-#include "DynArr_for_Hash.c"
+-
+-struct Hash {
+-  struct DynArr** tabl;
+-  int N;
+-};
+-
+-int calc_hash (int k, int N) {
+-  return k % N;
+-}
+-
+-void insert_bucket (struct DynArr* addr, int k, TY v)
+-{
+-  bool met = false;
+-  for (int i=0; i < len_dynarr(addr); ++i) {
+-    struct KV_Entry kv = get_dynarr(addr, i);
+-    if (kv.k = k) {
+-      set_dynarr (addr, i, {k: k, v: v});
+-      met = true;
+-    }
+-    if (!met) {
+-      push_dynarr (addr, {k: k, v: v});
+-    }
+-  }
+-}
+-
+-void update_hash(struct Hash* addr, int k, TY v)
+-{
+-  struct DynArr** tabl = addr -> tabl;
+-  int N = addr -> N;
+-  int hash = calc_hash (k, N);
+-  insert_bucket (tabl[hash], k, v);
+-}
+-
+-bool bucket_has_key (struct DynArr* addr, int k)
+-{
+-  bool met = false;
+-  for (int i = 0; i < len_dynarr(addr); ++i) {
+-    met = met || (get_dynarr(addr, i).k == k);
+-  }
+-  return met;
++intptr_t calc_hash(intptr_t v0, intptr_t v1) {
++intptr_t v2 = (intptr_t)((uintptr_t)v0 % (uintptr_t)v1);
++return v2;
+ }
+ 
+-bool hash_has_key (struct Hash* addr, int k)
+-{
+-  struct DynArr** tabl = addr -> tabl;
+-  int N = addr -> N;
+-  int hash = calc_hash (k, N);
+-  return bucket_has_key (tabl[hash], k);
+-}
+-
+-TY lookup_bucket (struct DynArr* addr, int k)
+-{
+-  TY ret;
+-  for (int i = 0; i < len_dynarr(addr); ++i) {
+-    struct KV_Entry entry = get_dynarr(addr, i);
+-    if (entry.k == k) {
+-      ret = entry.v;
+-    }
+-  }
+-  return ret;
+-}
+-
+-TY hash_lookup (struct Hash* addr, int k)
+-{
+-  struct DynArr** tabl = addr -> tabl;
+-  int N = addr -> N;
+-  int hash = calc_hash (k, N);
+-  TY ret = lookup_bucket (tabl[hash], k);
+-  return ret;
+-}
+-
+-struct Hash* new_hash (int N)
+-{
+-  struct DynArr** tabl_addr = (struct DynArr**) calloc(sizeof(struct DynArr*), N);
+-  for (int i = 0; i < N; ++i) {
+-    struct DynArr* dynarr = new_dynarr();
+-    tabl_addr[i] = dynarr;
+-  }
+-
+-  struct Hash* ret = (struct Hash*) calloc(sizeof(struct Hash), 1);
+-  ret -> N = N;
+-  ret -> tabl = tabl_addr;
+-  return ret;
+-}
+-
+-void del_hash (struct Hash* addr)
+-{
+-  int N = addr -> N;
+-  struct DynArr** tabl = addr -> tabl;
+-  for (int i = 0; i < N; ++i) {
+-    del_dynarr (tabl[i]);
+-  }
+-  free (tabl);
+-  free (addr);
+-}
++typedef struct {intptr_t N; void* tabl; } T37;
+ 
+-struct DynArr* entries_of_hash (struct Hash* addr)
+-{
+-  struct DynArr* dynarr = new_dynarr ();
+-  int N = addr -> N;
+-  struct DynArr** tabl = addr -> tabl;
+-  for (int i=0; i < N; ++i) {
+-    concat_dynarr (dynarr, tabl[i]);
+-  }
+-  return dynarr;
++intptr_t f38(intptr_t v0, intptr_t v1) {
++intptr_t v2 = (intptr_t)((uintptr_t)v0 % (uintptr_t)v1);
++return v2;
+ }
+ 
+-struct Hash* rehash (struct Hash* addr, int N)
+-{
+-  struct DynArr* dynarr = entries_of_hash (addr);
+-  del_hash(addr);
+-  struct Hash* ret = new_hash(N);
+-  for (int i = 0; i < len_dynarr(dynarr); ++i) {
+-    struct KV_Entry entry = get_dynarr (dynarr, i);
+-    update_hash (ret, entry.k, entry.v);
+-  }
+-  del_dynarr (dynarr);
+-  return ret;
++void update_hash(void* v0, intptr_t v1, intptr_t v2) {
++void* v3 = (void*)&((*(T37*)v0).tabl);
++void* v4 = *(void**)v3;
++void* v5 = (void*)&((*(T37*)v0).N);
++intptr_t v6 = *(intptr_t*)v5;
++intptr_t v7 = f38(v1,v6);
+ }
+ 
+diff --git a/Phi_Examples/Bucket_Hash.thy b/Phi_Examples/Bucket_Hash.thy
+index 375a230e..5a8a3171 100644
+--- a/Phi_Examples/Bucket_Hash.thy
++++ b/Phi_Examples/Bucket_Hash.thy
+@@ -44,7 +44,7 @@ deriving \<open> Abstract_Domain T P
+ 
+ declare [[\<phi>trace_reasoning = 1]]
+ 
+-proc calc_hash:
++proc calc_hash [\<phi>export]:
+   input  \<open>k \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> N \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+   premises \<open>N \<noteq> 0\<close>
+   output \<open>hash k N \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+@@ -140,7 +140,7 @@ proc lookup_bucket:
+           \<subj> v. (k,v) \<in> set bucket\<close>
+   is [routine]
+ \<medium_left_bracket>
+-  var ret \<semicolon>
++  var ret :: \<typeof> T \<semicolon>
+   iterate_a (\<open>0 \<Ztypecolon> \<nat>\<close>, len_dynarr (addr))
+               \<open>\<lambda>i. v \<Ztypecolon> \<may> \<inited> \<var>[ret] T
+                    \<subj> v v'. (\<exists>v. (k,v) \<in> set (take i bucket)) \<longrightarrow> v = Some v' \<and> (k,v') \<in> set (take i bucket)\<close>
+@@ -299,20 +299,16 @@ thm del_hash_def
+ thm entries_of_hash_def
+ thm rehash_def
+ 
+-
+-(*The `for` instances of the polymorphic procedures follow the parameter order of
+-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+-declare calc_hash_def [\<phi>export]
+-declare insert_bucket_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare update_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare bucket_has_key_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare hash_has_key_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare lookup_bucket_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare hash_lookup_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare new_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare del_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare entries_of_hash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare rehash_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
++declare insert_bucket_def   [\<phi>export for \<size_t>]
++declare update_hash_def     [\<phi>export for \<size_t>]
++declare bucket_has_key_def  [\<phi>export for \<size_t>]
++declare hash_has_key_def    [\<phi>export for \<size_t>]
++declare lookup_bucket_def   [\<phi>export for \<size_t>]
++declare hash_lookup_def     [\<phi>export for \<size_t>]
++declare new_hash_def        [\<phi>export for \<size_t>]
++declare del_hash_def        [\<phi>export for \<size_t>]
++declare entries_of_hash_def [\<phi>export for \<size_t>]
++declare rehash_def          [\<phi>export for \<size_t>]
+ 
+ declare [[\<phi>export_code = C]]
+ 
+diff --git a/Phi_Examples/Dynamic_Array.thy b/Phi_Examples/Dynamic_Array.thy
+index fa48cf99..fdc8aedc 100644
+--- a/Phi_Examples/Dynamic_Array.thy
++++ b/Phi_Examples/Dynamic_Array.thy
+@@ -23,11 +23,11 @@ abbreviation \<open>\<d>\<y>\<n>\<a>\<r>\<r> \<equiv> \<struct> {data: \<ptr>, l
+ 
+ 
+ 
+-proc len_dynarr:
++proc len_dynarr [\<phi>export]:
+   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
+   output   \<open>length l \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
+-  unfolding DynArr.unfold
+   is [routine]
++  unfolding DynArr.unfold
+ \<medium_left_bracket>
+   addr.len
+ \<medium_right_bracket> .
+@@ -37,8 +37,8 @@ proc get_dynarr:
+   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+   premises \<open>i < length l\<close>
+   output   \<open>l!i \<Ztypecolon> \<val> T\<heavy_comma> l \<Ztypecolon> DynArr addr T\<close>
+-  unfolding DynArr.unfold
+   is [routine]
++  unfolding DynArr.unfold
+ \<medium_left_bracket>
+   addr.data[i]
+ \<medium_right_bracket> .
+@@ -48,13 +48,13 @@ proc set_dynarr:
+   input    \<open>l \<Ztypecolon> \<ref> DynArr addr T\<heavy_comma> i \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> v \<Ztypecolon> \<val> T\<close>
+   premises \<open>i < length l\<close>
+   output   \<open>l[i := v] \<Ztypecolon> DynArr addr T\<close>
+-  unfolding DynArr.unfold
+   is [routine]
++  unfolding DynArr.unfold
+ \<medium_left_bracket>
+   addr.data[i] := v
+ \<medium_right_bracket> .
+ 
+-proc Max:
++proc Max [\<phi>export]:
+   input  \<open>x \<Ztypecolon> \<val> \<nat>(\<size_t>)\<heavy_comma> y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+   output \<open>max x y \<Ztypecolon> \<val> \<nat>(\<size_t>)\<close>
+   is [routine]
+@@ -145,7 +145,7 @@ proc new_dynarr:
+ \<medium_right_bracket> .
+ 
+ 
+-proc del_dynarr:
++proc del_dynarr [\<phi>export]:
+   input  \<open>l \<Ztypecolon> \<ref> DynArr addr T\<close>
+   output \<open>Void\<close>
+   is [routine]
+@@ -225,19 +225,12 @@ thm map_dynarr_def
+ thm exists_dynarr_def
+ thm fold_map_dynarr_def
+ 
+-
+-
+-(*The `for` instances of the polymorphic procedures follow the parameter order of
+-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+-declare Max_def [\<phi>export]
+-declare len_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare get_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare set_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare push_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare concat_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare pop_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare new_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
+-declare del_dynarr_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<size_t>)\<close>]
++declare get_dynarr_def    [\<phi>export for \<size_t>]
++declare set_dynarr_def    [\<phi>export for \<size_t>]
++declare push_dynarr_def   [\<phi>export for \<size_t>]
++declare concat_dynarr_def [\<phi>export for \<size_t>]
++declare pop_dynarr_def    [\<phi>export for \<size_t>]
++declare new_dynarr_def    [\<phi>export for \<size_t>]
+ 
+ declare [[\<phi>export_code = C]]
+ 
+diff --git a/Phi_Examples/Linked_List.thy b/Phi_Examples/Linked_List.thy
+index ed8ed0a6..c9f53400 100644
+--- a/Phi_Examples/Linked_List.thy
++++ b/Phi_Examples/Linked_List.thy
+@@ -5,16 +5,16 @@ begin
+ abbreviation \<open>link_list TY \<equiv> \<struct> {nxt: \<ptr>, data: TY}\<close>
+ 
+ \<phi>type_def Linked_Lst
+-  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<subj> addr = 0 \<and> \<typeof> T \<noteq> \<poison>)\<close>
++  where \<open>([] \<Ztypecolon> Linked_Lst addr T)   = (Void \<subj> addr = 0)\<close>
+       | \<open>(x#ls \<Ztypecolon> Linked_Lst addr T) = (ls \<Ztypecolon> Linked_Lst nxt T\<heavy_comma>
+                                       (nxt, x) \<Ztypecolon> \<obj>[addr] \<lbrace> nxt: Ptr, data: T \<rbrace>
+                                       \<subj> nxt. \<typeof> addr = link_list (\<typeof> T) )\<close>
+ 
+      deriving Basic
+           and \<open>Abstract_Domain T P \<Longrightarrow> Abstract_Domain (Linked_Lst addr T)
+-                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0) \<and> \<typeof> T \<noteq> \<poison>) \<close>
+-          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [] \<and> \<typeof> T \<noteq> \<poison>)\<close>
+-          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = [] \<and> \<typeof> T \<noteq> \<poison>) (\<lambda>_. addr = 0)\<close>
++                                      (\<lambda>x. list_all P x \<and> (x = [] \<longleftrightarrow> addr = 0)) \<close>
++          and \<open>Identity_Elements\<^sub>E (Linked_Lst addr T) (\<lambda>l. addr = 0 \<and> l = [])\<close>
++          and \<open>Identity_Elements\<^sub>I (Linked_Lst addr T) (\<lambda>l. l = []) (\<lambda>_. addr = 0)\<close>
+           and \<open> \<premise> \<typeof> T = \<typeof> U
+             \<Longrightarrow> Transformation_Functor (Linked_Lst addr) (Linked_Lst addr) T U set (\<lambda>_. UNIV) list_all2\<close>
+           and \<open> \<premise> \<typeof> T = \<typeof> U
+@@ -23,9 +23,8 @@ abbreviation \<open>link_list TY \<equiv> \<struct> {nxt: \<ptr>, data: TY}\<clo
+           and Pointer_Of
+ 
+ 
+-proc init:
++proc init [\<phi>export]:
+   input  Void
+-  premises \<open>\<typeof> T \<noteq> \<poison>\<close>
+   output \<open>[] \<Ztypecolon> \<ref> Linked_Lst 0 T\<close>
+   is [routine]
+ \<medium_left_bracket>
+@@ -33,7 +32,7 @@ proc init:
+   NULL
+ \<medium_right_bracket> .
+ 
+-proc is_empty:
++proc is_empty [\<phi>export]:
+   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<close>
+   output \<open>l = [] \<Ztypecolon> \<val> \<bool>\<heavy_comma> l \<Ztypecolon> Linked_Lst addr T\<close>
+   is [routine]
+@@ -41,7 +40,6 @@ proc is_empty:
+   addr = NULL
+ \<medium_right_bracket> .
+ 
+-  
+ proc prepend_llist:
+   input  \<open>l \<Ztypecolon> \<ref> Linked_Lst addr T\<heavy_comma> v \<Ztypecolon> \<val> T\<close>
+   requires \<open>Semantic_Zero_Val (\<typeof> T) T z\<close>
+@@ -186,7 +184,6 @@ text \<open>Semantic Representations of the Programs: \<close>
+ 
+ thm init_def
+ thm is_empty_def
+-thm prepend_llist_def
+ thm pop_llist_def
+ thm nth_llist_def
+ thm hd_llist_def
+@@ -195,21 +192,14 @@ thm length_of_def
+ thm reverse_aux_def
+ thm reverse_def
+ 
+-
+-
+-(*The `for` instances of the polymorphic procedures follow the parameter order of
+-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+-declare init_def [\<phi>export]
+-declare is_empty_def [\<phi>export]
+-declare prepend_llist_def [\<phi>export for "TYPE(nat)" ]
+-thm prepend_llist_def$
+-declare pop_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+-declare nth_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+-declare hd_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+-declare update_nth_llist_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+-declare length_of_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+-declare reverse_aux_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
+-declare reverse_def [\<phi>export for TYPE(nat) \<open>\<nat>(\<int'>)\<close>]
++declare prepend_llist_def    [\<phi>export for \<int'>]
++declare pop_llist_def        [\<phi>export for \<int'>]
++declare nth_llist_def        [\<phi>export for \<int'>]
++declare hd_llist_def         [\<phi>export for \<int'>]
++declare update_nth_llist_def [\<phi>export for \<int'>]
++declare length_of_def        [\<phi>export for \<int'>]
++declare reverse_aux_def      [\<phi>export for \<int'>]
++declare reverse_def          [\<phi>export for \<int'>]
+ 
+ declare [[\<phi>export_code = C]]
+ 
+diff --git a/Phi_Examples/Matrix_Oprs.thy b/Phi_Examples/Matrix_Oprs.thy
+index a8cc88ca..6d747e4a 100644
+--- a/Phi_Examples/Matrix_Oprs.thy
++++ b/Phi_Examples/Matrix_Oprs.thy
+@@ -329,16 +329,13 @@ thm sub_mat_def
+ thm strassen_def
+ thm strassen_mul_def
+ 
+-
+-(*The `for` instances of the polymorphic procedures follow the parameter order of
+-  `closure` (TYPE arguments first, then logical parameters); verify against `thm X_def`.*)
+-declare zero_mat_def [\<phi>export for 4 4]
+-declare new_mat_def [\<phi>export for 4 4]
+-declare del_mat_def [\<phi>export for 4 4]
+-declare copy_mat_def [\<phi>export for 4 4 4 4]
+-declare add_mat_def [\<phi>export for 4 4 4 4]
+-declare sub_mat_def [\<phi>export for 4 4 4 4]
+-declare strassen_def [\<phi>export for 4]
++declare zero_mat_def     [\<phi>export for 4 4]
++declare new_mat_def      [\<phi>export for 4 4]
++declare del_mat_def      [\<phi>export for 4 4]
++declare copy_mat_def     [\<phi>export for 4 4 4 4]
++declare add_mat_def      [\<phi>export for 4 4 4 4]
++declare sub_mat_def      [\<phi>export for 4 4 4 4]
++declare strassen_def     [\<phi>export for 4]
+ declare strassen_mul_def [\<phi>export for 2]
+ 
+ declare [[\<phi>export_code = C]]
+diff --git a/Phi_Examples/Quicksort.thy b/Phi_Examples/Quicksort.thy
+index e98b7c2b..6955cbcb 100644
+--- a/Phi_Examples/Quicksort.thy
++++ b/Phi_Examples/Quicksort.thy
+@@ -8,7 +8,7 @@ begin
+ declare [[auto_sledgehammer_params = "try0 = false",
+           linarith_split_limit = 20]]
+ 
+-  proc qsort:
++  proc qsort [\<phi>export]:
+     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<int'>\<heavy_comma>
+             \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
+             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<int'>)  \<close>
+@@ -59,7 +59,7 @@ thm qsort_def
+ (*
+ 
+ 
+-  proc qsort_rat:
++  proc qsort_rat [\<phi>export]:
+     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l>\<heavy_comma>
+             \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
+             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<rat>\<close>
+@@ -156,10 +156,6 @@ declare [[\<phi>infer_requirements]]
+   \<medium_right_bracket> .
+ *)
+ 
+-
+-declare qsort_def [\<phi>export]
+-declare qsort_rat_def [\<phi>export]
+-
+ declare [[\<phi>export_code = C]]
+ 
+ end
+diff --git a/Phi_Examples/Rational_Arith.thy b/Phi_Examples/Rational_Arith.thy
+index 34ca7b52..baaa88ad 100644
+--- a/Phi_Examples/Rational_Arith.thy
++++ b/Phi_Examples/Rational_Arith.thy
+@@ -3,8 +3,6 @@ theory Rational_Arith
+           Phi_Semantics.PhiSem_Int_ArbiPrec
+ begin
+ 
+-abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<aint>, den: \<aint>}\<close>
+-
+   
+ \<phi>type_def \<phi>Rational ("\<rat>")
+   where \<open>(x::rat) \<Ztypecolon> \<phi>Rational \<equiv> (n,d) \<Ztypecolon> \<lbrace> num: \<int>, den: \<int> \<rbrace> \<subj> n d. of_int n / of_int d = x \<and> d \<noteq> 0\<close>
+@@ -15,7 +13,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
+        and Semantic_Type
+        and Inhabited
+ 
+-  proc rat_add:
++  proc rat_add [\<phi>export]:
+     input \<open>\<val> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
+     output \<open>\<val> q1 + q2 \<Ztypecolon> \<rat>\<close>
+   is [routine]
+@@ -28,7 +26,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
+   \<medium_right_bracket> .
+ 
+ 
+-  proc rat_sub:
++  proc rat_sub [\<phi>export]:
+     input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
+     output \<open>q1 - q2 \<Ztypecolon> \<val> \<rat>\<close>
+   is [routine]
+@@ -41,7 +39,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
+   \<medium_right_bracket> .
+   
+   
+-  proc rat_mul:
++  proc rat_mul [\<phi>export]:
+     input \<open>q1 \<Ztypecolon> \<val> \<rat> \<heavy_comma> q2 \<Ztypecolon> \<val> \<rat>\<close>
+     output \<open>q1 * q2 \<Ztypecolon> \<val> \<rat>\<close>
+   is [routine]
+@@ -54,7 +52,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
+   \<medium_right_bracket> .
+   
+   
+-  proc rat_div:
++  proc rat_div [\<phi>export]:
+     input \<open>\<val> q1 \<Ztypecolon> \<rat> \<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
+     premises \<open>q2 \<noteq> 0\<close>
+     output \<open>\<val> q1 / q2 \<Ztypecolon> \<rat>\<close>
+@@ -68,7 +66,7 @@ abbreviation \<open>\<r>\<a>\<t>\<i>\<o>\<n>\<a>\<l> \<equiv> \<struct>{num: \<a
+   \<medium_right_bracket> .
+ 
+ 
+-proc rat_lt [\<phi>overload <]:
++proc rat_lt [\<phi>overload <, \<phi>export]:
+   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
+   output \<open>q1 < q2 \<Ztypecolon> \<val> \<bool>\<close>
+   is [routine]
+@@ -80,7 +78,7 @@ proc rat_lt [\<phi>overload <]:
+   sel (q1.den > 0 \<oplus> q2.den > 0, a > b, a < b)
+ \<medium_right_bracket> .
+ 
+-proc rat_le [\<phi>overload \<le>]:
++proc rat_le [\<phi>overload \<le>, \<phi>export]:
+   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
+   output \<open>q1 \<le> q2 \<Ztypecolon> \<val> \<bool>\<close>
+   is [routine]
+@@ -92,7 +90,7 @@ proc rat_le [\<phi>overload \<le>]:
+   sel (q1.den > 0 \<oplus> q2.den > 0, a \<ge> b, a \<le> b)
+ \<medium_right_bracket>  .
+ 
+-proc rat_gt [\<phi>overload >]:
++proc rat_gt [\<phi>overload >, \<phi>export]:
+   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
+   output \<open>q1 > q2 \<Ztypecolon> \<val> \<bool>\<close>
+   is [routine]
+@@ -100,7 +98,7 @@ proc rat_gt [\<phi>overload >]:
+   q2 < q1
+ \<medium_right_bracket> .
+ 
+-proc rat_ge [\<phi>overload >]:
++proc rat_ge [\<phi>overload >, \<phi>export]:
+   input \<open>\<val> q1 \<Ztypecolon> \<rat>\<heavy_comma> \<val> q2 \<Ztypecolon> \<rat>\<close>
+   output \<open>q1 \<ge> q2 \<Ztypecolon> \<val> \<bool>\<close>
+   is [routine]
+@@ -123,16 +121,6 @@ thm rat_sub_def
+ thm rat_mul_def
+ thm rat_div_def
+ 
+-
+-declare rat_add_def [\<phi>export]
+-declare rat_sub_def [\<phi>export]
+-declare rat_mul_def [\<phi>export]
+-declare rat_div_def [\<phi>export]
+-declare rat_lt_def [\<phi>export]
+-declare rat_le_def [\<phi>export]
+-declare rat_gt_def [\<phi>export]
+-declare rat_ge_def [\<phi>export]
+-
+ declare [[\<phi>export_code = C]]
+ 
+ end
+diff --git a/Phi_Semantics/PhiSem_Aggregate_Array.thy b/Phi_Semantics/PhiSem_Aggregate_Array.thy
+index 31655af0..7bb00729 100644
+--- a/Phi_Semantics/PhiSem_Aggregate_Array.thy
++++ b/Phi_Semantics/PhiSem_Aggregate_Array.thy
+@@ -85,7 +85,7 @@ section \<open>\<phi>Type\<close>
+            notes list_all2_conv_all_nth[simp] list_all_length[simp]
+ 
+ 
+-lemma semty_Array [simp, \<phi>type_property Array Semantic_Type]:
++lemma semty_Array [simp, procedure_simps, \<phi>type_property Array Semantic_Type]:
+   \<open>\<typeof> (Array N T) = \<array>[N] (\<typeof> T)\<close>
+   unfolding SType_Of_def Inhabited_def Satisfiable_def Semantic_Type_def
+   apply (cases N)
+diff --git a/Phi_Semantics/PhiSem_Aggregate_Named_Tuple.thy b/Phi_Semantics/PhiSem_Aggregate_Named_Tuple.thy
+index b0c51d78..610749a7 100644
+--- a/Phi_Semantics/PhiSem_Aggregate_Named_Tuple.thy
++++ b/Phi_Semantics/PhiSem_Aggregate_Named_Tuple.thy
+@@ -295,7 +295,7 @@ print_translation \<open>[
+ 
+ subsubsection \<open>Properties\<close>
+ 
+-lemma typeof_ntup_1 [simp, \<phi>type_property Named_Tuple_Field Semantic_Type]:
++lemma typeof_ntup_1 [simp, procedure_simps, \<phi>type_property Named_Tuple_Field Semantic_Type]:
+   \<open> \<typeof> \<lbrace> SYMBOL_VAR(s): T \<rbrace> = \<struct> {SYMBOL_VAR(s): \<typeof> T} \<close> 
+   unfolding SType_Of_def Named_Tuple_Field.unfold Inhabited_def Satisfiable_def Semantic_Type_def
+   apply auto
+@@ -410,12 +410,20 @@ apply auto
+ 
+ simproc_setup typeof_ntup (\<open>\<typeof> (\<lbrace> SYMBOL_VAR(s): T \<rbrace> \<^emph> U)\<close>) = \<open>
+   fn _ => fn ctxt => fn ctm =>
+-    Drule.infer_instantiate ctxt [(("T",0), Thm.dest_arg ctm)] @{thm' typeof_ntup}
+-      |> REPEAT_DETERM (resolve_tac ctxt @{thms' Named_Tuple_Types_N Named_Tuple_Types_1} 1)
+-      |> Seq.pull
+-      |> Option.map fst
++    let (*discharges the field-distinctness side conditions of Named_Tuple_Types_N with the
++          theory's complete simpset, so the simproc also works inside a restricted simpset
++          such as procedure_simps*)
++        val side_ss = put_simpset (simpset_of (Proof_Context.init_global (Proof_Context.theory_of ctxt))) ctxt
++     in Drule.infer_instantiate ctxt [(("T",0), Thm.dest_arg ctm)] @{thm' typeof_ntup}
++     |> (REPEAT_DETERM (resolve_tac ctxt @{thms' Named_Tuple_Types_N Named_Tuple_Types_1} 1)
++         THEN ALLGOALS (simp_tac side_ss))
++     |> Seq.pull
++     |> Option.mapPartial (fn (th, _) => if Thm.no_prems th then SOME th else NONE)
++    end
+ \<close>
+ 
++setup \<open>Context.theory_map (Proc_Monad_SS.map (fn ctxt => ctxt addsimprocs [\<^simproc>\<open>typeof_ntup\<close>]))\<close>
++
+ lemma fmpred_sing[simp]:
+   \<open>fmpred P (fmupd k v fmempty) \<longleftrightarrow> P k v\<close>
+   by auto
+diff --git a/Phi_Semantics/PhiSem_Aggregate_Tuple.thy b/Phi_Semantics/PhiSem_Aggregate_Tuple.thy
+index 2f4cb6f5..2b6f8277 100644
+--- a/Phi_Semantics/PhiSem_Aggregate_Tuple.thy
++++ b/Phi_Semantics/PhiSem_Aggregate_Tuple.thy
+@@ -289,6 +289,8 @@ simproc_setup typeof_tup (\<open>\<typeof> (\<lbrace> T \<rbrace> \<^emph> U)\<c
+       |> Option.map fst
+ \<close>
+ 
++setup \<open>Context.theory_map (Proc_Monad_SS.map (fn ctxt => ctxt addsimprocs [\<^simproc>\<open>typeof_tup\<close>]))\<close>
++
+ lemma
+   \<open> P (\<typeof> \<lbrace> A \<rbrace>) = P (\<tup> {\<typeof> A}) \<close>
+   by simp
+diff --git a/Phi_Semantics/PhiSem_C.thy b/Phi_Semantics/PhiSem_C.thy
+index 871e7509..95e440d8 100644
+--- a/Phi_Semantics/PhiSem_C.thy
++++ b/Phi_Semantics/PhiSem_C.thy
+@@ -10,9 +10,6 @@ theory PhiSem_C
+           PhiSem_Mem_C_Ar_MI
+ begin
+ 
+-declare [[\<phi>variable_is_typed]]
+-  \<comment> \<open>C local variables carry their semantic type; the C emitter needs it to print declarations.\<close>
+-
+ debt_axiomatization
+   where ptr_neq_int_t'  [simp]: \<open>\<ptr> \<noteq> sem_int_T n\<close>
+     and ptr_neq_struct [simp]: \<open>\<ptr> \<noteq> sem_ntup_T f\<close>
+diff --git a/Phi_Semantics/PhiSem_CF_Routine.thy b/Phi_Semantics/PhiSem_CF_Routine.thy
+index 91ce6ee4..74810e7c 100644
+--- a/Phi_Semantics/PhiSem_CF_Routine.thy
++++ b/Phi_Semantics/PhiSem_CF_Routine.thy
+@@ -62,8 +62,8 @@ declare [[
+ (* RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret *)
+ 
+ proc op_routine:
+-  requires Ty_X: \<open>Semantic_Types X TY_ARGs\<close>
+-      and  Ty_Y: \<open>Semantic_Types Y TY_RETs\<close>
++  requires Ty_X: \<open>\<condition> list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_ARGs \<Longrightarrow> Semantic_Types X TY_ARGs\<close>
++      and  Ty_Y: \<open>\<condition> list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_RETs \<Longrightarrow> Semantic_Types Y TY_RETs\<close>
+       and  \<open>\<r>Success\<close>
+       and  F: \<open>(\<And>(vs:: 'args::FIX_ARITY_VALs \<phi>arg <named> 'names) label_ret.
+             return_\<phi>app\<^bold>: TECHNICAL(RETURN_FRAME TYPE('rets::FIX_ARITY_VALs) label_ret Y)
+@@ -75,6 +75,7 @@ proc op_routine:
+   output \<open>Y\<close>
+   throws \<open>E\<close>
+ \<medium_left_bracket>
++  semantic_assumption \<open>list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_ARGs \<and> list_all (\<lambda>TY. TY \<noteq> \<poison>) TY_RETs\<close> \<semicolon>
+   apply_rule "__routine_basic__"[OF Ty_X Ty_Y \<r>Success_I, where 'names='names,
+                                  unfolded named_All, simplified]
+   \<medium_left_bracket> for vs 
+diff --git a/Phi_Semantics/PhiSem_Mem_C_AI.thy b/Phi_Semantics/PhiSem_Mem_C_AI.thy
+index 93555cd3..7b4b64f9 100644
+--- a/Phi_Semantics/PhiSem_Mem_C_AI.thy
++++ b/Phi_Semantics/PhiSem_Mem_C_AI.thy
+@@ -39,7 +39,7 @@ proc calloc_aN:
+   have t1: \<open>valid_memaddr (Addr blk [])\<close>
+     unfolding valid_memaddr_def Valid_MemBlk_def
+     using \<open>block.layout blk = \<array>[n] TY\<close>
+-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] TY)\<close> address_type_def the_\<phi>(8)) \<semicolon>
++    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] TY)\<close> address_type_def; auto_sledgehammer) \<semicolon>
+   
+   semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>2) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<array>[n] TY))\<close>
+ 
+@@ -75,7 +75,7 @@ proc calloc_aN2:
+   have t1: \<open>valid_memaddr (Addr blk [])\<close>
+     unfolding valid_memaddr_def Valid_MemBlk_def
+     using \<open>block.layout blk = \<array>[n] \<array>[m] TY\<close>
+-    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] \<array>[m] TY)\<close> address_type_def the_\<phi>(9)) \<semicolon>
++    by (cases blk; clarsimp simp: \<open>type_storable_in_mem (\<array>[n] \<array>[m] TY)\<close> address_type_def; auto_sledgehammer) \<semicolon>
+   
+   semantic_return \<open>sem_mk_pointer (Addr (\<phi>arg.dest \<v>3) 0) \<Turnstile> (Addr blk 0 \<Ztypecolon> TypedPtr (\<array>[n] \<array>[m] TY))\<close>
+ 
+diff --git a/Phi_Semantics/PhiSem_Mem_C_Ag_Ar.thy b/Phi_Semantics/PhiSem_Mem_C_Ag_Ar.thy
+index 1c3b06b8..bdf87370 100644
+--- a/Phi_Semantics/PhiSem_Mem_C_Ag_Ar.thy
++++ b/Phi_Semantics/PhiSem_Mem_C_Ag_Ar.thy
+@@ -430,4 +430,6 @@ lemma [\<phi>reason %generalized_sematic_type_cut]:
+   unfolding Generalized_Semantic_Type_def ..
+ *)
+ 
+-end
+\ No newline at end of file
++ML_file \<open>codegen/C/pointer_arr.ML\<close>
++
++end
+diff --git a/Phi_Semantics/PhiSem_Mem_C_MI.thy b/Phi_Semantics/PhiSem_Mem_C_MI.thy
+index 43476244..be0be23b 100644
+--- a/Phi_Semantics/PhiSem_Mem_C_MI.thy
++++ b/Phi_Semantics/PhiSem_Mem_C_MI.thy
+@@ -73,7 +73,7 @@ proc abst_shift_pointer [\<phi>overload +]:
+ \<medium_left_bracket>
+   op_shift_pointer ($addr to RawPointer, $n) \<open>TY\<close> to \<open>TypedPtr TY'\<close>
+ \<medium_right_bracket> .
+-  
+ 
++ML_file \<open>codegen/C/mem_MI.ML\<close>
+ 
+-end
+\ No newline at end of file
++end
+diff --git a/Phi_Semantics/codegen/C/agg_base.ML b/Phi_Semantics/codegen/C/agg_base.ML
+index 4d00da68..9e062382 100644
+--- a/Phi_Semantics/codegen/C/agg_base.ML
++++ b/Phi_Semantics/codegen/C/agg_base.ML
+@@ -5,4 +5,6 @@ fun op_set_aggregate_ _ _ idx (V2(a,b)) = puts'' ([dV a] @ ele idx @ ["=",dV b,"
+ 
+ val op_construct_aggregate_ = I
+ 
++fun AgIdx_VN_ v = C'G_Phi_Element_Path.AgIdx_V_ (dV v)
++
+ end end
+\ No newline at end of file
+diff --git a/Phi_Semantics/codegen/C/int.ML b/Phi_Semantics/codegen/C/int.ML
+index 03eb34b3..060f3bba 100644
+--- a/Phi_Semantics/codegen/C/int.ML
++++ b/Phi_Semantics/codegen/C/int.ML
+@@ -4,8 +4,8 @@ end end
+ 
+ structure C'G_PhiSem_Machine_Integer = struct local open Phi_C'G in
+ 
+-fun iT ~1 = ["int"]  | iT i = ["int",  string_of_int i, "_t"]
+-fun uT ~1 = ["uint"] | uT i = ["uint", string_of_int i, "_t"]
++fun iT ~1 = ["int"]  | iT ~2 = ["intptr_t"]  | iT i = ["int",  string_of_int i, "_t"]
++fun uT ~1 = ["uint"] | uT ~2 = ["uintptr_t"]| uT i = ["uint", string_of_int i, "_t"]
+ val int_t_T = ~1 ; val mk_int_T_ : int -> T = pair o iT ; val bT = K ["bool"]
+ 
+ fun sem_mk_int_ (_,i) = string_of_int i
+diff --git a/Phi_Semantics/codegen/C/pointer.ML b/Phi_Semantics/codegen/C/pointer.ML
+index e6292fcf..d291c648 100644
+--- a/Phi_Semantics/codegen/C/pointer.ML
++++ b/Phi_Semantics/codegen/C/pointer.ML
+@@ -1,4 +1,5 @@
+ structure C'G_PhiSem_Mem_Pointer = struct local open Phi_C'G in
+ val sem_pointer_T_ = pair ["void*"]; val P = sem_pointer_T_; val NULL_ : M = pair (V "NULL")
++val size_t_T = ~2; val addrspace_bits_ = ~2  (*width code understood by C'G_PhiSem_Machine_Integer.iT/uT*)
+ fun op_get_element_pointer_ T idx v = T #-> (fn t => var P (puts(["(void*)&((*("]@ t @["*)",dV v,")"] @ ele idx @ [");\n"])))
+ end end
+diff --git a/Phi_Semantics/library/variable.ML b/Phi_Semantics/library/variable.ML
+index 62666c2e..06038a29 100644
+--- a/Phi_Semantics/library/variable.ML
++++ b/Phi_Semantics/library/variable.ML
+@@ -16,7 +16,7 @@ structure Phi_Variable : PHI_VARIABLE = struct
+ open Phi_Variable
+ 
+ val varname_prefix = "var_"
+-val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K false)
++val variable_is_typed = Attrib.setup_config_bool \<^binding>\<open>\<phi>variable_is_typed\<close> (K true)
+ 
+ datatype var_state = Uninitialized | Initialized of cterm * cterm | May_Initialized of cterm * cterm
+ 
+diff --git a/Phi_StdLib/PhiStd_Slice.thy b/Phi_StdLib/PhiStd_Slice.thy
+index d75d41b7..2e3cd5b1 100644
+--- a/Phi_StdLib/PhiStd_Slice.thy
++++ b/Phi_StdLib/PhiStd_Slice.thy
+@@ -61,5 +61,6 @@ proc memcpy:
+   \<medium_right_bracket>
+ \<medium_right_bracket> .
+ 
++ML_file \<open>codegen/C/slice.ML\<close>
+ 
+-end
+\ No newline at end of file
++end
+diff --git a/Phi_System/library/codegen/C/base.ML b/Phi_System/library/codegen/C/base.ML
+index f84edc56..5f9b8c97 100644
+--- a/Phi_System/library/codegen/C/base.ML
++++ b/Phi_System/library/codegen/C/base.ML
+@@ -15,7 +15,7 @@ fun unop opr ty a = var ty (puts'' [opr, dV a] #> snd)
+ fun binop opr ty (V2(a,b)) = var ty (puts'' [dV a," ",opr," ",dV b] #> snd)
+ fun trinop opr1 opr2 ty (V2(a,V2(b,c))) = var ty (puts'' [dV a," ",opr1," ",dV b," ",opr2," ",dV c] #> snd)
+ 
+-val codegen = codegen' "#include <stdbool.h>\n#include <stdint.h>\n#include <stdlib.h>\n\n"
++val codegen = codegen' "#include <stdbool.h>\n#include <stdint.h>\n#include <stdlib.h>\n#include <string.h>\n\n"
+ 
+ fun pV (V s) = [s] | pV (V2(a,b)) = pV a @ [","] @ pV b
+ fun chkV0 (v,c) = if v = V0 then c else error "if-statement or while-statement cannot have return value"
+diff --git a/Phi_System/library/codegen/C/misc.ML b/Phi_System/library/codegen/C/misc.ML
+index 573a5362..b69adf47 100644
+--- a/Phi_System/library/codegen/C/misc.ML
++++ b/Phi_System/library/codegen/C/misc.ML
+@@ -8,6 +8,7 @@ structure C'G_Nat = struct fun Suc_ i = i+1 end
+ structure C'G_Product_Type = struct
+ fun prod_T f g = f #-> (fn a => g #-> (fn b => pair (Phi_CG.V2 (a,b))))
+ val unit_T : Phi_CG.ty = pair Phi_CG.V0
++val Unity_ = Phi_CG.V0
+ val Pair_ = pair
+ end
+ 
+diff --git a/Phi_System/library/codegen/emit.ML b/Phi_System/library/codegen/emit.ML
+index 7427f494..6a4ab387 100644
+--- a/Phi_System/library/codegen/emit.ML
++++ b/Phi_System/library/codegen/emit.ML
+@@ -58,8 +58,7 @@ fun gen_extractor (c:cfg) open_self path intrfs procs thyname =
+         #> open_self ? (w "open " #> w (#lang c) #> w "'G_" #> w thyname #> w "\n")
+         #> fold (gen_proc c') procs
+         #> not (Symtab.is_empty intrfs) ? CG #> w "end\n"
+-      val src = String.concat (rev (gen []))
+-  in tracing src; src end
++  in String.concat (rev (gen [])) end
+ 
+ fun codegen c os p i ps t = ML_Context.expression Position.none (ML_Lex.read (gen_extractor c os p i ps t))
+ 
+diff --git a/Phi_System/library/codegen_nonkernel/emit.ML b/Phi_System/library/codegen_nonkernel/emit.ML
+index d5dc2f3d..0e3d9d9d 100644
+--- a/Phi_System/library/codegen_nonkernel/emit.ML
++++ b/Phi_System/library/codegen_nonkernel/emit.ML
+@@ -11,6 +11,7 @@ fun codegen' cfg oself intrfs procs thy ctxt =
+                              (Path.basic (Context.theory_name {long=false} thy))
+               |> Path.expand |> Path.implode
+    in codegen cfg oself path intrfs procs thyname ctxt
++   |> tap (fn _ => writeln (#lang cfg ^ " program written to " ^ path ^ "." ^ #lang cfg))
+   end
+ 
+ val _ = Theory.setup (Theory.at_end (fn thy =>
+diff --git a/Phi_System/library/phi_type_algebra/semantic_type.ML b/Phi_System/library/phi_type_algebra/semantic_type.ML
+index 7346ae05..aeb4d67f 100644
+--- a/Phi_System/library/phi_type_algebra/semantic_type.ML
++++ b/Phi_System/library/phi_type_algebra/semantic_type.ML
+@@ -74,6 +74,7 @@ fun gen_semantic_type (_, name) instruction (phi0 : phi_type) thy =
+         |> Local_Theory.declaration {syntax=false,pervasive=false, pos = #3 instruction} (
+               fn m => Context.mapping (Simplifier.map_theory_simpset (fn ctxt => ctxt addsimps [Morphism.thm m rule]))
+                                       (fn ctxt => ctxt addsimps [Morphism.thm m rule])
++                   #> Proc_Monad_SS.add_simps [Morphism.thm m rule]  (*so \<typeof> unfolds in procedure bodies*)
+                (* |> Config.map_generic Phi_Reasoner.trace (fn i=>i-1)
+                   |> Phi_Reasoner.add_rule (#3 instruction) Phi_Reasoner.TO_BE_OVERRIDE'
+                                            (SOME (the_default @{reasoner_group %\<phi>sem_type_infer_derived}
+diff --git a/Phi_System/library/system/procedure.ML b/Phi_System/library/system/procedure.ML
+index 345c18ca..756ac66a 100644
+--- a/Phi_System/library/system/procedure.ML
++++ b/Phi_System/library/system/procedure.ML
+@@ -57,13 +57,11 @@ fun add_procedure thm ctxt =
+     (fn l => thm :: l)) ctxt
+ 
+ 
+-fun norm_def ctxt (m,n,instance) def = let
++fun norm_def ctxt (m,normal_insts,instance) def = let
+   val vars = strip_abs_vars (Logic.dest_equals (Thm.concl_of def) |> #2)
+   val ty_vars = take m vars
+         |> map (fn (_, ty) => Thm.cterm_of ctxt (Const ("Pure.type", ty)))
+-  val normal_vars = take n (drop m vars)
+-        |> map (fn (name,ty) => Thm.var ((name,0), Thm.ctyp_of ctxt ty))
+-  val insts = ty_vars @ normal_vars @ (map (Thm.cterm_of ctxt) instance)
++  val insts = ty_vars @ map (Thm.cterm_of ctxt) (normal_insts @ instance)
+   in
+     fold (fn a => fn b => Thm.combination b a) (map Thm.reflexive insts) def
+       |> Raw_Simplifier.rewrite_rule ctxt @{thms \<phi>V_simps[folded atomize_eq]}
+@@ -94,8 +92,32 @@ fun closure precond substT f =
+                       end
+ 
+     val (instance,f'') = Procedure_Syntax.package_values "\<a>\<r>\<g>" false (sort' vals) NONE f |> trim
++
++    (*A \<phi>-type parameter T may occur in the body only as \<open>\<typeof> T\<close>; each such subterm becomes
++      its own TY parameter, so a definition is parameterized by semantic types, never by \<phi>-types.*)
++    fun is_phi_var (Var (_, T)) = can Phi_Syntax.dest_phi_type_ty' T
++      | is_phi_var _ = false
++    fun typeofs (t as Const (\<^const_name>\<open>SType_Of\<close>, _) $ Var v) = insert (op =) (v, t)
++      | typeofs (A $ B) = typeofs A #> typeofs B
++      | typeofs (Abs (_,_,X)) = typeofs X
++      | typeofs _ = I
++    val used = Name.make_context (fold_aterms (fn Var ((name,_),_) => insert (op =) name | _ => I) f'' [])
++    val (gen, _) = fold_map (fn (((name,_),_), t) =>
++                        Name.variant (if name = "T" then "TY" else "TY_" ^ name)
++                        #>> (fn name' => (t, Var ((name',0), \<^Type>\<open>TY\<close>))))
++                     (typeofs f'' []) used
++    fun generalize (t as Const (\<^const_name>\<open>SType_Of\<close>, _) $ Var _) = the_default t (AList.lookup (op aconv) gen t)
++      | generalize (A $ B) = generalize A $ generalize B
++      | generalize (Abs (name,ty,X)) = Abs (name,ty,generalize X)
++      | generalize t = t
++    val f'' = generalize f''
++    val _ = case fold_aterms (fn v => is_phi_var v ? cons v) f'' []
++              of [] => ()
++               | vs => raise TERM ("\<phi>-type parameters may occur in a procedure body only as \<open>\<typeof> T\<close>", vs @ [f''])
++
+     val vars = fold_aterms (fn Var (name, T) => insert (op =) (name, T)
+                              | _ => I) f'' []
++    val insts = map (fn v => the_default (Var v) (AList.lookup (op =) (map swap gen) (Var v))) vars
+     fun abst i (Var v) =
+          (case find_index (fn x => x = v) vars
+             of ~1 => raise Fail "bug!"
+@@ -104,10 +126,19 @@ fun closure precond substT f =
+       | abst i (Abs (name,ty,X)) = Abs (name,ty,abst (i+1) X)
+       | abst _ X = X
+ 
++    (*type variables no longer occurring in the body (typically the abstract type of a
++      generalized \<phi>-type parameter) get no TYPE parameter*)
++    val tfrees = Term.add_tfrees f'' []
++    val ty_params = TVars.fold (fn (_, ctyp) => fn L =>
++                        case Thm.typ_of ctyp
++                          of T as TFree v => if member (op =) tfrees v then T :: L else L
++                           | T => T :: L) substT []
++                 |> rev
++
+   in abst 0 f''
+       |> fold (fn ((name,_), T) => fn X => Abs (name, T, X)) vars
+-      |> TVars.fold (fn (_,tfree) => fn x => Abs ("_", Type ("itself", [Thm.typ_of tfree]), x)) substT
+-      |> pair (TVars.size substT, length vars, instance)
++      |> fold (fn T => fn x => Abs ("_", Type ("itself", [T]), x)) ty_params
++      |> pair (length ty_params, rev insts (*outermost binder first*), instance)
+   end
+ 
+ fun rule_proc_F C ctxt =
+@@ -209,7 +240,8 @@ val _ = Theory.setup (Attrib.setup \<^binding>\<open>\<phi>export\<close> (
+     Thm.declaration_attribute (fn thm =>
+       Context.mapping (fn thy =>
+         let val const = chk_interf_thm thm
+-            val term = fold (fn arg => fn X => X $ arg) args const
++            val term = Syntax.check_term (Proof_Context.init_global thy)
++                          (Term.list_comb (Const (Term.dest_Const_name const, dummyT), args))
+             val ctm = Thm.global_cterm_of thy term
+             val targs  = Phi_Syntax.dest_procT_params (Thm.typ_of_cterm ctm)
+             val term = case targs
+diff --git a/Phi_Test/PhiTest_Arithmetic.thy b/Phi_Test/PhiTest_Arithmetic.thy
+index 45dab287..8c916c2e 100644
+--- a/Phi_Test/PhiTest_Arithmetic.thy
++++ b/Phi_Test/PhiTest_Arithmetic.thy
+@@ -8,7 +8,6 @@ theory PhiTest_Arithmetic
+     Phi_Semantics.PhiCG_C
+ begin
+ 
+-declare [[\<phi>variable_is_typed]]
+ 
+ proc test_prime [\<phi>export test_prime]:
+   input  \<open>\<val> x \<Ztypecolon> \<nat>\<close>

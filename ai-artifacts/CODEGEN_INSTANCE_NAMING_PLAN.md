@@ -100,14 +100,15 @@ Plus, outside the trust base, exports are emitted in definition order (Section 6
 | instance name | (none) | `f__` + mangled instance | file |
 | anonymous function | `f42` | `f__42` | file |
 | typedef | `T15` | `T__15` | file |
-| local variable | `v0` | `v0` (unchanged) | block |
+| local variable | `v0` | `_v0` | block |
 
 Every generated file-scope name begins with a letter followed by `__`; block-scope names are
-`v` followed by digits and are spelled both by `assign_var` (`base.ML:41`) and by the routine
-header (`routine.ML:8`), so they stay as they are. `interf` refuses an export name matching
-`^.__` or `^v[0-9]+$` (Section 5.5). With that check a generated name and an export name can
-never coincide in the emitted C, and `new_fun`'s lookup by name cannot hand back a user
-function in place of a generated one.
+`_v` followed by digits (an underscore followed by a lower-case letter is reserved only at
+file scope, so a local may carry it) and are spelled in two places, `assign_var`
+(`base.ML:27`) and the routine header (`routine.ML:8`). `interf` refuses an export name
+matching `^.__` or `^_v[0-9]+$` (Section 5.5). With that check a generated name and an export
+name can never coincide in the emitted C, and `new_fun`'s lookup by name cannot hand back a
+user function in place of a generated one.
 
 Decision recorded: generated file-scope names do not begin with `_` (C11 7.1.3 reserves such
 names for the implementation at file scope); `f__`/`T__` are legal C identifiers (C reserves
@@ -440,7 +441,7 @@ fun interf name F ([],NONE,ftab,ss,0,Anonymous) =
    in ([],NONE,ftab',ss',0,Anonymous) end
 ```
 
-`is_generated_name` matches `^.__` or `^v[0-9]+$`. Both checks are load-bearing: an export
+`is_generated_name` matches `^.__` or `^_v[0-9]+$`. Both checks are load-bearing: an export
 named like a generated name would be found by `new_fun`'s name lookup in place of the
 function it stands for; an export whose body reaches no routine hook would silently produce
 no function under its name (requirement 2).
@@ -531,6 +532,12 @@ previous output after renaming `f`/`T` serials. The four negative tests behave a
 (`ai-artifacts/Scratch_Naming_{A,B,C,D}.thy`); since `codegen'` was changed to print every
 function before opening the file, test D was re-run and a refused export leaves no `.C` file
 behind. Item 5 (`FIX_ARITY_VALs_K`) is not exercised.
+After the local variables were renamed to `_v` followed by digits (same day), every file was
+regenerated from one session: the function counts are unchanged, no `v` followed by digits
+remains, test C (export name `"_v12"`) is refused. `gcc -Wall -Wextra` reports three
+warnings that come from the sources (a value computed and never used in `strassen_mul`,
+`pop_dynarr` and `length_of`) and one error in `Quicksort.C`: the export name `qsort`
+collides with the `qsort` declared by `<stdlib.h>`, which the prelude includes.
 PhiTest_Arithmetic 3 (test_prime, test_prime2, GCD) after its three `mod`/`div` sites were
 rewritten to the φ-language operators `%` and `/`, which are now bound to the truncating
 instructions `op_asmod`/`op_asdiv`; the cartouche spellings `mod`/`div` still synthesise the
@@ -550,7 +557,7 @@ floor division (`op_adiv`/`op_amod`, no hook) because the old ℕ synthesis rule
 3. `strassen` calls `add_mat`/`sub_mat`/`copy_mat` by name; `strassen_mul` calls
    `new_mat`/`strassen`/`del_mat` by name; `concat_dynarr` calls `push_dynarr` by name.
 4. Negative tests in a scratch theory: two exports of the same instance under two names
-   produce two functions; an export name matching `^.__` or `^v[0-9]+$` is refused; an
+   produce two functions; an export name matching `^.__` or `^_v[0-9]+$` is refused; an
    export whose body reaches no routine is refused.
 5. Scratch test for `FIX_ARITY_VALs_K`: a definition with a `FIX_ARITY_VALs`-sorted `TYPE`
    parameter exported at `VAL`, `unit` and a product yields three distinct instance names and

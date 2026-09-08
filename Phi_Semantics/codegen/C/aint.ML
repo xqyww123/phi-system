@@ -7,7 +7,8 @@ val op_amul_ = binop "*" T
   op_adiv and op_amod has no hook, so a procedure using it cannot be emitted*)
 val op_asdiv_ = binop "/" T; val op_asmod_ = binop "%" T
 
-val op_alshr_= binop ">>" T; val op_alshl_ = binop "<<" T; val op_a_lt_ = binop "<" T
-val op_a_gt_ = binop ">" T; val op_a_le_ = binop "<=" T; val op_a_ge_ = binop ">=" T
+val op_alshr_= binop ">>" T; val op_alshl_ = binop "<<" T
+val op_a_lt_ = binop "<"  C'G_PhiSem_Generic_Boolean.B; val op_a_gt_ = binop ">"  C'G_PhiSem_Generic_Boolean.B
+val op_a_le_ = binop "<=" C'G_PhiSem_Generic_Boolean.B; val op_a_ge_ = binop ">=" C'G_PhiSem_Generic_Boolean.B
 
 end end

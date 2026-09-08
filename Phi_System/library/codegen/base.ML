@@ -24,7 +24,7 @@ fun puts s (out::outs,pf,ftab,ss,vc,fr) = ((rev s@out)::outs,pf,ftab,ss,vc,fr); 
 fun puts' s = puts s #> put " " ; fun put' s = put s #> put " "
 fun puts'' s = puts s #> put ";\n" #> pair V0; fun put'' s = put s #> put ";\n" #> pair V0
 
-fun assign_var (out,pf,ftab,ss,vc,fr) = ("v" ^ string_of_int vc, (out,pf,ftab,ss,vc+1,fr))
+fun assign_var (out,pf,ftab,ss,vc,fr) = ("_v" ^ string_of_int vc, (out,pf,ftab,ss,vc+1,fr))
 fun get_frame (_,_,_,_,_,fr) = fr
 fun set_frame fr (out,pf,ftab,ss,vc,_) = (out,pf,ftab,ss,vc,fr)
 
@@ -108,14 +108,14 @@ fun new_fun F v (c as (outs,pf,ftab,ss,vc,fr)) =
       end
   end
 
-(*a letter followed by "__", or v followed by digits: the shapes of generated names*)
+(*a letter followed by "__", or _v followed by digits: the shapes of generated names*)
 fun is_generated_name s =
   (size s >= 3 andalso String.substring (s, 1, 2) = "__")
-  orelse (size s >= 2 andalso String.sub (s, 0) = #"v" andalso forall Char.isDigit (String.explode (String.extract (s, 1, NONE))))
+  orelse (size s >= 3 andalso String.isPrefix "_v" s andalso forall Char.isDigit (String.explode (String.extract (s, 2, NONE))))
 
 fun interf name F ([],NONE,ftab,ss,0,Anonymous) =
   let val _ = is_generated_name name andalso
-        error ("The export name " ^ quote name ^ " has the shape of a generated name (a letter followed by \"__\", or v followed by digits); choose another name")
+        error ("The export name " ^ quote name ^ " has the shape of a generated name (a letter followed by \"__\", or _v followed by digits); choose another name")
       val (_,(_,_,ftab',ss',_,_)) = F V0 ([[]],SOME name,ftab,ss,0,Anonymous)
       val _ = Symtab.defined ftab' (fun_entry name) orelse
         error ("The export " ^ quote name ^ " produced no function: its body reaches no routine")

@@ -8,7 +8,7 @@ begin
 declare [[auto_sledgehammer_params = "try0 = false",
           linarith_split_limit = 20]]
 
-  proc qsort [\<phi>export]:
+  proc qsort [\<phi>export quicksort]: \<comment> \<open>exported as quicksort: qsort is taken by <stdlib.h>\<close>
     input  \<open>\<val> i \<Ztypecolon> \<slice>-\<ptr>[addr:LEN] \<int'>\<heavy_comma>
             \<val> len \<Ztypecolon> \<nat>(\<int'>)\<heavy_comma>
             l \<Ztypecolon> \<mem>[addr] \<slice>[i,len] \<nat>(\<int'>)  \<close>
