@@ -3,9 +3,10 @@ structure Phi_C'G : PHI_C'G = struct open Phi_CG local open C'G_Phi_Element_Path
 type T = ctxt -> string list * ctxt ; exception TY of string
 
 (*a typedef, memoised by its key; the line printer receives the fresh type name*)
-fun defty' key line (c as (os,pf,tab,ss,vc)) = case Symtab.lookup tab key of SOME (TY t) => ([t],c)
-      | NONE => let val t = serial "T"
-                 in ([t], (os,pf,Symtab.update_new (key,TY t) tab, line t::ss, vc)) end
+fun typedef_entry key = "T" ^ key
+fun defty' key line (c as (os,pf,tab,ss,vc,fr)) = case Symtab.lookup tab (typedef_entry key) of SOME (TY t) => ([t],c)
+      | NONE => let val t = serial "T__"
+                 in ([t], (os,pf,Symtab.update_new (typedef_entry key,TY t) tab, line t::ss, vc,fr)) end
 fun defty expr = defty' expr (fn t => ["typedef ",expr," ",t,";\n\n"])
 (*C spells an array type around the declared name, so an array type is always a typedef*)
 fun defty_array elem dim = defty' (cat elem ^ "[" ^ dim ^ "]") (fn t => ["typedef "] @ elem @ [" ",t,"[",dim,"];\n\n"])

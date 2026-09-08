@@ -59,7 +59,7 @@ proc test_prime' [\<phi>export test_prime2]:
           End: (x < i * i)\<close>
         ( v * v \<le> x )
     \<medium_left_bracket>
-      if \<open>$x mod $v = 0\<close> \<medium_left_bracket>
+      if ($x % $v = 0) \<medium_left_bracket>
         return (False)
       \<medium_right_bracket> \<medium_left_bracket>
         \<open>$v + 1\<close> \<rightarrow> $v 
@@ -91,7 +91,7 @@ proc GCD [\<phi>export GCD]:
 \<medium_left_bracket>
   if ($y < $x) \<medium_left_bracket> GCD ($y, $x) \<medium_right_bracket>
   \<medium_left_bracket>
-    \<open>$y mod $x\<close> \<rightarrow> val t
+    $y % $x \<rightarrow> val t
     if \<open>$t = 0\<close> \<medium_left_bracket> $x \<medium_right_bracket> \<medium_left_bracket> GCD ($t, $x) \<medium_right_bracket>
   \<medium_right_bracket>
 \<medium_right_bracket>.
@@ -128,7 +128,7 @@ proc binary_search:
             End: (l + 1 = u)\<close>
           ( \<open>$l + 1 < $u\<close> )
     \<medium_left_bracket>
-      \<open>($l + $u) div 2\<close> \<rightarrow> val m
+      ($l + $u) / 2 \<rightarrow> val m
       if ( F($m) ) \<medium_left_bracket> $m \<rightarrow> $u \<medium_right_bracket> \<medium_left_bracket> $m \<rightarrow> $l \<medium_right_bracket>
     \<medium_right_bracket>
     return ($u)

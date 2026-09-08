@@ -25,6 +25,8 @@ signature PHI_PROCEDURE = sig
   val add_procedure : thm -> Context.generic -> Context.generic
   (*names of the parameters of a procedure constant, outermost first; "" for an unnamed one*)
   val param_names_of : Context.generic -> string -> string list option
+  (*whether the definition of a procedure constant ends with the binder of its run-time argument*)
+  val has_runtime_arg : Context.generic -> string -> bool option
 end
 
 structure Phi_Procedure : PHI_PROCEDURE = struct
@@ -58,14 +60,16 @@ fun add_procedure thm ctxt =
   Procedures.map (Symtab.map_default (thy_name_of_ctxt ctxt, [])
     (fn l => thm :: l)) ctxt
 
+(*per procedure constant: the parameter names, and whether the run-time argument binder survived*)
 structure Param_Names = Generic_Data(
-  type T = string list Symtab.table;
+  type T = (string list * bool) Symtab.table;
   val empty = Symtab.empty;
   val merge = Symtab.merge (K true)
 )
 
-fun add_param_names (c, names) = Param_Names.map (Symtab.update (c, names))
-fun param_names_of ctxt c = Symtab.lookup (Param_Names.get ctxt) c
+fun add_param_names (c, names, has_arg) = Param_Names.map (Symtab.update (c, (names, has_arg)))
+fun param_names_of ctxt c = Option.map fst (Symtab.lookup (Param_Names.get ctxt) c)
+fun has_runtime_arg ctxt c = Option.map snd (Symtab.lookup (Param_Names.get ctxt) c)
 
 
 fun norm_def ctxt (m,normal_insts,instance) def = let
@@ -216,7 +220,8 @@ fun gen_define def_const (binding,attrs) (lthy0,sequent0) =
                   |> Local_Theory.declaration {syntax=false, pervasive=false, pos=Binding.pos_of binding}
                         (fn m => let val def' = Morphism.thm m def
                                   in add_procedure def'
-                                  #> add_param_names (const_name, ctxt_params def' @ names @ map (K "") instance)
+                                  #> add_param_names (const_name, ctxt_params def' @ names @ map (K "") instance,
+                                                      not (null instance))
                                  end)
                   |> rpair (rename lthy_x (norm_def lthy_x arity_ins def) sequent)
                 end)

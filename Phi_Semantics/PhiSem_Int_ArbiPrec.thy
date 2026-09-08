@@ -374,17 +374,16 @@ lemma op_mul_anat[\<phi>overload *,
 
 paragraph \<open>Division\<close>
 
-lemma op_udiv_aint_\<phi>app[\<phi>overload /,
-                        \<phi>synthesis for _ (%synthesis_arith)
+lemma op_udiv_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
                                    and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<proc> op_adiv (\<phi>V_pair vx vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<int> \<longmapsto> \<val> x div y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_adiv_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)
 
-lemma op_udiv_anat_\<phi>app[\<phi>overload /,
-                        \<phi>synthesis for _ (%synthesis_arith)
-                                   and \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+(*no synthesis rule: on \<nat> the truncating op_asdiv agrees with div, and only it is emitted to C,
+  so \<open>x div y\<close> synthesises op_asdiv (op_sdiv_anat_\<phi>app)*)
+lemma op_udiv_anat_\<phi>app:
   \<open>\<proc> op_adiv (\<phi>V_pair vx vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<nat> \<longmapsto> \<val> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_udiv_aint \<medium_right_bracket>
       certified by (simp add: div_int_pos_iff nat_div_distrib) .
@@ -392,17 +391,15 @@ lemma op_udiv_anat_\<phi>app[\<phi>overload /,
 
 paragraph \<open>Modulo\<close>
 
-lemma op_mod_aint_\<phi>app[\<phi>overload %,
-                       \<phi>synthesis for _ (%synthesis_arith)
+lemma op_mod_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
                                   and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<proc> op_amod (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<int> \<longmapsto> \<val> x mod y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_amod_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)
 
-lemma op_mod_anat_\<phi>app[\<phi>overload %,
-                       \<phi>synthesis for _ (%synthesis_arith)
-                                  and \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+(*no synthesis rule, for the same reason as op_udiv_anat_\<phi>app; see op_smod_anat_\<phi>app*)
+lemma op_mod_anat_\<phi>app:
   \<open>\<proc> op_amod (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<nat> \<longmapsto> \<val> x mod y \<Ztypecolon> \<nat> \<rbrace>\<close>
   \<medium_left_bracket> op_mod_aint \<medium_right_bracket>
       certified by (metis nat_int of_nat_0_le_iff zmod_int) .
@@ -414,20 +411,49 @@ text \<open>On natural numbers \<open>sdiv\<close> and \<open>smod\<close> coinc
   signed abstractions are given; they are reached through synthesis of \<open>x sdiv y\<close> and
   \<open>x smod y\<close>, while the operators \<open>/\<close> and \<open>%\<close> keep denoting the floor division.\<close>
 
-lemma op_sdiv_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
-                                    and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x sdiv y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+lemma int_sdiv_eq_div[simp]:
+  \<open>0 \<le> a \<Longrightarrow> 0 \<le> b \<Longrightarrow> a sdiv b = a div b\<close>
+  \<open>a \<le> 0 \<Longrightarrow> b \<le> 0 \<Longrightarrow> a sdiv b = a div b\<close> for a b :: int
+  unfolding signed_divide_int_eq_divide_int
+  by (auto, (insert nless_le sgn_pos, blast)[1], insert sgn_neg, force)
+
+lemma int_smod_eq_mod[simp]:
+  \<open>0 \<le> a \<Longrightarrow> 0 \<le> b \<Longrightarrow> a smod b = a mod b\<close>
+  \<open>a \<le> 0 \<Longrightarrow> b \<le> 0 \<Longrightarrow> a smod b = a mod b\<close> for a b :: int
+  unfolding signed_modulo_int_eq_modulo_int
+  by (auto, (insert nless_le sgn_pos, blast)[1], insert nless_le sgn_neg, blast)
+
+lemma op_sdiv_anat_\<phi>app[\<phi>overload /,
+                        \<phi>synthesis for _ (%synthesis_arith)
+                                    and \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x div y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+  \<open>\<proc> op_asdiv (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<nat> \<longmapsto> \<val> x div y \<Ztypecolon> \<nat> \<rbrace>\<close>
+  unfolding op_asdiv_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
+      rule, simp, insert int_ops(8), presburger)
+
+lemma op_sdiv_aint_\<phi>app[\<phi>overload /,
+                        \<phi>synthesis for _ (%synthesis_arith)
+                                   and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x sdiv y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<proc> op_asdiv (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<int> \<longmapsto> \<val> x sdiv y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_asdiv_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)
 
-lemma op_smod_aint_\<phi>app[\<phi>synthesis for _ (%synthesis_arith)
+lemma op_smod_anat_\<phi>app[\<phi>overload %,
+                        \<phi>synthesis for _ (%synthesis_arith)
+                                    and \<open>x \<Ztypecolon> \<val> \<nat>\<heavy_comma> y \<Ztypecolon> \<val> \<nat>\<close> \<Rightarrow> \<open>\<lambda>v. x mod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
+  \<open>\<proc> op_asmod (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<nat>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<nat> \<longmapsto> \<val> x mod y \<Ztypecolon> \<nat> \<rbrace>\<close>
+  unfolding op_asmod_def
+  by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
+      rule, simp, insert int_ops(9), presburger)
+
+lemma op_smod_aint_\<phi>app[\<phi>overload %,
+                        \<phi>synthesis for _ (%synthesis_arith)
                                     and \<open>x \<Ztypecolon> \<val> \<int>\<heavy_comma> y \<Ztypecolon> \<val> \<int>\<close> \<Rightarrow> \<open>\<lambda>v. x smod y \<Ztypecolon> _\<close> (%synthesis_arith_cut)]:
   \<open>\<proc> op_asmod (vx\<^bold>, vy) \<lbrace> x \<Ztypecolon> \<val>[vx] \<int>\<heavy_comma> y \<Ztypecolon> \<val>[vy] \<int> \<longmapsto> \<val> x smod y \<Ztypecolon> \<int> \<rbrace>\<close>
   unfolding op_asmod_def
   by (cases vx; cases vy; simp, rule, rule, simp add: Premise_def, rule, simp add: Premise_def,
       rule, simp)
-
 
 
 paragraph \<open>Right Shift\<close>
