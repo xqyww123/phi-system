@@ -541,6 +541,16 @@ section \<open>Introduction\<close>
 ML_file \<open>library/tools/statistics.ML\<close>
 ML_file \<open>library/context_export.ML\<close>
 ML_file \<open>library/reasoner.ML\<close>
+
+text \<open>The budget premise of a judge lemma in the guard cache (library/guard_cache.ML):
+  every rewrite rule of such a lemma is weakened to \<open>\<dots> \<Longrightarrow> Guard_Budget \<r>BUDGET<i> \<Longrightarrow> lhs \<equiv> rhs\<close>
+  and one context-local simproc discharges the premise while counting.  \<open>ind\<close> has
+  no simp rules, numerals or arithmetic procedures, so the premise reaches that
+  simproc unchanged.  Declared to no simpset; hidden at the end of this theory.\<close>
+
+definition Guard_Budget :: \<open>ind \<Rightarrow> bool\<close> where \<open>Guard_Budget x \<equiv> True\<close>
+
+ML_file \<open>library/guard_cache.ML\<close>
 ML_file \<open>library/tools/helpers1.ML\<close>
 
 declare \<r>Guard_I [\<phi>reason %cutting]
@@ -1959,6 +1969,12 @@ declare Premise_def [\<phi>guard_refute_simp]
 
 ML_file "library/reasoners.ML"
 
+method_setup \<phi>guard_P_auto = \<open>
+  Scan.succeed (fn ctxt => SIMPLE_METHOD (
+    Phi_Reasoners.timed_tac (Phi_Reasoners.guard_classic_prover_bound ctxt)
+                            (Phi_Reasoners.p_auto_body ctxt)))
+\<close> "P-auto: the one proof attempt every prove_or_refute call makes on a guard, with \<phi>guard_simp and the guard cache's lemmas, under \<phi>guard_classic_prover_timeout"
+
 (*TEMPORARY (2026-08-30): the guard-race experiments read these two Event_Log
   categories; both default off.  Placed upstream of every evaluation target so the
   whole chain logs (author's ruling in GUARD_NITPICK_FALSIFY_PLAN.md Section 22.3).*)
@@ -1967,24 +1983,37 @@ declare [[\<phi>log_guard_race = true, \<phi>log_guess_inst = true]]
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)
+
+(*an obligation solved on the spot: the guard factory over fastforce in a
+  \<phi>guard_simp-enhanced context, unbounded, no store; not proved = backtrack*)
+fun solve_obligation_now ctxt th =
+  Phi_Reasoners.guard_condition_solver (K ()) (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
+      Phi_Reasoners.try_prove_or_give_up NONE (fn ctxt => ALLGOALS (Clasimp.fast_force_tac ctxt))
+          (Phi_Guard_Cache.Guard_Simp_SS.enhance ctxt) th
+      |> Seq.map (pair ctxt0))
+    {can_inst = true} (ctxt, th)
+  |> Seq.map snd
+
 fun defer_premise ctxt =
       case Config.get ctxt Phi_Reasoner_solve_obligation_and_no_defer
           of 0 => Phi_Reasoners.defer_obligation_tac {can_inst=true, fix_level=0} (true,true,~1) ctxt
            | 1 => (fn th => if Phi_Reasoners.has_obligations_tag th
                             then Phi_Reasoners.defer_obligation_tac {can_inst=true, fix_level=0} (true,true,~1) ctxt th
-                            else Phi_Reasoners.guard_condition_solver {can_inst=true} ctxt th)
-           | 2 => Phi_Reasoners.guard_condition_solver {can_inst=true} ctxt
+                            else solve_obligation_now ctxt th)
+           | 2 => solve_obligation_now ctxt
            | _ => error "Bad value of Phi_Reasoner_solve_obligation_and_no_defer. Should be 0,1,2."
 \<close>
 
 \<phi>reasoner_ML Normal_Premise %general (\<open>\<premise> ?P\<close> | \<open>\<obligation> ?P\<close>)
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
+(*the two in-run guard reasoners take the state directly: the context they return
+  is the incoming one plus the guard's lemmas, which Phi_Reasoners.wrap would drop*)
 \<phi>reasoner_ML Simp_Premise %general (\<open>\<condition> ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.guard_condition_solver {can_inst=true}) o snd\<close>
+  = \<open>Phi_Reasoners.guard_condition_judge {can_inst=true} o snd\<close>
 
 \<phi>reasoner_ML NO_INST %general (\<open>\<condition>[NO_INST] ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.guard_condition_solver {can_inst=false}) o snd\<close>
+  = \<open>Phi_Reasoners.guard_condition_judge {can_inst=false} o snd\<close>
 
 \<phi>reasoner_ML \<open>\<condition>[\<safe>] P\<close> %general (\<open>\<condition>[\<safe>] ?P\<close>)
   = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=true}) o snd\<close>
@@ -3254,5 +3283,6 @@ lemma Collect_Schematic_I: \<open>PROP Collect_Schematic TY sch Term\<close>
 *)
 (*Others, to be done!*)
 
+hide_const (open) Guard_Budget
 
 end

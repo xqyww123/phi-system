@@ -83,12 +83,34 @@ signature PHI_REASONERS = sig
      -> (Proof.context -> thm -> thm) (*failure callback*)
      -> Proof.context -> thm -> thm
 
-  val guard_condition_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
-      (*The annotation of \<open>case_split\<close> is supported*)
+  (*The guard factory (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md): the preprocessing template
+    -- oblg_template, the is_F shortcut, the case split, the aux-fact insertion, the
+    "G.simpcut" pass under \<phi>guard_classic_prover_timeout -- parameterised by the
+    solving function it ends with (prove_or_refute's type: can_inst, the guard-side
+    context, what the digest step computed, then the state) and by that digest step,
+    computed on the state after the case split and before the insertion.  A result
+    carries the context the factory was called on plus what the solving function
+    added.  The annotation of \<open>case_split\<close> is supported.*)
+  val guard_condition_solver : (thm -> 'd)
+                            -> (bool -> Proof.context -> 'd -> context_state -> context_state Seq.seq)
+                            -> {can_inst: bool} -> context_state -> context_state Seq.seq
+  (*the in-run instance: the factory over prove_or_refute with the guard digest*)
+  val guard_condition_judge : {can_inst: bool} -> context_state -> context_state Seq.seq
+  val prove_or_refute : bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
+  (*the out-of-run instances: the factory over P-auto once, no store*)
   val guard_condition_solver': {can_inst: bool}
                              -> (Proof.context -> thm -> thm) (*failure callback*)
                              -> Proof.context -> thm -> thm
   val guard_condition_solver1: {can_inst: bool} -> Proof.context -> thm -> thm
+
+  (*run the tactic once, under the bound if given, and keep only a solved state*)
+  val try_prove_or_give_up : Time.time option -> (Proof.context -> tactic) -> Proof.context -> thm -> thm Seq.seq
+  (*P-auto's body, in a context with \<phi>guard_simp and the guard cache's lemmas enabled;
+    P-auto = timed_tac \<phi>guard_classic_prover_timeout o p_auto_body*)
+  val p_auto_body : Proof.context -> tactic
+  val timed_tac : Time.time -> tactic -> tactic
+  val guard_classic_prover_timeout : int Config.T (*milliseconds, 400 provisional*)
+  val guard_classic_prover_bound : Proof.context -> Time.time
 
   val safe_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
       (*The annotation of \<open>case_split\<close> is supported*)
@@ -219,13 +241,18 @@ structure Tactic_Configures = Hooks (
   type state = thm list (*aux thms*) * tactic * Proof.context
 )
 
-fun apply_tac ctxt tactic mode =
-  HEADGOAL (SOLVED' (fn i => fn th =>
-    let val tac = #2 (Tactic_Configures.invoke_until_success (Context.Proof ctxt)
-          (fn mode => fn (aux,tac,ctxt) =>
-              ([], tactic (ctxt,tac,aux,mode), ctxt)) mode (aux_thms ctxt, all_tac, ctxt))
-     in tac th
-    end ))
+(*Runs the hook fold of Tactic_Configures to obtain the configured (aux, pre, ctxt),
+  then the body on them OUTSIDE the hook, so that a body may return results of any
+  type; `prj` reads the theorem out of a result for the SOLVED' filter: a result is
+  kept iff it has fewer premises than the input.  A hook raising Success with a
+  tactic of its own no longer replaces the body: its state is used like the fold's
+  result and the body runs (no registration does that today).*)
+fun apply_tac prj ctxt body mode th =
+  let val (aux, pre, ctxt') =
+        Tactic_Configures.invoke (Context.Proof ctxt) mode (aux_thms ctxt, all_tac, ctxt)
+   in body (ctxt', pre, aux, mode) th
+   |> Seq.filter (fn st => Thm.nprems_of (prj st) < Thm.nprems_of th)
+  end
 
 (*
 (** Tactic Template **)
@@ -333,18 +360,22 @@ fun LPR_inst ctxt th = ( (*TODO: strengthen fast_inst*)
             | 1 for fixing the conditions of the leading antecedent only but leaves variables
                     in the conclusion of the leading antecedent free
             | 2 for fixing variables in the entire leading antecedent*)
-fun oblg_template report_time {can_inst, fix_level} f ctxt th00 = Seq.make (fn () =>
+(*Polymorphic in the result type of `f`: `inj` makes a result of a theorem that never
+  reached `f` (the exits below), `on_thm` applies a theorem post-pass to a result; the
+  theorem-returning callers pass I and I, the guard factory pairs with its context.*)
+fun oblg_template report_time {can_inst, fix_level} {inj, on_thm} f ctxt th00 = Seq.make (fn () =>
   PLPR_Statistics.measure_time_of_proof_evaluation' report_time ctxt (fn () =>
   let val th01 = case PLPR_Syntax.dest_premise_tag_opt (major_prem_of th00)
                    of SOME _ => th00
                     | NONE => @{thm' Premise_D[where mode=default]} RS th00
       val th = Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
               PLPR_Syntax.premise_tag_conv (K true) (Simplifier.full_rewrite ctxt)) ctxt) 1 th01
+      fun inj_ret (th, seq) = (inj th, Seq.map inj seq)
    in case Thm.major_prem_of th
    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>True\<close>, _) =>
-        SOME (@{thm' TrueI} RS' (ctxt, th), Seq.empty)
+        SOME (inj (@{thm' TrueI} RS' (ctxt, th)), Seq.empty)
     | _ => case fast_inst can_inst th
-   of SOME ret => SOME ret
+   of SOME ret => SOME (inj_ret ret)
     | _ => let (* simple_simp ctxt (Conv.gconv_rule (Phi_Conv.hhf_concl_conv (fn ctxt =>
                 HOLogic.Trueprop_conv (Conv.arg_conv (
                   Simplifier.rewrite (Very_Safe_Oblg_Simp_SS.equip ctxt)))
@@ -367,25 +398,28 @@ fun oblg_template report_time {can_inst, fix_level} f ctxt th00 = Seq.make (fn (
                  end
                     
    in (case fast_inst can_inst th2
-   of SOME ret => SOME ret
+   of SOME ret => SOME (inj_ret ret)
     | NONE => (
       case LPR_inst ctxt' th2
         of SOME ret => f ctxt' ret
          | _ => f ctxt' th2))
-   |> not (null fixing_targets) ? Option.map (fn (th, seq') =>
-        let val f = singleton (Variable.export_inst (Phi_Help.uncertify_vars instc))
-         in (f th, Seq.map f seq')
+   |> not (null fixing_targets) ? Option.map (fn (r, seq') =>
+        let val f = on_thm (singleton (Variable.export_inst (Phi_Help.uncertify_vars instc)))
+         in (f r, Seq.map f seq')
         end)
   end end) ())
 
 
 (*** Auxiliaries ***)
 
-(*protects the remaining goals and only attack the first one*)
-fun head_only tac th =
+(*protects the remaining goals and only attack the first one; a result of any type
+  through inj (a state the tactic never saw) and on_thm (the conclude post-pass)*)
+fun head_only' inj on_thm tac th =
   if Thm.nprems_of th = 0
-  then all_tac th
-  else Goal.protect 1 th |> tac |> Seq.map Goal.conclude
+  then Seq.single (inj th)
+  else Goal.protect 1 th |> tac |> Seq.map (on_thm Goal.conclude)
+
+fun head_only tac = head_only' I I tac
 
 
 (*Wrap a context tactic of type `Proof.context -> thm -> thm Seq.seq` to the
@@ -816,7 +850,7 @@ fun find_obligations_tag thm = tl (Thm.prems_of thm)
                      | _ => false)
 fun has_obligations_tag thm = find_obligations_tag thm <> ~1
 
-fun defer_obligation cfg contract = oblg_template false cfg (fn ctxt => fn thm =>
+fun defer_obligation cfg contract = oblg_template false cfg {inj = I, on_thm = I} (fn ctxt => fn thm =>
   let val idx = find_obligations_tag thm
   in if idx = ~1
      then error ("Fail to defer a proof obligation: an \<obligation> antecedent is not found.")
@@ -847,11 +881,11 @@ fun defer_obligation_tac cfg contr_mode =
 fun hammer_obligation_solver
       {async_mode, read_store, write_store,
        return_empty_seq_instead_of_raising_detailed_error} wrap id =
-      oblg_template true {can_inst=true, fix_level=0} (fn ctxt => fn th =>
+      oblg_template true {can_inst=true, fix_level=0} {inj = I, on_thm = I} (fn ctxt => fn th =>
         let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
             val th' = @{thm' Premise_I} RS th'1
          in th'
-         |> head_only (apply_tac ctxt (fn (ctxt,pre,aux,_) =>
+         |> head_only (apply_tac I ctxt (fn (ctxt,pre,aux,_) =>
             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                 THEN (fn st =>
                    let (*The one place all failure text is composed (D51, revised
@@ -1032,6 +1066,15 @@ fun solved_states search st = Seq.filter Thm.no_prems (search st)
 fun search_solved search st =
   Option.map #1 (Seq.pull (solved_states search st))
 
+(*every consumer of the guard cache's lemmas enhances its own context: \<phi>guard_simp,
+  then the lemmas under fresh budgets (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 4)*)
+val enhance_for_guard =
+      Phi_Guard_Cache.enhance_with_lemmas o Phi_Guard_Cache.Guard_Simp_SS.enhance
+
+(*P-auto's body: the solved states of p_auto_search_tac in the enhanced context; P-auto
+  is this under \<phi>guard_classic_prover_timeout (the method \<phi>guard_P_auto)*)
+fun p_auto_body ctxt = solved_states (p_auto_search_tac (enhance_for_guard ctxt))
+
 (*Early-finish protocol (plan §8, author-ruled 2026-08-25): let a refutation
   end the race the moment it is known that no proof can still arrive.  Both
   events live in ONE variable, so each racer publishes its own event and
@@ -1080,10 +1123,10 @@ val p_auto_probe_category =
       ([("outcome", outcome), ("elapsed_ms", string_of_int el),
         ("cpu_ms", string_of_int cpu), ("gc_ms", string_of_int gc)], [])}
 
-fun p_auto_racer search protocol th : race_result Race.racer =
+fun p_auto_racer body protocol th : race_result Race.racer =
   ("P-auto", fn () =>
      let val t0 = Timing.start ()
-         val r = Exn.capture_body (fn () => search_solved search th)
+         val r = Exn.capture_body (fn () => Option.map #1 (Seq.pull (body th)))
          val {elapsed, cpu, gc} = Timing.result t0
          val outcome = case r of Exn.Res (SOME _) => "win"
                                | Exn.Res NONE => "none"
@@ -1129,7 +1172,7 @@ val negation = \<^cterm>\<open>Not\<close>
   Variable.export through ctxt'.  (That search_solved accepts on no_prems
   alone, ignoring hyps/tpairs, is a recorded hardening candidate —
   plan §8.)*)
-fun r_conv_racer can_inst ctxt ctxt0 search protocol goals : race_result Race.racer =
+fun r_conv_racer can_inst ctxt ctxt0 protocol goals : race_result Race.racer =
   ("R-conv", fn () =>
      let exception Unsupported
          fun conv_goal used ctm =
@@ -1156,10 +1199,10 @@ fun r_conv_racer can_inst ctxt ctxt0 search protocol goals : race_result Race.ra
               |> (fn gs =>
                    if can_inst
                    then let val ((_, gs'), ctxt') = Variable.import false gs ctxt
-                         in exists (is_some o search_solved (auto_search_tac ctxt')) gs'
+                         in exists (is_some o search_solved (auto_search_tac (enhance_for_guard ctxt'))) gs'
                         end
                    else Variable.export ctxt ctxt0 gs
-                        |> exists (is_some o search_solved search)))
+                        |> exists (is_some o search_solved (auto_search_tac (enhance_for_guard ctxt)))))
            handle Unsupported => false
       in if refuted
          then Synchronized.change_result protocol
@@ -1384,14 +1427,27 @@ val guard_race_category =
   simpset (guess_instantiate.ML).  It reaches every simplification below
   through ctxt, which guard_condition_solver's auto_tac already equipped:
   auto_search_tac for the 30ms quick attempt, P-auto and R-conv (and r_conv's
-  own call on the imported ctxt'), and Guard_Refute_SS.enhance for R-nitpick,
+  own call on the imported ctxt'), and Nitpick_Refute_SS.enhance for R-nitpick,
   which MERGES this ctxt's simpset.  Experiment 2 takes it back off the refuter
   alone, where a non-most-general instantiation is unsound: a guard's schematic
   is existential, so specialising it strengthens the guard, and refuting the
   stronger form proves nothing.*)
-fun prove_or_refute can_inst ctxt ctxt0 =
+(*the undecided-guard warning: neither a proof nor a refutation, and no judge --
+  trace-gated like every reasoner warning*)
+fun undecided_guard_warning ctxt goals =
+  List.app (fn goal =>
+    Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
+      chunks [block (text "Fail to prove or falsify the following guard condition"),
+              Goal_Display.pretty_a_goal ctxt (Thm.term_of goal),
+              block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
+    end)) goals
+
+(*TRANSITIONAL (plan step 1): the race stays until step 2 replaces it by the
+  sequential protocol of the plan's section 5; prove_or_refute below already has the
+  plan's type and wraps it.*)
+fun guard_race can_inst ctxt ctxt0 =
   let val search = auto_search_tac ctxt
-      val p_search = p_auto_search_tac ctxt  (*EXPERIMENT 2026-09-02: P-auto only*)
+      val p_search = p_auto_body ctxt
       (*Author ruling 2026-09-01: the gate passes only a SOLVED state
         (solved_states, shared with the racers) -- auto_search_tac never
         fails, so an empty-handed return used to skip the race (guard assumed
@@ -1406,16 +1462,7 @@ fun prove_or_refute can_inst ctxt ctxt0 =
   (fn th =>
     let val timer = Timing.start ()
         val goals = Thm.cprems_of th
-        val fail = Seq.make (fn () => (
-              List.app (fn goal =>
-                Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
-                  chunks (
-                    [block (text "Fail to prove or falsify the following guard condition"),
-                    Goal_Display.pretty_a_goal ctxt (Thm.term_of goal),
-                    block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
-                    )
-                end)) goals
-              ; NONE))
+        val fail = Seq.make (fn () => (undecided_guard_warning ctxt goals; NONE))
 
         (*a budget < 1ms would mean NO timeout at all (Timeout.ignored) — clamp*)
         val budget = Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_race_timeout))
@@ -1502,7 +1549,7 @@ fun prove_or_refute can_inst ctxt ctxt0 =
                (fn () => Timeout.apply t body ()))
         val racers =
           wrap budget (p_auto_racer p_search protocol th) ::
-          wrap budget (r_conv_racer can_inst ctxt ctxt0 search protocol goals) ::
+          wrap budget (r_conv_racer can_inst ctxt ctxt0 protocol goals) ::
           map (wrap hang_net) nitpick_racers
 
         val {winner, exits, forked} = Race.race racers
@@ -1576,69 +1623,115 @@ fun prove_or_refute can_inst ctxt ctxt0 =
   
 
 
-(*It is another tactic using 'clarsimp' method. It is weaker than 'auto' but much safer
-and will usually terminate (if no loop is encountered in the simplification)*)
-fun guard_condition_solver {can_inst} ctxt0 th0 =
-  let fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
-        | is_guard_mode (Const(\<^const_name>\<open>NO_INST\<close>, _)) = true
-        | is_guard_mode _ = false
-      fun is_false (Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ Const(\<^const_name>\<open>False\<close>, _))
+(*One prove_or_refute call (plan section 5), in its final type: can_inst, the
+  guard-side context, the guard digest, then the run's state -- the run's context
+  ctxt0 and the goal state.  TRANSITIONAL body (step 1): the race above, its result
+  paired with ctxt0 unchanged; step 2 installs the sequential protocol.*)
+fun prove_or_refute can_inst ctxt (_ : Hasher.digest) (ctxt0, th) =
+  guard_race can_inst ctxt ctxt0 th |> Seq.map (pair ctxt0)
+
+
+(*** The guard factory ***)
+
+(*400 ms, provisional (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 10): the bound of
+  P-auto, of R-conv and of the "G.simpcut" pass, and the replay floor of a judge
+  lemma.*)
+val guard_classic_prover_timeout =
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_classic_prover_timeout\<close> (K 400)
+(*a budget < 1ms would mean NO timeout at all (Timeout.ignored) -- clamp*)
+fun guard_classic_prover_bound ctxt =
+      Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_classic_prover_timeout))
+
+(*the "G.simpcut" pass: asm_full_simp then quick_cut on every subgoal, in the guard-side
+  context enhanced, under \<phi>guard_classic_prover_timeout.  TIMEOUT yields the state it
+  was given, unchanged, so the solving function runs on the unsimplified guard; a
+  subgoal simplified to False stays an empty sequence.  Not timed_tac, whose timeout
+  is an empty sequence and would read as a refutation.  A deliberate narrowing: the
+  first simplified state only (Seq.take 1), so the one bound covers the whole pass and
+  the solving function runs once per call [author 2026-09-09].*)
+fun simpcut_tac ctxt th =
+  let val seq = Seq.take 1 (ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt) THEN_ALL_NEW quick_cut) th)
+   in Seq.make (fn () =>
+        Timeout.apply (guard_classic_prover_bound ctxt) Seq.pull seq
+        handle Timeout.TIMEOUT _ => SOME (th, Seq.empty))
+  end
+
+(*run the tactic once, under the bound if given; keep only a solved state*)
+fun try_prove_or_give_up bound tac ctxt th =
+  let val seq = Seq.take 1 (solved_states (tac ctxt) th)
+   in case bound of NONE => seq | SOME t => timed_seq t seq end
+
+(*the loud guard warning: the entry said Proved, P-auto could not prove the guard with
+  the entry's lemmas, and the call ends Refuted or Unknown; printed unconditionally,
+  with the refuters' and the judge's results*)
+fun loud_guard_warning ctxt goals results =
+  warning (Pretty.string_of (let open Pretty in
+    chunks (block (text "A guard condition the guard cache recorded as proved can no longer be proved:")
+            :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) goals
+            @ [block (text ("The refuters and the judge answered: " ^ results))])
+  end))
+
+(*a guard is a premise of the \<condition> family*)
+fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
+  | is_guard_mode (Const(\<^const_name>\<open>NO_INST\<close>, _)) = true
+  | is_guard_mode _ = false
+
+(*The factory: the preprocessing template -- oblg_template, quick_cut, under head_only
+  the configured pre-tactic, the case split of the leading subgoal, the digest step,
+  the aux-fact insertion, the "G.simpcut" pass -- ending in the solving function
+  `solve`, of prove_or_refute's type.  `digest_of` computes, on the state right after
+  the case split and before the insertion (every visible premise is then a guard
+  subgoal), what `solve` is given: the guard digest for the judge instance, () for the
+  others.  Every exit bypassing `solve` is paired with ctxt0, the context the factory
+  was called on -- never with oblg_template's imported context, whose fresh frees
+  would make the export hook drop the lemmas; only `solve` may replace the context.
+  guess_inst's looper and solver enter the guard machinery here and only here: the
+  "G.simpcut" pass, the is_F shortcut, and everything `solve` simplifies through the
+  guard-side context ctxt_g.*)
+fun guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
+  let fun is_false (Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ Const(\<^const_name>\<open>False\<close>, _))
             = is_guard_mode mode
         | is_false (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_false X
         | is_false _ = false
       val is_F = is_false (Thm.major_prem_of th0)
 
-   in oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
+   in oblg_template true {can_inst = can_inst, fix_level = if can_inst then 1 else 2}
+                    {inj = pair ctxt0, on_thm = apsnd}
   (fn ctxt => fn th =>
-      let (*val (new_conds, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
-          val th' = @{thm' Premise_I} RS th'1*)
-          val th' = th
-          (*EXPERIMENT 1 (2026-08-29): guess_inst's looper used to be in the
-            theory simpset, hence in every simplification anywhere.  It now
-            enters the guard machinery HERE and only here: this preprocessing
-            pass, the is_F shortcut, and -- through the ctxt handed on --
-            everything prove_or_refute simplifies, since all three racers derive
-            their simpsets from it (auto_search_tac for P-auto and R-conv,
-            Guard_Refute_SS.enhance for R-nitpick, which merges).*)
-          fun auto_tac ctxt0'' =
-              let val ctxt = Guess_Instantiate.add_guess_inst_looper ctxt0'' in
-                ALLGOALS (Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW quick_cut) THEN
-                (if is_F
-                 then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt)
-                 else prove_or_refute can_inst ctxt ctxt0)
-              end
-                (* (timed_tac (Time.fromMilliseconds 300) (auto_search_tac ctxt)) *)
-        (*fun clarsimp_tac ctxt =
-                Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
-             (*For some reason I don't know, some goals rely on unsafe tactics even when no variables occur 
-               (if can_inst then Simplifier.asm_full_simp_tac ctxt
-                            else Simplifier.safe_asm_full_simp_tac ctxt) THEN_ALL_NEW *)
-                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.fast_tac (addSss ctxt) i) th)
-          fun clarsimp'_tac ctxt =
-                Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
-                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.fast_tac (addss ctxt) i) th)
-          fun force_tac ctxt =
-                Classical.clarify_tac ctxt THEN_ALL_NEW
-                Simplifier.asm_full_simp_tac ctxt THEN_ALL_NEW
-                (fn i => fn th => timed_tac (Time.fromMilliseconds 300) (Classical.first_best_tac (addss ctxt) i) th) *)
-       in
-        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (head_only (
-             pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
-                 THEN HEADGOAL (
-                              case_split_by_annotations_leading_subgoal ctxt 
-                 THEN_ALL_NEW Method.insert_tac ctxt aux
-                 ) THEN auto_tac (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def})
-               (* THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x) ) *)
-               (*THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac
-                      (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*) )
-               ))
-              |> Seq.take 1 ) Safe_Solver th'
-       |> Seq.take 1
-       |> Seq.pull
-      end) ctxt0 th0
+      apply_tac snd ctxt (fn (ctxt, pre, aux, _) => fn th =>
+        let val ctxt_g = Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}
+                         |> Guess_Instantiate.add_guess_inst_looper
+            fun solving d th =
+              simpcut_tac ctxt_g th |> Seq.maps (fn th =>
+                if is_F
+                then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt_g) th
+                     |> Seq.map (pair ctxt0)
+                else solve can_inst ctxt_g d (ctxt0, th))
+         in quick_cut 1 th
+         |> Seq.maps (head_only' (pair ctxt0) apsnd (fn th =>
+              (pre THEN HEADGOAL (case_split_by_annotations_leading_subgoal ctxt)) th
+              |> Seq.maps (fn th =>
+                   let val d = digest_of th
+                    in ALLGOALS (Method.insert_tac ctxt aux) th |> Seq.maps (solving d) end)))
+         |> Seq.take 1
+        end) Safe_Solver th
+      |> Seq.take 1
+      |> Seq.pull) ctxt0 th0
   end
 
-val guard_condition_solver' = context_tactic_to_state_transition o guard_condition_solver
+(*the guard digest: the guard's own subgoals, each with its parameters and premises*)
+val guard_digest = Hasher.terms o map Thm.term_of o Thm.cprems_of
+
+fun guard_condition_judge cfg = guard_condition_solver guard_digest prove_or_refute cfg
+
+(*the out-of-run instance: P-auto once under \<phi>guard_classic_prover_timeout, no store*)
+fun p_auto_solving _ ctxt _ (ctxt0, th) =
+  try_prove_or_give_up (SOME (guard_classic_prover_bound ctxt)) p_auto_body ctxt th
+  |> Seq.map (pair ctxt0)
+
+fun guard_condition_solver' cfg =
+  context_tactic_to_state_transition (fn ctxt => fn th =>
+    guard_condition_solver (K ()) p_auto_solving cfg (ctxt, th) |> Seq.map snd)
 
 fun guard_condition_solver1 can_inst ctxt sequent =
   guard_condition_solver' can_inst (fn _ =>
@@ -1649,13 +1742,14 @@ fun guard_condition_solver1 can_inst ctxt sequent =
 
 fun safe_obligation_solver {can_inst} ctxt0 =
         oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
+                      {inj = I, on_thm = I}
   (fn ctxt => fn th =>
       let val th' = th
           fun clarsimp_tac ctxt =
                 Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
                 (fn i => fn th => Classical.clarify_tac (addSss ctxt) i th)
        in
-        apply_tac ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (
+        apply_tac I ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (
              pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
                  THEN HEADGOAL (
                               case_split_by_annotations_leading_subgoal ctxt 

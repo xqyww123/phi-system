@@ -45,7 +45,7 @@ datatype verdict = Refuted | Provable | Unknown
   THEOREMS: Provable below rests on the preprocessing being meaning-preserving.
   Do NOT register addr_gep_def -- its map_addr lambda defeats the [iff] gep
   lemmas and cost refutations when tried (plan 19.4).*)
-structure Guard_Refute_SS = Simpset (
+structure Nitpick_Refute_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
   val binding = SOME \<^binding>\<open>\<phi>guard_refute_simp\<close>
   val comment = "rewrites applied to a guard before refuting it by model search"
@@ -179,7 +179,7 @@ fun preprocess ctxt assms goal =
     val prems = Preprocess_Hooks.invoke (Context.Proof ctxt) ctxt prems0
     val prepared = Logic.list_implies (prems, concl)
     val simp_ctxt =
-      Guard_Refute_SS.enhance ctxt
+      Nitpick_Refute_SS.enhance ctxt
         |> Simpset_Hooks.invoke (Context.Proof ctxt) ()
         |> fold Splitter.add_split (case_splits ctxt prepared)
         (*EXPERIMENT 2 (2026-08-30, author's step 2): R-nitpick's preprocessing
