@@ -33,7 +33,7 @@ val key_strs : (ctxt -> string list * ctxt) -> keyp
 val mangle : string -> keyp list -> ctxt -> string option * ctxt
 val frame  : (ctxt -> string option * ctxt) -> M -> M
 val frame' : (ctxt -> string option * ctxt) -> (V -> M) -> V -> M
-val new_fun : (string -> ctxt -> (V -> M) * ctxt) -> V -> M
+val new_fun : (string -> string option -> ctxt -> (V -> M) * ctxt) -> V -> M
 val interf  : string -> (V -> M) -> ctxt -> ctxt
 val assign_var : ctxt -> string * ctxt
 val cat  : string list -> string

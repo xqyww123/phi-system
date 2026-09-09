@@ -135,6 +135,11 @@ proc binary_search:
   \<medium_right_bracket>
 \<medium_right_bracket> .
 
+text \<open>One procedure exported under two names: one export holds the body, the other is a function
+  that only forwards to it. The generated \<^file>\<open>PhiTest_Arithmetic.C\<close> is committed; a diff there
+  is a regression.\<close>
+declare GCD_def [\<phi>export gcd]
+
 declare [[\<phi>export_code = C]]
 
 end

@@ -1,5 +1,44 @@
 # Plan: one C function per procedure instance
 
+> **Sealed on 2026-09-09.** Everything below this note is the plan as reviewed and approved
+> (revision 5) together with its verification record, kept as the record of what was
+> approved; it is not maintained. Where the text below and the code disagree, the code is
+> authoritative: `Phi_System/library/codegen/base.ML`, `Phi_Semantics/codegen/C/routine.ML`,
+> `Phi_System/library/codegen_nonkernel/emit.ML`. The plan was implemented in three commits
+> on `master`; the departures from the text below are:
+>
+> - `8fe9c371`: the plan as written (instance names, `new_fun`, content keys, the checks in
+>   `interf`, definition order), plus the truncating `op_asdiv`/`op_asmod` hooks and the
+>   `PhiTest_Arithmetic` changes of Section 10.
+> - `d4cbde68`: local variables are spelled `_v0`, `_v1`, ... and `interf` refuses export
+>   names of that shape (that commit rewrote Sections 4.1, 5.5 and 10 to match, so they are
+>   current); comparisons of arbitrary-precision integers are `bool`; `Quicksort.thy` exports
+>   `quicksort` (Section 10 still records the `qsort` collision as unresolved).
+> - The commit that adds this note: the follow-up of Section 5.4
+>   is done. At an export top whose body already exists under a name m, `new_fun` no longer
+>   prints a second copy: it calls the routine hook a second time with m, and the hook prints
+>   under the export name a function whose body only forwards to m (`return m(_v0, ...)`;
+>   no `return` when the return type is `void`); the frame's instance name is registered to
+>   m. The hook interface gained a `string option` argument (`base.sig`). Sections 5.2,
+>   5.3 (the `pf` bullet), 5.4, 6, 8, 9 and 10 describe the behaviour before this change.
+>   The permanent test is `Phi_Test/PhiTest_Arithmetic.thy`, where `GCD` is exported also
+>   as `gcd`; the generated `PhiTest_Arithmetic.C` is committed beside it as the expected
+>   output (the owner's exception to "never commit `.C`"), and contains
+>
+>   ```c
+>   int gcd(int _v0, int _v1) {
+>   return GCD(_v0, _v1);
+>   }
+>   ```
+>
+>   Verification (2026-09-09, one prover session after the change): the eight example files
+>   regenerated with the same function counts (Binary_Search 1, Binary_Trees 7, Bucket_Hash
+>   11, Dynamic_Array 9, Linked_List 10, Matrix_Oprs 8, Quicksort 1, Rational_Arith 8) and
+>   identical text up to the typedef serial numbers; `PhiTest_Arithmetic.C` has 4 functions;
+>   every file passes `gcc -x c -Wall -Wextra -fsyntax-only` with the same three
+>   source-level unused-value warnings as before. The trust base is 375 code lines by
+>   cloc (366 before).
+
 Status: revision 5, after the review of revision 4 (judge: ready after the listed fixes,
 no further review round) and the decisions taken with the project owner. Nothing
 implemented. Baseline commit: `ac45356c`.

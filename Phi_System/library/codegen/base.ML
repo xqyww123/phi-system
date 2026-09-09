@@ -79,10 +79,14 @@ fun frame' nameP (F : V -> M) = fn v => frame nameP (F v)
 (*Names and defines the function a routine hook prints, then prints the call.  The name is the
   export name if this is the first hook of an export, else the instance name in the frame, else
   a serial.  A function already defined under the name is only called.  Otherwise the body is
-  printed and, unless at an export top, discarded when a function with the same content key
-  exists.  At an export top a second copy is printed even if the body exists: an export must be
-  a function under its own name; this happens when one instance is exported under two names or
-  is defined internally before its export is reached.*)
+  printed and, when a function m with the same content key exists, discarded: outside an export
+  top the name becomes another name of m; at an export top, where the export must be a function
+  under its own name, the hook prints instead a function that only forwards to m, and the
+  instance name becomes another name of m, which holds the body.  That second call starts from
+  the same context as the first, and a hit rules out a fresh typedef (its serial would stand in
+  the text and cannot stand in m's older text), so it reprints the header the key says is m's,
+  the name aside.  This happens when one instance is exported under two names, is defined
+  internally before its export is reached, or prints the same text as another instance.*)
 fun new_fun F v (c as (outs,pf,ftab,ss,vc,fr)) =
   let val (name, alias) =
         case (pf, fr)
@@ -93,17 +97,24 @@ fun new_fun F v (c as (outs,pf,ftab,ss,vc,fr)) =
    in case Symtab.lookup ftab (fun_entry name)
         of SOME (FUN G) => G v (outs, NONE, ftab, ss, vc, Anonymous)
          | _ =>
-      let val (G, (out::outs', _, ftab', ss', _, _)) = F name ([]::outs, NONE, ftab, ss, 0, Anonymous)
+      let val (G, (out::outs', _, ftab', ss', _, _)) = F name NONE ([]::outs, NONE, ftab, ss, 0, Anonymous)
           val text = rev out
           val key  = key_entry (content_key name text)
-       in case (pf, Symtab.lookup ftab key)
+       in (*a hit means the text is m's, so the print defined no function and no typedef the
+            table lacks: both hit branches return to the table before the print*)
+          case (pf, Symtab.lookup ftab key)
             of (NONE, SOME (KEY m)) =>
                  let val G' = the_fun ftab m
                   in G' v (outs, NONE, Symtab.update (fun_entry name, FUN G') ftab, ss, vc, Anonymous) end
+             | (SOME _, SOME (KEY m)) =>
+                 let val (G, (out::_, _, ftab', ss', _, _)) = F name (SOME m) ([]::outs, NONE, ftab, ss, 0, Anonymous)
+                     val ftab'' = ftab' |> Symtab.update (fun_entry name, FUN G)
+                                       |> (case alias of SOME a => Symtab.update (fun_entry a, FUN (the_fun ftab m)) | NONE => I)
+                  in G v (outs, NONE, ftab'', rev out :: ss', vc, Anonymous) end
              | _ =>
                  let val ftab'' = ftab' |> Symtab.update (fun_entry name, FUN G)
                                        |> Symtab.default (key, KEY name)
-                                       |> (case alias of SOME m => Symtab.update (fun_entry m, FUN G) | NONE => I)
+                                       |> (case alias of SOME a => Symtab.update (fun_entry a, FUN G) | NONE => I)
                   in G v (outs', NONE, ftab'', text :: ss', vc, Anonymous) end
       end
   end
