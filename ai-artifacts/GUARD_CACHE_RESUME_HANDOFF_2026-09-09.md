@@ -1,57 +1,82 @@
-# Handoff: guard cache implementation — steps P, 0, 1 done and ACCEPTED after code review (2026-09-09, 14:10 UTC+8)
+# Handoff: guard cache implementation — steps P, 0, 1 done, reviewed, ACCEPTED, COMMITTED; step 2 next (2026-09-09, 14:30 UTC+8)
 
-Supersedes the 09-08 handoff.  "开工" was given 2026-09-09.  The plan is
-`contrib/phi-system/Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` **rev 23**; §26 records
-step P's acceptance ("验收通过") and step 0's anchor re-verification; §27 records
-step 1; §28 the first code review's fixes; §29 the re-review: ACCEPTED.  Archive `.rev22.md` beside it.
+Supersedes the 09-08 handoff.  Plan: `contrib/phi-system/Docs/GUARD_CACHE_QUICK_MODE_PLAN.md`
+**rev 23** — §1 glossary authoritative; §3 architecture; §4 where things live; §5 one
+`prove_or_refute` call (THE spec of step 2); §6 refuters/judge; §7 honest costs; §8
+persistence (step 4); §9 phase-1 enablers; §10 order + drafter decisions; §26 step P
+accepted + step 0; §27 step 1; §28 first code review's fixes; §29 re-review ACCEPTED.
 
-## State
-- **Step P (preparatory phase)**: DONE and accepted.  ssymb.ML in Pure; `MESSAGE_PACK`;
-  `RPC_Term_Codec` functor in `Isabelle_RPC/Tools/pretty.ML`; `RPC_Pretty_Bytes`;
-  Isa-Mini's `agent_packer.ML` applies the functor; `Isabelle_RPC/test/Test_Term_Codec.thy`
-  in `Isabelle_RPC_Test`.  Heaps rebuilt by the author.
-- **Step 0**: DONE — ~220 anchors re-verified by three agents + drafter; 15 corrected.
-- **Step 1**: DONE, code-reviewed (wf_d8746808-6c8: 1 MAJOR + 6 MINOR fixed; relaxations A `Tactic_Configures.invoke`, B `Seq.take 1` on "G.simpcut" accepted by the author), re-reviewed ACCEPTED (wf_61cf82c2-9ce).  Rebuild from Performant_Isabelle_HOL up done 2026-09-09 (the author approved the drafter running builds for this).  Files: `auto_sledgehammer/library/Hasher.ML`
-  (`terms`), `sledgehammer_solver.ML` (interrupt clause; `auto_sledgehammer_trace_replay`),
-  `phi-system/Phi_Logic_Programming_Reasoner/PLPR.thy` (`Guard_Budget`, `ML_file
-  library/guard_cache.ML` after `reasoner.ML`, method `\<phi>guard_P_auto`, the two
-  `\<condition>` registrations on `guard_condition_judge … o snd`, `defer_premise` on
-  `solve_obligation_now`, `hide_const (open) Guard_Budget`), NEW `library/guard_cache.ML`
-  (`Phi_Guard_Cache`), `library/guard_refute.ML` (`Nitpick_Refute_SS`),
-  `library/reasoners.ML` (factory `guard_condition_solver digest_of solve {can_inst}
-  (ctxt0, th)`, `guard_condition_judge`, `prove_or_refute` in its final type wrapping
-  the TRANSITIONAL race `guard_race`, `apply_tac prj …`, `head_only'`, `oblg_template …
-  {inj, on_thm}`, `enhance_for_guard`, `simpcut_tac`, `p_auto_body`,
-  `try_prove_or_give_up`, `guard_classic_prover_timeout`/`_bound`, the two warning
-  functions).  Evidence: PLPR.thy clean under MCP on Performant_Isabelle_HOL; author's
-  rebuild `isabelle build -b Minilang_AoA Phi_System_Base` passed; PhiTest_Arithmetic.thy
-  clean under MCP on Phi_System_Base with 175 guard_race records through the new factory.
-- The MCP prover is on `Phi_System_Base` (session_dirs /home/qiyuan/Current/MLML).
+## Committed (2026-09-09; NOT pushed — push only when told, only to origin)
+Performant_Isabelle_ML `4e850dd`, Isabelle_RPC `65cdbaa`, Isa-Mini `1ce791f`,
+auto_sledgehammer `1360b21`, phi-system `d19e4521`, root MLML submodule bump (HEAD).
+Others' uncommitted tracked edits were swept in and named in the messages (race.ML,
+accounted_timeout.ML, config.ML, agent_hint.ML, aux.ML, Readme, unicode mirror, proof
+stores).  Left untracked on purpose: others' scratch (Isabelle_RPC docs/tests, `local`,
+`list`; Performant_Isabelle_ML ai-artifacts/sort_*; Isa-Mini ai-artifacts; `.o`, `.swn`).
 
-## Drafter decisions (reported; the author raised no objection)
-`auto_sledgehammer_trace_replay`; structure `Phi_Guard_Cache`; internal names
-`enhance_for_guard`, `simpcut_tac`, `solve_obligation_now`, `p_auto_solving`, `guard_race`;
-hook priority 200; the loud warning's text; `prj` only on `apply_tac` and `oblg_template`
-taking `{inj, on_thm}`; the digest step typed `thm -> 'd` (judge: `guard_digest`; others `K ()`).
+## State of the code (all heaps rebuilt 2026-09-09 from Performant_Isabelle_HOL up)
+- Factory `Phi_Reasoners.guard_condition_solver digest_of solve {can_inst} (ctxt0, th)`
+  (reasoners.ML ~:1634-1750): quick_cut; head_only' (inj = pair ctxt0, on_thm = apsnd):
+  pre; case split; `d = digest_of th`; ALLGOALS insert aux; `simpcut_tac ctxt_g`
+  (enhance_for_guard, Seq.take 1, Timeout = state unchanged); is_F arm (250 ms
+  auto_search, paired with ctxt0) or `solve can_inst ctxt_g d (ctxt0, th)`.
+  `guard_condition_judge = guard_condition_solver guard_digest prove_or_refute`.
+  `prove_or_refute can_inst ctxt d (ctxt0, th)` is TRANSITIONAL: wraps `guard_race`
+  (today's Race.race with P-auto/R-conv/R-nitpick racers, 35 ms gate,
+  `\<phi>guard_race_timeout`, `\<phi>log_guard_race`, guard_race Event_Log category).
+- `Phi_Guard_Cache` (guard_cache.ML): tier/lemma/verdict/entry; `\<phi>guard_cache`;
+  `\<phi>guard_lemma_apply_limit`; `budget_of_tier`; `Guard_Simp_SS`; `get_lemmas`,
+  `add_lemma ctxt0 (th, budget)` (canonicalises), `replace_lemmas ctxt0 new`;
+  `enhance_with_lemmas`; export hook priority 200.  UNEXERCISED so far (no lemma
+  producer): enhance_with_lemmas on a non-empty list, add_lemma, the hook.
+- Helpers: `try_prove_or_give_up bound tac ctxt th`, `p_auto_body`, `enhance_for_guard`,
+  `guard_classic_prover_timeout` (400 ms) / `_bound`, `undecided_guard_warning ctxt goals`
+  (used by guard_race), `loud_guard_warning ctxt goals results` (no caller yet),
+  `timed_tac` exported; method `\<phi>guard_P_auto`; `solve_obligation_now` in PLPR.thy
+  (`ALLGOALS (fast_force_tac)`).  `Nitpick_Refute_SS` (was Guard_Refute_SS).
+- auto_sledgehammer: `Hasher.terms`; eval_prf_str0 interrupt clause;
+  `auto_sledgehammer_trace_replay`.
+- Probes: phi-system/ai-artifacts/Solve_Obligation_Now_Probe.thy (imports PLPR; run
+  under MCP on Phi_System_Base).
 
-## Next: step 2 (plan §10)
-`prove_or_refute` over `context_state` with the sequential protocol of §5 and an
-in-memory table (test-injected `Symtab`) in place of the store; `guard_decision`
-record behind `\<phi>log_guard_decision` (rename of `\<phi>log_guard_race`; delete the
-`\<phi>log_guard_race = true` clause at PLPR.thy's `declare [[…]]`, keep
-`\<phi>log_guess_inst = true`); remove `Race.race`, the racers, `\<phi>guard_race_timeout`,
-the 35 ms gate; rewrite the `nitpick_params` note ("inside a racer body");
-`Test/Guard_Race_Smoke.thy` reshaped around `guard_decision` (its :79 call migrates);
-every path of §5 exercised.  Steps 1 and 4 needed rebuild approvals; step 2 changes
-only phi-system files (loaded from source under Phi_System_Base) — no rebuild.
+## Next: STEP 2 (plan §10 step 2; spec §5, §6, §1)
+1. Replace `guard_race`'s body: the sequential protocol of §5 — step 0 lookup (an
+   in-memory table, test-injected `Symtab` keyed `"PLPRGUARD" ^ Hasher.compact d`, in
+   place of the store until step 4; gated by `\<phi>guard_cache`); step 1 enable lemmas
+   (`Thm.cterm_of ctxt0`, `Thm.trivial`, `eval_prf_str` n=1 under
+   `Phi_Proof_Store.replay_limits` of times floored by the classic bound; failures =
+   drop + dropped-lemma warning; `add_lemma ctxt0` into ctxt0→ctxt1 and ctxt→ctxt_g);
+   step 2 P-auto = `timed_tac (guard_classic_prover_bound ctxt) (p_auto_body ctxt_g)`;
+   steps 3-4 by the entry's verdict (Refuted silent; Unknown → judge or warning;
+   NONE → R-conv → R-nitpick → judge → warning+write Unknown; Proved → refuters →
+   judge → LOUD warning); step 6 the judge ref (`judge_arg`, `judgement`,
+   standard_time on receipt, `replace_lemmas`, P-auto again, errors).  R-conv = today's
+   r_conv_racer body under `Timeout.apply` of the classic bound; R-nitpick = today's
+   screen + calls, outer net `refute_timeout + 5 s × n`, inner `refute_timeout + 5 s`
+   per subgoal, sequential.  Delete Race.race, the racers, the protocol var, the 35 ms
+   gate, `\<phi>guard_race_timeout`, p_auto_probe/nitpick_probe categories (check with
+   the author before deleting probe categories).
+2. `guard_decision` Event_Log record behind `\<phi>log_guard_decision` (rename of
+   `\<phi>log_guard_race`): verdict, path (hit kind, refuter, judge asked), elapsed,
+   `Hasher.hex` digest, n_goals, #lemmas enabled.  Delete `\<phi>log_guard_race = true`
+   from PLPR.thy's `declare [[…]]` (keep `\<phi>log_guess_inst = true`).
+3. Rewrite the `nitpick_params` comment ("inside a racer body").
+4. `Test/Guard_Race_Smoke.thy` reshaped around `guard_decision` (its :79 call migrates to
+   `guard_condition_judge`); exercise every §5 path with injected entries and a test
+   judge: hits of each verdict, lemma enabling, a looping lemma cut off by its budget,
+   the judge replacing lemmas, both warnings, both errors.
+5. Verify: PLPR.thy + PhiTest_Arithmetic.thy under MCP on Phi_System_Base (no rebuild:
+   phi-system files only); then the same review shape (workflow, Opus, English,
+   interrogators → more fresh defenders → judge; harsh rebuttal; report in Chinese; no
+   code changes before the author agrees).  Record in the plan (§30) and rev-bump.
 
-## Rules (unchanged)
-No `isabelle build` without approval (the author runs them); edit source with the Edit
-tool (author 2026-09-09: "建议你最好用 Edit tool 去编辑源码"); plan docs by hand; never
-coin words; explain in Chinese, essence first; commit only when told, push origin only;
-memory writes need approval; probes never load phi-system theories under new names.
-
-## Uncommitted
-Everything above plus the plan + archives rev11–rev22, ai-artifacts, Hasher.ML comment
-deletion, Semantic_Embedding cleanup scripts.  Other agents' uncommitted edits exist in
-Performant_Isabelle_ML (`accounted_timeout.ML`, `race.ML`) and Isa-Mini.
+## Rules (the author's, all binding)
+Edit source with the Edit tool; plan docs by hand; never coin words (fixed terms:
+record/entry/store/the lemma list/the lemma budget/ctxt_g/ctxt1/the canonical form/the
+preparatory phase/"G.simpcut"); explain in Chinese, essence first, full context, exact
+file:line; `isabelle build` only with approval (the author approved the drafter running
+the rebuilds of 2026-09-09; ask again for new ones); after `.ML` edits restart/re-evaluate;
+never git stash/checkout/reset/clean; commit on the repo's current branch, push origin
+only, only when told; memory writes need approval; probes must not load phi-system
+theories under NEW names (importing PLPR under its own name is fine); do not relay
+agent progress ticks.
