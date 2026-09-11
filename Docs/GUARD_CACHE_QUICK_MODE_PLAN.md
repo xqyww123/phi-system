@@ -2916,3 +2916,37 @@ new antecedent constant `\<check> \<hypothesis> \<consistency>`, defined as
 priority above the condition solver — whose one job is proving the
 contextual premises inconsistent, replacing the `is_F` shortcut as the home
 of that idiom.
+
+**The tier measurement (§10 step 3, second half) — brainstormed, SHELVED
+[author 2026-09-11 "先记录结果, 搁置这个问题, 这是我们之后才要处理的"].**
+An Opus panel (four proposals, eight critiques, one judge; the dossier in
+`ai-artifacts/TIER_MEASUREMENT_BRAINSTORM_2026-09-11.md`) produced a
+three-stage plan: A — capacity (how many charges one consumer run can
+afford under its own thread-CPU bound; no corpus run; plus the `mksimps`
+arity per lemma); B — one instrumented corpus run counting applied
+rewrite rules per consumer run, the run boundary being the four
+`enhance_for_guard` call sites (each call of `enhance_with_lemmas` makes a
+fresh budget table, so "one consumer run" is one such call), reporting the
+invocations-per-run multiplier of §7 and the per-(run, rule) demand
+against 3 / 30 / 300 / the ceiling, with the bounds raised tenfold on the
+measurement legs because the probe's CPU is charged to the clock that
+decides verdicts; C — the starvation counterfactual (real rules deleted
+from the guard-side simpset and re-injected as budgeted lemmas; perturbs
+the corpus).  The drafter's decision when the work resumes: A and B, not
+C unless the author allows the perturbation.  Structural facts the judge
+verified, to be settled with the judge's design in phase 2: a budgeted
+lemma's rules are always CONDITIONAL, so `sort_rrules` tries them after
+every unconditional rule at the same redex and `simp_depth_limit` (40)
+refuses them deep in a simplification; `Frequent` is an alias of the
+ceiling (`budget_of_tier` returns `limit`), so `Normal >= limit` merges
+the top two rungs; the "duplicate rule is ignored" story of the drafter
+was wrong (`eq_rrule` compares propositions, and the budget premise makes
+them differ).  Semantics ruled [author 2026-09-11 "我认为是 整条 lemma 一次
+run 内合计 3 次"]: a budget counts the rewrites of ALL rules derived from
+one lemma, accumulated over the whole consumer run — the code's present
+semantics; the value of `Only_Once` under it is the product of the
+lemma's `mksimps` arity and the number of times one run re-rewrites the
+same redex (P-auto's search backtracks past the rewrite), to be read off
+stages A and B; 3 stays until then.  The judge's two proposed permanent
+changes (per-lemma charge fields on `guard_decision`; retrying once at a
+raised limit before the "judge is broken" error) are not adopted; open.
