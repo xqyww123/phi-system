@@ -146,7 +146,7 @@ document.
   on every call [author 2026-09-08 05:53 "一切裁决都是取决于 P-auto 的"].
   [descriptive]
 - **the goal state**: the thm `prove_or_refute` receives — the PLPR sequent
-  after `guard_condition_solver`'s `Goal.protect 1` (`head_only`,
+  after `gen_guard_condition_solver`'s `Goal.protect 1` (`head_only`,
   `reasoners.ML:385-388`): the guard's subgoals visible, the rest of the
   sequent wrapped in `Pure.prop` (`#(rest ⟹ C)`) as the conclusion; case
   split, the aux-fact insertion and the "G.simpcut" pass have already acted
@@ -192,7 +192,8 @@ document.
   refutation by simplification.  Today the pass is unbounded (`:1603-1605`
   install no clock), which was the hole the lemma budget could not cover
   (§7).  [code]
-- **`guard_condition_solver`**: from now on a FACTORY — the existing
+- **`gen_guard_condition_solver`** (until 2026-09-11 `guard_condition_solver`;
+  renamed as the factory [author 2026-09-11]): from now on a FACTORY — the existing
   preprocessing template (`oblg_template`, the `is_F` shortcut, case split,
   `apply_tac`'s fact insertion, the "G.simpcut" pass) parameterised by the
   solving function it ends with, whose type is `prove_or_refute`'s
@@ -214,7 +215,7 @@ document.
   [drafter].  The factory's contract, total [drafter, tenth review]:
   `oblg_template` (`reasoners.ML:336-380`) is SHARED — four live callers,
   `defer_obligation` `:819`, `hammer_obligation_solver` `:850`,
-  `guard_condition_solver` `:1591`, `safe_obligation_solver` `:1651` — and
+  `gen_guard_condition_solver` `:1591`, `safe_obligation_solver` `:1651` — and
   becomes polymorphic in the solving function's result type `'a` through
   three extra parameters, `inj : thm -> 'a` (how a thm that never reached
   the solving function becomes a result), `on_thm : (thm -> thm) -> 'a ->
@@ -223,7 +224,7 @@ document.
   callers pass `I`, `I` and `I`, the guard path passes `pair ctxt0`,
   `apsnd` and `snd`.  Every exit of the template that bypasses the solving
   function goes through `inj` — the `TrueI` exit `:344-345`, the two
-  `fast_inst` exits `:346-347` and `:369-370`, `guard_condition_solver`'s
+  `fast_inst` exits `:346-347` and `:369-370`, `gen_guard_condition_solver`'s
   own `is_F` arm `:1606-1607`, and `head_only`'s zero-premise arm `:386-387`
   (`all_tac th`, which never calls the tactic and so becomes `Seq.single
   (inj th)`) — so each such result is paired with the ctxt the factory was
@@ -784,7 +785,7 @@ caller uses — no run-time "is there a cache" test anywhere:
 IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:1984/1987)
   gen_reason' (reasoner.ML:906) — UNCHANGED
     … reasoning …  (state = (ctxt, thm); the ctxt flows from call to call)
-      guard_condition_judge = guard_condition_solver prove_or_refute
+      guard_condition_judge = gen_guard_condition_solver prove_or_refute
         the factory (reasoners.ML:1625-1635): quick_cut; under head_only: pre;
                      HEADGOAL case_split; digest d of Thm.cprems_of (the split guard,
                      nothing inserted); ALLGOALS (insert aux); then auto_tac:
@@ -826,7 +827,7 @@ OUT OF A RUN   (guard_condition_solver' / guard_condition_solver1: four
                 toplevel0.ML:387, generic_variable_access2.ML:182, :272;
                 application.ML:137 is commented out — solving proof
                 obligations, `Premise default P` / `Premise MODE_COLLECT P`)
-  guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
+  gen_guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
       try_prove_or_give_up (SOME \<phi>guard_classic_prover_timeout) p_auto_body ctxt th
       |> Seq.map (pair ctxt0)):
     same preprocessing (no digest step; "G.simpcut" under its bound, as in
@@ -841,7 +842,7 @@ OBLIGATIONS SOLVED ON THE SPOT   (defer_premise, PLPR.thy:1975/1976, when
                 by the user's prove_obligations_in_time (PLPR.thy:1999-2005)
                 and internally by rule_generation.ML:443, the only internal
                 setter left since SE_Trim_Empty.ML was deleted, commit 11499285)
-  guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
+  gen_guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
       try_prove_or_give_up NONE fastforce (Guard_Simp_SS.enhance ctxt) th
       |> Seq.map (pair ctxt0)):
     same preprocessing (no digest step; "G.simpcut" under its bound), then
@@ -858,7 +859,7 @@ instance, §8), `eval_prf_str`, `Simpset` (for `Guard_Simp_SS`),
 `Performant_Isabelle_ML`, the R-conv/R-nitpick bodies (screens verbatim),
 `RPC_Pretty`'s raw term codec (functorised, §8).  `Phi_Reasoners.wrap`
 stays at every registration except the two guard reasoners, which now
-take the state directly (§1 `guard_condition_solver`) [2026-09-02 12:08
+take the state directly (§1 `gen_guard_condition_solver`) [2026-09-02 12:08
 "registrations unchanged" superseded for these two by 2026-09-04 04:19].
 
 Every caller of the old `guard_condition_solver` must migrate, and the
@@ -1494,7 +1495,7 @@ P. **The preparatory phase** — DONE 2026-09-09 and accepted by the author
    `library/guard_cache.ML` (the types, `Guard_Simp_SS` with its attribute,
    `Guard_Lemmas`, `enhance_with_lemmas` with the simproc and the budget
    table, the export hook, `\<phi>guard_cache` — the store instance and
-   the codec wait for step 4); the factory: `guard_condition_solver`
+   the codec wait for step 4); the factory: `gen_guard_condition_solver`
    parameterised, the digest step between the case split and the
    insertion, the "G.simpcut" bound, `oblg_template` with `inj`, `on_thm`
    and `prj` and its three other callers, `apply_tac` reshaped around the
@@ -2385,7 +2386,7 @@ library/guard_cache.ML` next, the method `\<phi>guard_P_auto` after
 race, renamed; `prove_or_refute` in its final type wrapping it;
 `guard_classic_prover_timeout`/`_bound`; `enhance_for_guard`, `simpcut_tac`,
 `p_auto_body`, `try_prove_or_give_up`, `undecided_guard_warning`,
-`loud_guard_warning`, `is_guard_mode`, the factory `guard_condition_solver
+`loud_guard_warning`, `is_guard_mode`, the factory `gen_guard_condition_solver
 digest_of solve`, `guard_digest`, `guard_condition_judge`, `p_auto_solving`,
 `guard_condition_solver'` — internal names: drafter; the P-auto and R-conv
 racers now search in `enhance_for_guard`ed contexts).
@@ -2845,8 +2846,10 @@ Diagnosed with TEMPORARY probes, all reverted (`reasoners.ML` and
    is `gen_guard_condition_solver` (`reasoners.ML` `:94`, `:1582`, `:1616`,
    `:1625`; `PLPR.thy:1995`; `Test/Guard_Decision_Smoke.thy:71`;
    `guess_instantiate.ML:307`).  The instances `guard_condition_solver'` /
-   `guard_condition_solver1` keep their names.  Where this document says
-   `guard_condition_solver` for the factory, read the new name.
+   `guard_condition_solver1` keep their names.  This document now uses the
+   new name wherever it means the factory ("更新一下"); the old name stays
+   only inside quotations of the author and where it means the pre-factory
+   function of before step 1 (§1's migration note, §11 item 3).
 
 **Rulings of 2026-09-11 on item 2, applied**: the "G.simpcut" pass's bound
 is 5 s of thread CPU, fixed in the code with no option ("直接定死 5s x the
@@ -2861,10 +2864,11 @@ nowhere else, is now a local function of `gen_guard_condition_solver`
 ("建议挪动进 gen_guard_condition_solver 里").  §1 "G.simpcut" and the §10
 option table carry the ruling.
 
-**Still pending the author**: the `is_F` shortcut (the drafter's proposal:
-bypass "G.simpcut" and run the 250 ms `auto_search_tac` directly, which
-proves both kinds of contradiction — or leave it to the follow-up below);
-item 4.
+**Rulings of 2026-09-11 on the rest**: the `is_F` shortcut stays as it is
+and its repair is left to the follow-up below ("留给 \<check> \<hypothesis>
+\<consistency> 后续"); the `\<phi>log_guess_inst = true` declare of
+`PLPR.thy` (the guess_inst experiments' instrumentation of 2026-08-30) is
+deleted ("删除"); item 4 is explained to the author, decision open.
 
 **Follow-up proposed by the author (2026-09-11), after the current work**: a
 new antecedent constant `\<check> \<hypothesis> \<consistency>`, defined as

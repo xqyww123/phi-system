@@ -1975,11 +1975,6 @@ method_setup \<phi>guard_P_auto = \<open>
                             (Phi_Reasoners.p_auto_body ctxt)))
 \<close> "P-auto: the one proof attempt every prove_or_refute call makes on a guard, with \<phi>guard_simp and the guard cache's lemmas, under \<phi>guard_classic_prover_timeout"
 
-(*TEMPORARY (2026-08-30): the guess_inst experiments read this Event_Log category;
-  default off.  Placed upstream of every evaluation target so the whole chain logs
-  (author's ruling in GUARD_NITPICK_FALSIFY_PLAN.md Section 22.3).*)
-declare [[\<phi>log_guess_inst = true]]
-
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
           Config.declare_int ("Phi_Reasoner_solve_obligation_and_no_defer", \<^here>) (K 0)

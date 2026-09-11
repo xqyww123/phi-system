@@ -58,11 +58,11 @@ closes or cuts every `\<condition> False` guard first) — the idiom is simp-onl
    them in the message.  Untracked build products in the tree (`Phi_Examples/*.C`,
    `*.o`, `PhiTest_Arithmetic.o`, `Phi_Semantics/PhiSem_Real_Abst.proof-store`) are not
    ours: leave them.
-4. Open with the author: `\<phi>log_guess_inst = true` in PLPR.thy (another subsystem's
-   instrumentation) — keep or delete (asked 09-10, unanswered); the `is_F` shortcut
-   (§33 pending); §33 item 4 (the loud warning on a shared entry); whether to rename
-   `guard_condition_solver` → `gen_guard_condition_solver` throughout the plan text or
-   leave §33 item 5's note as the pointer.
+4. DONE (rulings 2026-09-11): the `\<phi>log_guess_inst = true` declare deleted from
+   PLPR.thy; the `is_F` shortcut left to the follow-up constant; the plan text renamed
+   to `gen_guard_condition_solver` throughout (old name only in quotations and for the
+   pre-factory function).  Still open with the author: §33 item 4 (the loud guard
+   warning on a shared entry — explained, decision pending).
 
 ## Then: STEP 3 (plan §10 step 3)
 The export hook end to end — a lemma enabled at one call reaching the next call of the
