@@ -34,6 +34,20 @@ unchanged; the factory's local `guard_ctxt`.  guard_cache.ML: `lookup_entry`/
 `nitpick` = preprocessing + one Nitpick call.  PLPR.thy: `cpu_bounded_tac` in
 `\<phi>guard_P_auto`; `hide_const`; the `declare` block.
 
+## The digest (ruling of 2026-09-11, late)
+The store key is the WHOLE goal state plus the context's assumptions:
+`guard_digest ctxt th = Hasher.terms (Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt))`
+(one hash; `Thm.prop_of th` under `Goal.protect` = the guard subgoals + the protected rest
+of the sequent with its conclusion; the aux facts stay out — derivable).  The factory's
+digest step takes `ctxt` (`digest_of : Proof.context -> thm -> 'd`; the non-digest
+instances pass `K (K ())`).  The subgoals-only key of 09-03…09-11 was the DRAFTER's
+narrowing recorded under the author's timing citations — never the author's ruling
+("我从来说的都是整个 sequent"); §1 "guard digest" carries the correction of the record, §33
+item 4 the two measurements that preceded the ruling (77 us per decision; 355 corpus
+decisions → 261 keys, no repeated key among the 162 that hit the store).  Lesson, binding:
+when narrowing a definition beyond the author's words, quote the author verbatim and mark
+the narrowing [drafter] and ask; never file it under an author citation.
+
 ## What 09-11 found (details in §33)
 The 2608 flip was the "G.simpcut" pass's 400 ms bound: those `len_intvl` guards need
 371–437 ms of thread CPU in that pass (measured, low load), the timeout was silent and

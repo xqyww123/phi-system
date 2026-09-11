@@ -309,24 +309,38 @@ document.
   names only the judge's answer [supersedes 2026-09-04 03:23].  `verdict`,
   `tier`, `lemma`, `entry` are declared in `guard_cache.ML` (§4);
   `judgement` in `reasoners.ML` beside the judge.
-- **guard digest**: the `Hasher` digest (`Word64.word`) of the guard's own
-  subgoals — `Thm.cprems_of` of the state the factory holds right after
-  the case split and BEFORE the aux facts are inserted (`reasoners.ML`
-  between `:1628` and `:1629`), each subgoal with its parameters and its
-  own premises; not the ctxt's assumptions, not the aux facts, not the
-  theory name [author 2026-09-03 07:48; 2026-09-08 06:10 "2. 不掺"; 07:05
-  "digest 取在这道化简之前"; 11:52 "赞同. 批准" — before the insertion].
-  Under `head_only`'s protection every visible premise at that point IS a
-  guard subgoal, so the digest covers exactly the guard.  Computed by a new
+- **guard digest**: the `Hasher` digest (`Word64.word`) of the WHOLE goal
+  state and of the context's assumptions: one `Hasher.terms` over
+  `Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt)`, on
+  the state the factory holds right after the case split and BEFORE the
+  aux facts are inserted (`gen_guard_condition_solver`'s digest step;
+  `guard_digest : Proof.context -> thm -> digest`).  `Thm.prop_of th` under
+  `head_only`'s `Goal.protect` is the guard's subgoals — each with its
+  parameters and its own premises — followed by the protected rest of the
+  sequent with its conclusion; the assumptions are the ctxt's at that
+  step.  Not the aux facts, which are derivable; not the theory name
+  [author 2026-09-11 "我说的是整个 sequent 包括 Goal.protect 中的结论";
+  "不需要加 aux 事实, aux 全是 derivable 的, 我们只考虑 the sequent and the
+  contextual assumptions"; "确定: state + contextual assumptions 的方案" —
+  after the measurement of §33 item 4].  CORRECTION of the record: from
+  2026-09-03 to 2026-09-11 this bullet, step 1 and step 2 keyed the store
+  by the guard's own subgoals only (`Thm.cprems_of`); that scope was the
+  drafter's, written under the author's citations on the digest's TIMING
+  ("2. 不掺" — the ctxt's simpset and lemmas not mixed in; "digest 取在这道
+  化简之前"; "赞同. 批准" — before the insertion), which never said
+  "subgoals only"; the author meant the whole sequent throughout
+  ("我从来说的都是整个 sequent"; "我从来没有批准过只给 guard 子目标做 digest").
+  Computed by a new
   `Hasher.terms : term list -> digest` added to `HASHER` and
   `contrib/auto_sledgehammer/library/Hasher.ML` (the `hash_term`
   accumulator chained from the FNV basis over the list; `Hasher : HASHER`,
   `Hasher.ML:81`, hides the accumulator, so it cannot live in
-  `guard_cache.ML`).  The key moves in three cases and no other: when the
-  guard's text changes; when `oblg_template`'s normalisation of it does
-  (`:341-342`, the ctxt's simpset on the tag); and, for a guard that still
-  carries schematic variables when it reaches the factory, when those
-  variables' names or INDICES do.  On the `\<condition> ?P` reasoner
+  `guard_cache.ML`).  The key moves when the goal state's text changes —
+  the guard's, the rest of the sequent's or its conclusion's — or the
+  context's assumptions do; when `oblg_template`'s normalisation of the
+  guard does (`:341-342`, the ctxt's simpset on the tag); and, for a state
+  that still carries schematic variables when it reaches the factory, when
+  those variables' names or INDICES do.  On the `\<condition> ?P` reasoner
   (`PLPR.thy:1984`, `can_inst = true`) the factory runs `oblg_template` at
   `fix_level = 1` (`reasoners.ML:1591`; `:332-334`), whose fixing targets
   are the variables of the leading antecedent's own premises that its
@@ -355,10 +369,15 @@ document.
   gets two keys.  The digest is normalised against NEITHER [author
   2026-09-08 12:57 "好的, 赞同不做归一化" (the fresh names); 15:12 "B. 否
   决 … 为什么要放宽呢?" (the indices)]; the cost of the divergent keys is
-  recorded in §7.  Two guards with the same subgoals share one entry, in
-  one run or across runs, builds and contexts: the entry is advice, not a
-  decision, so sharing is right [author 06:10 "1. 同意"]; its cost is
-  recorded in §7.
+  recorded in §7.  Two calls with the same goal state and the same
+  assumptions share one entry, in one run or across runs and builds — the
+  same statement replayed, or an identical state reached twice: the entry
+  is advice, not a decision, so sharing is right [author 06:10 "1. 同意",
+  on sharing as such]; its cost is recorded in §7.  Measured on the corpus
+  (§33 item 4, 2026-09-11): 355 decisions resolve to 261 keys under this
+  digest (144 under the former subgoals-only key), and among the 162
+  decisions that hit the store no key repeats within one run; the digest
+  costs 77 us per decision (5 us before), 0.12 % of the guard time.
 - **the store**: one table per theory, guard digest → entry, kept in
   `<thy>.guard-cache` through the proof store's functor instance
   `Phi_Guard_Store` (§8); read at the start of a `prove_or_refute` call,
@@ -435,8 +454,10 @@ its entry and enabled the entry's lemmas (§5).
   §5 does anyway: each lemma is a closed statement of type `prop`
   (`Trueprop`-wrapped for a HOL proposition), certifiable by `Thm.cterm_of
   ctxt0` and provable by its own method text in ANY `ctxt0` that can
-  reach this guard's digest — the digest excludes the ctxt by ruling
-  [author 06:10 "2. 不掺"] and the entry is shared across contexts, so the
+  reach this guard's digest — the digest covers the goal state and the
+  context's assumptions but not the ctxt's simpset, lemmas or local facts
+  [author 06:10 "2. 不掺"; 2026-09-11], and the entry is shared across
+  contexts that agree on those, so the
   method text may cite theory-level facts only, never a fact local to the
   recording call's context, and runs without `oblg_template`'s fixes, the
   inserted aux facts and the guard-side assumptions; the lemmas together
@@ -2841,7 +2862,26 @@ Diagnosed with TEMPORARY probes, all reverted (`reasoners.ML` and
    among them simp closes it (0 subgoals, `Proved` written), without it
    R-nitpick refutes it (`Refuted` written); every warm run flips the entry
    and warns once.  The consequence of §1's sharing ruling ("the entry is
-   advice"); the warning is a false alarm there.  Open.
+   advice"); the warning is a false alarm there.  Not a digest collision:
+   the two calls' digested subgoals are the same text, so the key is the
+   same by construction [drafter, on the author's question 2026-09-11].
+   RESOLVED 2026-09-11 by the author's ruling on the digest itself: the key
+   is the whole goal state plus the context's assumptions (§1 guard digest,
+   with the correction of the record there — the subgoals-only key was the
+   drafter's narrowing, never the author's ruling).  Measured first, on the
+   author's instruction, with TEMPORARY probes by an Opus agent (both
+   reverted; the same 355 corpus decisions each time): (i) subgoals +
+   aux facts + assumptions — hashing 40 us more per decision, keys 144 →
+   200; (ii) whole state + assumptions, aux excluded — the digest 76.8 us
+   per decision against 4.8 us (0.12 % of the 22.5 s of guard time; the
+   state is the payload, mean size 182 against the subgoals' 14), keys
+   144 → 261 over all 355 decisions (repeat rate 59.4 % → 26.5 %), and over
+   the 162 decisions that hit the store 84 → 162, no repeat at all; the
+   whole state alone gives 259 of the 261 keys, the assumptions 2 more.
+   The author chose (ii) ("确定: state + contextual assumptions 的方案");
+   the aux facts stay out because they are derivable.  With it the two
+   call sites of this item get different keys and the warning no longer
+   fires for that reason.
 5. **Rename applied** [author 2026-09-11]: the factory `guard_condition_solver`
    is `gen_guard_condition_solver` (`reasoners.ML` `:94`, `:1582`, `:1616`,
    `:1625`; `PLPR.thy:1995`; `Test/Guard_Decision_Smoke.thy:71`;

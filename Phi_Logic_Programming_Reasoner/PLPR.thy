@@ -1982,7 +1982,7 @@ val Phi_Reasoner_solve_obligation_and_no_defer =
 (*an obligation solved on the spot: the guard factory over fastforce in a
   \<phi>guard_simp-enhanced context, unbounded, no store; not proved = backtrack*)
 fun solve_obligation_now ctxt th =
-  Phi_Reasoners.gen_guard_condition_solver (K ()) (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
+  Phi_Reasoners.gen_guard_condition_solver (K (K ())) (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
       Phi_Reasoners.try_prove_or_give_up NONE (fn ctxt => ALLGOALS (Clasimp.fast_force_tac ctxt))
           (Phi_Guard_Cache.Guard_Simp_SS.enhance ctxt) th
       |> Seq.map (pair ctxt0))

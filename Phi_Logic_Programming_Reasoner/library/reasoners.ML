@@ -91,14 +91,16 @@ signature PHI_REASONERS = sig
     computed on the state after the case split and before the insertion.  A result
     carries the context the factory was called on plus what the solving function
     added.  The annotation of \<open>case_split\<close> is supported.*)
-  val gen_guard_condition_solver : (thm -> 'd)
+  val gen_guard_condition_solver : (Proof.context -> thm -> 'd)
                             -> (bool -> Proof.context -> 'd -> context_state -> context_state Seq.seq)
                             -> {can_inst: bool} -> context_state -> context_state Seq.seq
   (*the in-run instance: the factory over prove_or_refute with the guard digest*)
   val guard_condition_judge : {can_inst: bool} -> context_state -> context_state Seq.seq
-  (*the guard digest: of the guard's own subgoals, on the state the factory holds after
-    the case split and before the aux-fact insertion*)
-  val guard_digest : thm -> Hasher.digest
+  (*the guard digest: of the whole goal state -- the guard's subgoals and the protected
+    rest of the sequent with its conclusion -- and the context's assumptions, on the
+    state the factory holds after the case split and before the aux-fact insertion
+    (the aux facts are derivable, so they are not part of the key) [author 2026-09-11]*)
+  val guard_digest : Proof.context -> thm -> Hasher.digest
   val prove_or_refute : bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
   (*the out-of-run instances: the factory over P-auto once, no store*)
   val guard_condition_solver': {can_inst: bool}
@@ -1610,7 +1612,7 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
          |> Seq.maps (head_only' (pair ctxt0) apsnd (fn th =>
               (pre THEN HEADGOAL (case_split_by_annotations_leading_subgoal ctxt)) th
               |> Seq.maps (fn th =>
-                   let val d = digest_of th
+                   let val d = digest_of ctxt th
                     in ALLGOALS (Method.insert_tac ctxt aux) th |> Seq.maps (solving d) end)))
          |> Seq.take 1
         end) Safe_Solver th
@@ -1618,8 +1620,11 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
       |> Seq.pull) ctxt0 th0
   end
 
-(*the guard digest: the guard's own subgoals, each with its parameters and premises*)
-val guard_digest = Hasher.terms o map Thm.term_of o Thm.cprems_of
+(*the guard digest: one hash of the whole goal state (Thm.prop_of: the guard's subgoals
+  and, under Goal.protect, the rest of the sequent with its conclusion) and of the
+  context's assumptions; the aux facts, derivable, stay out [author 2026-09-11]*)
+fun guard_digest ctxt th =
+  Hasher.terms (Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt))
 
 fun guard_condition_judge cfg = gen_guard_condition_solver guard_digest prove_or_refute cfg
 
@@ -1630,7 +1635,7 @@ fun p_auto_solving _ ctxt _ (ctxt0, th) =
 
 fun guard_condition_solver' cfg =
   context_tactic_to_state_transition (fn ctxt => fn th =>
-    gen_guard_condition_solver (K ()) p_auto_solving cfg (ctxt, th) |> Seq.map snd)
+    gen_guard_condition_solver (K (K ())) p_auto_solving cfg (ctxt, th) |> Seq.map snd)
 
 fun guard_condition_solver1 can_inst ctxt sequent =
   guard_condition_solver' can_inst (fn _ =>
