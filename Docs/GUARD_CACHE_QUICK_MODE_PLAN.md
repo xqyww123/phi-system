@@ -1,10 +1,11 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 23 (2026-09-09) — **IN IMPLEMENTATION**: the preparatory
+Status: rev 24 (2026-09-09) — **IN IMPLEMENTATION**: the preparatory
 phase (§10 step P) is done and accepted, step 0's anchor re-verification
 is done (§26; fifteen anchors corrected, none missing), step 1 is done
 (§27), reviewed and ACCEPTED after one round of fixes (§28, §29), step 2
-is next.
+is done (§30) and awaits its code review and the author's acceptance;
+step 3 is next.
 Rev 22 was **READY** by the nineteenth review (rev 21:
 two one-sentence fixes, no blocker, no major; §25), applied there.  Rev
 21 folded in the eighteenth review (rev 20: NOT_READY,
@@ -159,10 +160,25 @@ document.
   lemmas enabled by its own `enhance_with_lemmas` call; the name is this
   plan's, inherited from the label of the `option_hunt` probe that used to
   wrap the pass and that commit `8c26c3b4` removed — the code no longer
-  carries the string.  From now on the pass runs under a wall-clock bound
-  of `\<phi>guard_classic_prover_timeout`, in all three factory instances
+  carries the string.  From now on the pass runs under a bound of
+  **5 s of THREAD CPU, fixed in the code, no option** (`Time.fromSeconds 5`;
+  `Thread_CPU.apply` scales it by `timeout_scale` itself), a local function
+  of the factory `gen_guard_condition_solver`; ten times the corpus maximum
+  of 437 ms (§33), so a timeout means the simplifier is looping, and the
+  pass then prints, unconditionally, the warning
+  `The system simplifier probably loops on:` followed by the visible
+  subgoals, and yields the state it was given, unchanged — the solving
+  function then runs on the unsimplified guard, as before [author 2026-09-11
+  "把 G.simpcut 的超时改为 5s"; "直接定死 5s x the scale"; "超时并警告之后, 保持现状";
+  supersedes the `\<phi>guard_classic_prover_timeout` bound of 2026-09-08
+  12:51 / 2026-09-09, which §33 found too tight].  Thread CPU (`Thread_CPU.apply`
+  with no wall limit, an error where the thread has no CPU clock; every
+  guard-side bound is thread CPU, so that machine load cannot flip a
+  verdict — only R-nitpick, which waits on an external process, keeps
+  wall clock [author 2026-09-09 "400ms 时限改成线程 CPU 时间. 如果相关库没加载
+  直接报错"]), in all three factory instances
   (§3): the pass's sequence is cut to its first state (`Seq.take 1`) and
-  pulled inside `Timeout.apply` of that bound, so the one bound covers
+  pulled inside that bound, so the one bound covers
   the whole pass and the solving function runs once per call; on its
   `TIMEOUT` the pass yields the state it was given,
   unchanged, so the solving function runs on the unsimplified guard; a
@@ -363,7 +379,8 @@ its entry and enabled the entry's lemmas (§5).
 
 - **P-auto**: `p_auto_body ctxt = solved_states (p_auto_search_tac
   (enhance_with_lemmas (Guard_Simp_SS.enhance ctxt)))`, and P-auto =
-  `timed_tac \<phi>guard_classic_prover_timeout o p_auto_body` — the one
+  `cpu_bounded_tac \<phi>guard_classic_prover_timeout o p_auto_body` (thread
+  CPU, §1 "G.simpcut") — the one
   proof attempt EVERY call makes, hit or no hit, with the entry's lemmas
   enabled; its outcome IS the call's verdict [author 2026-09-02 07:11; 400
   ms provisional 08:49; on every call: 2026-09-08 05:36 "即便是对于 refuted
@@ -400,15 +417,20 @@ its entry and enabled the entry's lemmas (§5).
   [author 2026-09-04 03:11–03:14 (`thm` in); `Provable` reduced to lemmas:
   2026-09-08 06:14 "赞同" (no `proof`, no returned state — P-auto proves the
   guard with the lemmas, on the spot, so the recording run and every
-  later run behave alike)].  `judge_arg.ctxt` is the guard-side ctxt with
-  the entry's lemmas enabled (§5 step 1's `ctxt_g`), `outer_ctxt` is
-  `ctxt0`.  The judge receives no list of the entry's lemmas as an
-  argument — `judge_arg` has no lemmas field — and must ignore the ones
-  it can read out of `judge_arg.ctxt`'s lemma list; its list REPLACES
-  them: a bad lemma disappears by the judge not proposing it again
+  later run behave alike)].  `judge_arg.ctxt` is the guard-side ctxt as
+  it was BEFORE this entry's lemmas were added (§5 step 1's `ctxt`, whose
+  lemma list holds the lemmas of earlier guards and statements),
+  `outer_ctxt` is `ctxt0`.  The judge receives none of this entry's
+  lemmas — `judge_arg` has no lemmas field and its ctxt does not carry
+  them; its list REPLACES this entry's lemmas and no other: a bad lemma
+  disappears by the judge not proposing it again, an earlier guard's
+  lemma stays, and a lemma the judge re-proposes takes the judge's budget
   [author 08:34 "LLM judge 那里, 是无视 the prove_or_refute point 上已有的的
   lemmas. 得到的 lemmas 是直接替换, 而不是继承已有的 lemmas, 以允许把坏的 lemmas
-  移除掉"].  Its obligations, a contract with no run-time check beyond what
+  移除掉" — "已有的 lemmas" = this entry's, as the author confirmed on
+  2026-09-09 ("是你之前写计划的时候误解了我了"; the judge's ctxt "的确是不带本
+  entry 的 lemmas 的", "还是带了之前的 lemmas 的"; a collision "更新 the
+  budget")].  Its obligations, a contract with no run-time check beyond what
   §5 does anyway: each lemma is a closed statement of type `prop`
   (`Trueprop`-wrapped for a HOL proposition), certifiable by `Thm.cterm_of
   ctxt0` and provable by its own method text in ANY `ctxt0` that can
@@ -592,8 +614,8 @@ its entry and enabled the entry's lemmas (§5).
   returns `Seq.empty` contributes no successor state (an ML reasoner's
   sequence IS its set of successor states, `reasoner.ML:688`), so its
   `ctxt1` and the lemmas it replayed are abandoned with that branch.  The
-  list grows by §5 step 1's append, shrinks where §5 step 6 replaces the
-  whole list with the judge's (whichever entry put a statement there),
+  list grows by §5 step 1's append, loses this entry's lemmas where §5
+  step 6 replaces them with the judge's (an earlier guard's stay),
   and loses at a run or block boundary the theorems `export_aux_lemma`
   refuses; it never repeats a statement: §5 step 1's append stores every
   theorem in **the canonical form** — `Raw_Simplifier.norm_hhf_protect
@@ -682,7 +704,10 @@ its entry and enabled the entry's lemmas (§5).
   `\<phi>trace_reasoning >= 1` (the corpus sets it: `IDE_CP_App2.thy:256`).
   Printed when a call ends `Unknown`, on a first decision and on every
   `Unknown` hit alike [author 2026-09-08 05:53 "对于 reliable = false 的,
-  我们直接 warning 不再跑 R-conv, R-nitpick"].  [descriptive]
+  我们直接 warning 不再跑 R-conv, R-nitpick"] — except on a call from a
+  `Proved` entry, where the loud guard warning alone is printed: the two
+  warnings are mutually exclusive, decided at one site from the final
+  verdict [author 2026-09-09 "spec-3 赞同 (a)"].  [descriptive]
 - **the loud guard warning**: the message printed when a guard whose entry
   said `Proved` could not be proved by P-auto with the entry's lemmas AND
   the call finally ends `Refuted` or `Unknown` — whichever path ended it:
@@ -785,8 +810,9 @@ IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:1984/1
                                                    else R-nitpick refutes → likewise
                                                    else judge installed → step 6
                                                    else write {lemmas, Unknown}; LOUD warning; Seq.empty
-          6  the judge, j {ctxt = ctxt_g, outer_ctxt = ctxt0, can_inst, thm}:
-               Provable new  → replace: the list becomes exactly `new` (a failure → error);
+          6  the judge, j {ctxt = ctxt (no lemma of this entry), outer_ctxt = ctxt0, can_inst, thm}:
+               Provable new  → this entry's lemmas replaced by `new` on the lists of ctxt, ctxt0
+                                (a failure → error; a re-proposed statement takes the judge's budget);
                                 P-auto again on ctxt_g' (fresh time budget, fresh lemma budgets);
                                 proved → write {new, Proved}; return (ctxt1', solved)   (no warning)
                                 failed → error "the judge is broken"
@@ -904,8 +930,9 @@ keeps `prove_or_refute`, the factory, the refuters, the judge ref and
   that ctxt's simpset, the `\<r>BUDGET` variables among its fixes
   (`Variable.add_fixes`, `variable.ML:480`); no slot of this design and
   no theory data holds any of it.  That ctxt is handed to exactly one
-  consumer run and discarded; `ctxt_g` itself, which the judge receives,
-  and `ctxt1`, which the call returns, carry the lemma list and no budget.
+  consumer run and discarded; `ctxt_g`, the ctxt every prover of this call
+  starts from, `ctxt1`, which the call returns, and `ctxt`, which the judge
+  receives, carry a lemma list and no budget.
   The call is made INSIDE each consumer and nowhere else — `p_auto_body`
   (§1 P-auto), the R-conv body (§6) and the "G.simpcut" pass (§1) each
   call `enhance_with_lemmas` on the ctxt they are handed, once per
@@ -971,9 +998,9 @@ solver), `d` the guard digest and `thm` the goal state.
    [drafter, tenth review].)
 2. **P-auto** on `ctxt_g` — `p_auto_body` calls `enhance_with_lemmas`
    itself, so the budgets are fresh for this consumer run (§4) — under
-   `\<phi>guard_classic_prover_timeout` (the
-   `Int.max (1, …)` clamp of `reasoners.ML:1420-1421` stays: a bound below
-   1 ms installs no timer, `Pure/Concurrent/timeout.ML:26, 33-34`);
+   `\<phi>guard_classic_prover_timeout` of thread CPU (§1 "G.simpcut";
+   the `Int.max (1, …)` clamp stays: a bound below 1 ms is ignored,
+   `Thread_CPU.apply` as `Timeout.apply`);
    `elapsed` is not recorded — nothing stores P-auto's time any more.
 3. **P-auto proved** (`solved`): `entry = NONE` or `verdict = Proved` →
    nothing written; `verdict = Refuted | Unknown` → write `{lemmas, Proved}`
@@ -1003,21 +1030,21 @@ solver), `d` the guard digest and `thm` the goal state.
      warning [author 08:45].
 5. **Writes** are those named above and in step 6, each the whole entry
    under `key d`.
-6. **The judge**: `j {ctxt = ctxt_g, outer_ctxt = ctxt0, can_inst, thm}`.
+6. **The judge**: `j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst, thm}` —
+   `ctxt` the guard-side ctxt as it was before step 1 added this entry's
+   lemmas (§1 the judge).
    - `Provable new` → each lemma's times are normalised with
-     `Phi_Proof_Store.standard_time` first (§1 the judge); then the
-     lemmas present are REPLACED by `new`: the lemma list of `ctxt0` and
-     of `ctxt` becomes EXACTLY the enabled `new` — every statement present
-     at this point leaves, whichever entry put it there [author 08:34 "无
-     视 the prove_or_refute point 上已有的的 lemmas … 直接替换", as §20 read
-     it; a guard whose lemmas left is re-installed by its own entry at
-     its next call's step 1] — each of `new` enabled as in step 1 (the
-     replay floor and `replay_limits` on the normalised times, the
-     canonical form) at the judge's own tier, so no statement of `new`
-     can run at another entry's budget, but with a failure being an
-     `error` naming the judge (§1); then P-auto again, on the rebuilt `ctxt_g'`, with a fresh
-     time budget and — `p_auto_body` enhancing again — fresh lemma
-     budgets.  Proved → write `{new, Proved}` with the normalised times as
+     `Phi_Proof_Store.standard_time` first (§1 the judge); then THIS
+     ENTRY's lemmas are REPLACED by `new`: each of `new` is enabled as in
+     step 1 (the replay floor and `replay_limits` on the normalised times,
+     the canonical form) onto the lemma lists of the moment before step 1
+     — `ctxt0` giving `ctxt1'`, `ctxt` giving `ctxt_g'` — so this entry's
+     survivors of step 1 are gone, an earlier guard's lemma stays, and a
+     statement of `new` already present takes the judge's budget
+     (`update_lemma`; §1 the judge, author 2026-09-09), but with a
+     failure being an `error` naming the judge (§1); then P-auto again,
+     on the rebuilt `ctxt_g'`, with a fresh time budget and —
+     `p_auto_body` enhancing again — fresh lemma budgets.  Proved → write `{new, Proved}` with the normalised times as
      they are, return `Seq.single (ctxt1', solved)` — and no loud warning,
      whatever the entry said [author 08:45].  Failed → `error` "the judge
      is broken" [author 08:45].
@@ -1056,7 +1083,7 @@ the run's thread:
 
 | step | what | its own bound |
 |---|---|---|
-| R-conv | today's `r_conv_racer` body: negate each subgoal, search with `auto_search_tac` in a `Guard_Simp_SS`- and lemma-enhanced ctxt (its own `enhance_with_lemmas`, fresh budgets), with both of its `can_inst` branches as today — the `can_inst = false` one exporting through `outer_ctxt` (`reasoners.ML:1106-1115`, `:1132-1163`) | `Timeout.apply \<phi>guard_classic_prover_timeout`; `TIMEOUT` → not refuted [author 2026-09-04 03:23] |
+| R-conv | today's `r_conv_racer` body: negate each subgoal, search with `auto_search_tac` in a `Guard_Simp_SS`- and lemma-enhanced ctxt (its own `enhance_with_lemmas`, fresh budgets), with both of its `can_inst` branches as today — the `can_inst = false` one exporting through `outer_ctxt` (`reasoners.ML:1106-1115`, `:1132-1163`) | `Thread_CPU.apply` of `\<phi>guard_classic_prover_timeout` of thread CPU, no wall limit (§1 "G.simpcut"); `TIMEOUT` → not refuted [author 2026-09-04 03:23; thread CPU 2026-09-09] |
 | R-nitpick | today's screen and Nitpick calls (`reasoners.ML:1459-1478`), subgoals one after another, each Nitpick call with its 2000 ms parameter as today; a `genuine` or `quasi_genuine` answer refutes (`guard_refute.ML:280-281`); R-nitpick's own preprocessing simpset `Nitpick_Refute_SS`; no lemmas | one outer `Timeout.apply` of `\<phi>guard_refute_timeout + 5000 ms × length goals`, and inside it one `Timeout.apply` of `\<phi>guard_refute_timeout + 5000 ms` per subgoal — a subgoal's `TIMEOUT` moves to the next; the outer bound normally ends R-nitpick INSIDE the running subgoal and is a real cap: the running subgoal's own request has not fired, so its `Timeout.apply` cancels it, finds `was_timeout` false and releases the interrupt unchanged (`Pure/Concurrent/timeout.ML:48-56`; the shadow re-raises for the same reason, `accounted_timeout.ML:123-131`), the per-subgoal handler does not catch it, and the outer application, whose request did fire, converts it to its `TIMEOUT`; only when an inner timer and the outer fire together does the inner claim the one interrupt and the outer's request get consumed (the accepted residual, `accounted_timeout.ML:36-38`), and from then on the remaining subgoals run under their inner bounds alone, so the total can exceed the net by those bounds; either way → not refuted [author 2026-09-03 13:05; inner bound 2026-09-07 13:00; sequential: drafter] |
 | the judge | `!judge`, if `SOME` (§1) | its own |
 
@@ -1336,7 +1363,7 @@ stop proving reach it, `Refuted` entries never do.
 
 | option / constant | default |
 |---|---|
-| `\<phi>guard_classic_prover_timeout` | 400 ms, provisional — P-auto's and R-conv's budget [author 2026-09-04 03:23 "直接重命名为 \<phi>guard_classic_prover_timeout"], the "G.simpcut" pass's bound [author 2026-09-08 12:51], and the replay floor of §5 step 1 [author 2026-09-07 13:16] |
+| `\<phi>guard_classic_prover_timeout` | 400 ms of thread CPU, provisional — P-auto's and R-conv's budget [author 2026-09-04 03:23 "直接重命名为 \<phi>guard_classic_prover_timeout"] and the replay floor of §5 step 1 [author 2026-09-07 13:16]; NOT the "G.simpcut" pass's bound any more — that is 5 s of thread CPU fixed in the code, no option (§1 "G.simpcut", §33) [author 2026-09-11, superseding 2026-09-08 12:51]; thread CPU, never wall clock, an error without a CPU clock [author 2026-09-09]; the `is_F` shortcut's 250 ms is thread CPU too [drafter] |
 | `\<phi>guard_refute_timeout` | 2000 ms (Nitpick's parameter; R-nitpick's outer net is `\<phi>guard_refute_timeout + 5000 ms × length goals`, and each subgoal inside it is bounded by `\<phi>guard_refute_timeout + 5000 ms`) |
 | `\<phi>guard_cache` | true |
 | `\<phi>log_guard_race` → `\<phi>log_guard_decision` | false (renamed) |
@@ -1387,9 +1414,10 @@ that it is a permanent record rather than temporary measurement code
 Instrumentation is temporary measurement code [author 2026-09-03 04:01].
 One record is permanent: `guard_decision` (the verdict, the path taken —
 hit kind, which refuter, judge asked — elapsed, `Hasher.hex` of the guard
-digest, n_goals and the number of lemmas enabled — not how many reached
-their budget: that count lives in the simprocs' closures and no channel
-§4 permits carries it out), behind `\<phi>log_guard_decision`, written by
+digest and n_goals; no lemma count — the drafter's "number of lemmas
+enabled" was deleted [author 2026-09-09 "(2)"], and how many reached
+their budget lives in the simprocs' closures, which no channel §4
+permits carries out), behind `\<phi>log_guard_decision`, written by
 `prove_or_refute` [drafter].  `Hasher.hex` appears in exactly that line of
 the permanent code.
 
@@ -2459,3 +2487,388 @@ drafter ran the rebuild from `Performant_Isabelle_HOL` up
 (`Isabelle_RPC_Test`, `Performant_Isabelle_HOL`, `Auto_Sledgehammer`,
 `Minilang`, `Minilang_AoA`, `Phi_System_Base`; 1 m 55 s, all passed).
 Step 2 is next.
+
+## 30. Step 2 done (2026-09-09) — pending review and the author's acceptance
+
+What was done, against §10 step 2 (phi-system files only; no heap rebuilt):
+
+1. **`prove_or_refute` is the sequential protocol of §5** (`reasoners.ML`, the
+   "Guard decision" section): step 0 reads the entry through
+   `Phi_Guard_Cache.lookup_entry`, gated by `\<phi>guard_cache` read once from
+   `ctxt0`; step 1 replays each lemma in `ctxt0` (`replay_lemma`: `Thm.cterm_of
+   ctxt0`, `Thm.trivial`, `eval_prf_str` with `n = 1` under
+   `Phi_Proof_Store.replay_limits` of the recorded times, each component floored
+   by `guard_classic_prover_bound ctxt0` with `Time.max`; the keywords
+   `Keyword.no_major_keywords (Thy_Header.get_keywords thy)` as
+   `sledgehammer_solver.ML`'s `replay_store` takes them), drops a failing lemma
+   with **the dropped-lemma warning** and rewrites the entry without it, and
+   appends the survivors to the lemma list of `ctxt0` (`ctxt1`) and of `ctxt`
+   (`ctxt_g`) through `add_lemma ctxt0` with `budget_of_tier`; step 2 is
+   `cpu_bounded_tac (guard_classic_prover_bound ctxt0) (p_auto_body ctxt_g)`,
+   first solved state (thread CPU, §1 "G.simpcut"); steps 3–4 follow the
+   entry's verdict exactly as §3's tree draws them (`Refuted` silent;
+   `Unknown` → the judge or `Unknown`, nothing rewritten; `NONE` → R-conv →
+   R-nitpick → the judge → `{lemmas, Unknown}` written; `Proved` → the same
+   with the loud guard warning); step 6 (`consult`) hands the judge `ctxt`
+   — the guard-side ctxt without this entry's lemmas — normalises the
+   judge's times with `standard_time` on receipt, replays each of `new` — a
+   failure is `error "The judge is broken: its lemma …"` — adds them through
+   `update_lemma ctxt0` to the lists of `ctxt0` and of `ctxt` as they were
+   before step 1 (`ctxt1'`, `ctxt_g'`: this entry's lemmas replaced, an
+   earlier guard's kept, a re-proposed one at the judge's budget), runs
+   P-auto again on `ctxt_g'`, writes `{new, Proved}` and returns `(ctxt1',
+   solved)`, or raises `error "The judge is broken: P-auto cannot prove …"`;
+   `Unprovable` writes `{lemmas, Refuted}`.  The two warnings are decided at
+   one site from the final verdict, mutually exclusive: the loud guard
+   warning when a call from a `Proved` entry ends otherwise, with the
+   refuters' and the judge's results in one sentence ("the judge was not
+   consulted" when a refuter answered first); the undecided-guard warning
+   when a call from any other entry ends `Unknown` [author 2026-09-09 "spec-3
+   赞同 (a)"].
+2. **R-conv** is `r_conv can_inst ctxt ctxt0 goals : bool`, the former racer
+   body verbatim under `cpu_bounded (guard_classic_prover_bound ctxt)` —
+   `Thread_CPU.apply` with no wall limit — `TIMEOUT` = not refuted;
+   **R-nitpick** is `r_nitpick ctxt goals : bool`, the former screen and calls,
+   the subgoals one after another, each under `Timeout.apply
+   (\<phi>guard_refute_timeout + 5 s)`, the whole under
+   `\<phi>guard_refute_timeout + 5 s × the number of subgoals` (§6; the first
+   draft had the net at `n × (…)`, the review's one MAJOR, §31), either
+   `TIMEOUT` = not refuted; wall clock, since it waits on an external process;
+   it receives the guard-side `ctxt` without the lemmas (§1 `Guard_Simp_SS`:
+   not R-nitpick).
+3. **The judge ref**: `type judge_arg`, `datatype judgement = Provable of lemma
+   list | Unprovable`, `val judge : (judge_arg -> judgement) option
+   Unsynchronized.ref` (= `NONE`), all in `PHI_REASONERS`; names: drafter
+   under the 11:24 delegation.
+4. **The store's stand-in** (§10 step 2's "in-memory table"): `guard_cache.ML`
+   gained `lookup_entry : theory -> Hasher.digest -> entry option` and
+   `write_entry : theory -> Hasher.digest -> entry -> unit` over one
+   process-global `Synchronized.var` holding an `entry Symtab.table` keyed by
+   `"PLPRGUARD" ^ Hasher.compact d` (§1 the store); the `theory` argument is
+   ignored until step 4 swaps `Phi_Guard_Store` in behind the same two names.
+   Not gated by the switch; `prove_or_refute` gates its read and writes (§4).
+5. **`guard_decision`**, the permanent record (§10): fields `verdict`
+   (proved/refuted/unknown), `hit` (the entry's verdict or `none`), `refuter`
+   (`R-conv`/`R-nitpick`/`-`), `judge` (`Provable`/`Unprovable`/`-`),
+   `elapsed_ms`, `digest` (`Hasher.hex`), `subgoals` (the first draft's
+   `lemmas` count was ambiguous — this entry's survivors or the whole list —
+   and is deleted [author 2026-09-09]); switch `\<phi>log_guard_decision`,
+   default false; the clause
+   `\<phi>log_guard_race = true` left `PLPR.thy`'s `declare` (`\<phi>log_guess_inst
+   = true` stays).  One level-2 trace line per call remains, as the race had.
+6. **Deleted**: `Race.race` and its racers, the protocol var, the 35 ms gate,
+   `\<phi>guard_race_timeout`, `\<phi>log_guard_race` and the `guard_race`
+   category, `race_result`, `checked_io`, and the two TEMPORARY probes
+   `p_auto_probe` and `nitpick_probe` (they lived inside the racer bodies; §10:
+   instrumentation is temporary — vetoable: their measurement, P-auto's own
+   timing and R-nitpick's per-subgoal answer, is now only in the trace line);
+   `guard_classic_prover_timeout` moved above the provers.  Comments: the
+   `nitpick_params` note rewritten (a malformed value errors inside R-nitpick
+   and propagates as the run's exception); every racer/race/ledger/hang-net
+   sentence rewritten or removed in `reasoners.ML`, `guard_refute.ML` and
+   `Phi_System/library/system/processor.ML` (the first draft missed nine
+   such lines and claimed a clean `grep`; the review caught it, §31).
+7. **`Test/Guard_Race_Smoke.thy` reshaped around `guard_decision`** (name kept
+   as §10 names it; a rename to match its content is proposed below): one
+   engine `decide` that computes the guard digest THROUGH THE FACTORY (a solving
+   function that records what the digest step handed it — `guard_digest` is
+   exported for it), writes an injected entry, installs a test judge in the
+   ref (restored on every exit), drives the guard through
+   `guard_condition_judge`, and asserts on the projection `(verdict, hit,
+   refuter, judge, lemmas)` of the record carrying this guard's digest and on
+   the entry left in the store; `decide_error` asserts an `error`'s text
+   (markup stripped) by prefix.  Every guard carries a fresh numeral (`serial
+   ()`), since the table outlives a re-evaluation and has no deletion.  New
+   constructs `LOOP` (`LOOP n = n`, no simp rule) and `PP` with
+   `PP_I[intro!]: PP (LOOP (LOOP (LOOP (LOOP x))))`: `PP (LOOP k)` is provable
+   ONLY with the looping judge lemma `⋀n. LOOP n = LOOP (LOOP n)` enabled and
+   cut off by its budget — the unit probe shows `enhance_with_lemmas` at budget
+   3 rewrites `LOOP 0` to `LOOP (LOOP (LOOP (LOOP 0)))` and stops.  Probes, all
+   passing: no entry proved / refuted by R-conv / refuted by R-nitpick /
+   undecided with the undecided-guard warning and `Unknown` written / vacuous
+   hypothesis proved; hits: `Refuted` silent (no refuter), `Refuted` promoted
+   to `Proved`, `Unknown` warning only, `Proved` refuted by R-conv with the loud
+   warning, `Proved` undecided with the loud warning; lemmas: `Unknown` entry
+   with the looping lemma → proved through it (the returned context carries
+   it at budget 3), `Proved` entry with it proved again under a fresh budget,
+   an uncertifiable and an unreplayable lemma both dropped with the
+   dropped-lemma warning and the entry rewritten, an insufficient lemma kept
+   through a refutation; the judge: `Provable` replacing a seeded lemma and
+   P-auto proving, `Unprovable` on no entry / on an `Unknown` hit (no refuter
+   ran) / on a `Proved` hit (loud warning), both errors; `\<phi>guard_cache =
+   false` ignoring an injected entry; the can_inst branches, the schematic type
+   variable, `nitpick_params` pollution immunity.
+8. **Evidence**: `PLPR.thy` clean under Isabelle-MCP on `Phi_System_Base` (no
+   new ML warnings); the battery clean; `PhiTest_Arithmetic.thy` clean with
+   `\<phi>log_guard_decision` on: 355 decisions — 199 proved with no entry,
+   120 `Refuted` hits, 23 refuted by R-nitpick, 6 `Unknown` hits, 1 undecided,
+   and the §7 flips of a shared entry: 2 `Unknown` and 1 `Refuted` promoted to
+   `Proved`, 2 `Proved` hits proved, 1 `Proved` hit refuted by R-nitpick — the
+   loud guard warning fired once in a plain corpus load; P-auto's proofs all
+   under 100 ms but one, the whole 49.6 s of guard time; no lemma anywhere
+   (phase 1 has no producer).  Compared per theory with the old `guard_race`
+   records, no statement decides differently.  A third load in the same
+   process, the table warm from the second: the same 355 decisions, 143 of
+   them `Refuted` hits and none reaching a refuter, 22.0 s of guard time —
+   what the store saves is the refuters, as §7 says.
+9. **An incident, recorded honestly.**  The FIRST corpus load after step 2,
+   run under Isabelle-MCP while the machine was swapping (55 GB of swap in
+   use, the prover's CPU time frozen for ten minutes), stalled at
+   `Phi_System/Phi_Types.thy:2608` (`\<semicolon> Tr`) and spawned the AoA
+   agent — an obligation there missed the proof store, Sledgehammer failed
+   and the AoA gate (`aoa_allowed`: an interactive frontend, which Isabelle-MCP
+   is) was open; cancelled after about six minutes of agent time.  Not
+   reproduced: the second load, with the agent on its deterministic `test`
+   driver, passed that statement and everything else with the decisions
+   above.  The most plausible cause is the wall-clock bounds themselves —
+   P-auto and R-conv now have 400 ms where the race had 2000, and under a
+   ten-fold stall a guard that proves in 100 ms fails P-auto, the reasoning
+   takes another branch, its obligation misses the store.  Two proposals for
+   the author (§31 will carry the review's view): (a) measure the bounds in
+   thread CPU (`Thread_CPU.apply`, as the proof store's replay does) rather
+   than wall clock, so load cannot flip a verdict; (b) until step 5's
+   re-measurement, keep every corpus load under Isabelle-MCP on the `test`
+   driver — the two TEMPORARY `declare`s the drafter added to `PLPR.thy` for
+   the diagnosis (`\<phi>log_guard_decision = true, AoA_driver = "test",
+   AoA_write_proof_store = false`) are reverted before the commit.
+10. **Proposal**: rename `Test/Guard_Race_Smoke.thy` to
+    `Test/Guard_Decision_Smoke.thy` — there is no race in it any more.
+
+## 31. Step 2's code review (2026-09-09) — rulings and fixes applied
+
+The review (`wf_22eefcb5-61e`; six interrogators, two fresh defenders per
+finding, one judge, Opus; 33 findings): **NOT ACCEPTED** — one MAJOR, one
+AUTHOR_DECISION, sixteen DRAFTER_FIX (with duplicates), six rejected, no
+relaxation.  Rulings, all applied, and three corrections of the plan the
+discussion with the author uncovered:
+
+1. MAJOR — `r_nitpick`'s outer net was `n × (\<phi>guard_refute_timeout + 5 s)`,
+   the drafter's misreading of §6's `\<phi>guard_refute_timeout + 5 s × n`;
+   restored, with the margin named once so the two bounds cannot drift
+   (§30 item 2 corrected).
+2. AUTHOR_DECISION (spec-3): a call from a `Proved` entry that ends `Unknown`
+   printed both warnings.  The author chose (a): the loud guard warning alone;
+   the two warnings are now decided at one site from the final verdict,
+   mutually exclusive (§1 the undecided-guard warning; §30 item 1).
+3. Three corrections of the plan, found while explaining the findings [author
+   2026-09-09 "是你之前写计划的时候误解了我了"]: (i) the judge's `Provable`
+   replaces THIS ENTRY's lemmas only — an earlier guard's lemma in the list
+   stays; the drafter had read 08:34's "已有的 lemmas" as the whole list
+   (§1 the judge, §3, §5 step 6; `replace_lemmas` deleted, `update_lemma`
+   added); (ii) the judge's `ctxt` carries the list as it was BEFORE this
+   entry's lemmas were added (§1, §5 step 6); (iii) a judge lemma whose
+   canonical proposition is already in the list takes the judge's budget
+   (`update_lemma`), where step 1's append keeps the first budget (the
+   drafter's rule, unchanged for step 1 — stated as an assumption).
+4. The 400 ms classic bound is THREAD CPU from now on, on every guard-side
+   consumer — P-auto, R-conv, "G.simpcut", `try_prove_or_give_up`, the
+   `is_F` shortcut's 250 ms — through `Thread_CPU.apply` with no wall limit,
+   an error where the thread has no CPU clock; R-nitpick keeps wall clock
+   [author 2026-09-09 "400ms 时限改成线程 CPU 时间. 如果相关库没加载直接报错"]
+   (§1 "G.simpcut", §5 step 2, §6, §10).  `cpu_bounded`, `cpu_bounded_seq`,
+   `cpu_bounded_tac` in `reasoners.ML`; `\<phi>guard_P_auto` uses the last.
+5. `guard_decision`'s `lemmas` field deleted [author "(2)"] — its two
+   readings (this entry's survivors, the whole list) had no consumer that
+   needed either (§10, §30 item 5).
+6. DRAFTER_FIX, applied: the loud warning's results text in three arms ("the
+   judge was not consulted" when a refuter answered); `failure_text
+   Fails_To_Certify` states the observation, not a cause; the drop write is a
+   `case` on the entry, no `the`; the factory's local `ctxt_g` renamed
+   `guard_ctxt` and `p_auto`'s parameter `ctxt'`, so `ctxt_g` names one
+   object; the stale race/racer/ledger/hang-net/gate sentences in
+   `reasoners.ML` (four), `guard_refute.ML` (three) and `processor.ML`
+   (one) rewritten or removed.
+7. The battery: the cache-off probe injects `Unknown`, the verdict its call
+   cannot reach; a `Refuted`-hit probe with one replayable and one
+   unreplayable lemma pins step 1's drop write as the store's final state;
+   `BADT` lost its elim rule so the schematic-type-variable probe reaches
+   R-nitpick's screen and expects `unknown` — the control the review asked
+   for was run once: with the screen disabled the probe goes red ("Nitpick
+   cannot handle goals with schematic type variables"), screen restored;
+   `BAD ∧ SPIN` witnesses the fixed refuter order; a `Proved` hit whose lemma
+   the judge replaces, proved with no warning; every test judge is wrapped
+   by `contract`, which asserts on each call that `ctxt` and `outer_ctxt`
+   carry the probe context's list (not this entry's lemmas), that
+   `can_inst` is the probe's and the goal state has subgoals; the
+   replacement probe seeds an earlier guard's lemma, gives the entry
+   `useless`, and asserts the returned list is the seeded lemma at its own
+   budget followed by the judge's; a further probe re-proposes the seeded
+   statement at `Only_Once` and asserts its budget became 3.  Projection now
+   `(verdict, hit, refuter, judge)`.
+8. Rejected with the judge (the drafter agrees): asserting warning text in
+   the battery (needs the process-global `warning_fn`; the asserted tuple
+   already determines each warning's firing condition); the canonical form
+   computed once per target context (pure, and the remedy re-opens the door
+   §28 item 3 closed); a comment on R-nitpick's un-enhanced context (lemmas
+   reach a prover only through `enhance_for_guard`, which R-nitpick never
+   calls); `th` shadowing (the repository's idiom); the digest captured by a
+   second factory run (checked by name on every probe); `subgoals`
+   unasserted (a measurement of the bounded pass).
+Verification after the fixes: PLPR.thy clean (no new ML warning); the
+battery clean; `PhiTest_Arithmetic.thy` clean on a COLD table (the table
+lives in `guard_cache.ML` and a reload of it empties the table — §30's
+"cold" second load had in fact inherited the entries of the theories
+the cancelled first load had passed): 366 decisions — 202 proved with no
+entry, 71 refuted by R-nitpick and 4 by R-conv on first decision, 75
+`Refuted` hits, 8 undecided and 2 `Unknown` hits, the §7 flips 2 + 1 + 1;
+102.5 s of guard time, of which R-nitpick's first decisions are the bulk
+(~1.4 s each); no loud guard warning in this load.  The re-review's
+record follows.
+
+## 32. Step 2's re-review (2026-09-09) — fixes applied, pending acceptance
+
+The re-review (`wf_59c9d545-ddb`; three interrogators over the fixes of §31 and
+the new rulings, three fresh defenders per finding, one judge, Opus; 14
+findings): **NOT ACCEPTED "but only just"** — the judge re-derived every
+load-bearing claim and found nothing behaviourally wrong; one gap failed the
+acceptance condition, eight cheap fixes, one question for the author, five
+opinions deleted.  Applied:
+1. The replacement probe could not fail: its entry lemma `useless` stated
+   `CHAIN []`, the very proposition the seeded earlier-guard lemma carries, so
+   `add_lemma` merged the two and a step 6 rooted on step 1's contexts — the
+   mistake §31 item 3 (i) forbids — would have passed.  The entry lemma is now
+   `useless_other` (`CHAIN [1]`), with the comment that stops anyone tidying it
+   back; `contract` compares the judge's two lists with the probe context's
+   statement for statement, not by length.
+2. `timed_seq` and `timed_tac`, the wall-clock pair step 2 orphaned, deleted
+   with `timed_tac`'s export; the "G.simpcut" comment names the shape (a bound
+   whose timeout is an empty sequence) instead of the deleted function.
+3. `add_lemmas` is pair-valued over the call's two base contexts `(ctxt0,
+   ctxt)`: `val (ctxt1, ctxt_g) = add_lemmas add_lemma replayed` and `val
+   (ctxt1', ctxt_g') = add_lemmas update_lemma replayed'` — step 6 can no longer
+   be written on step 1's result.
+4. The R-nitpick comment's "strictly below the sum of the bounds per subgoal"
+   was false at one subgoal (equal there); it now says "below … from two
+   subgoals on, equal to it at one — so the net normally ends R-nitpick inside
+   the running subgoal".
+5. "knife" (a coined word for a bound) removed from `guard_refute.ML`'s two
+   rewritten comments; §4's "`ctxt_g` itself, which the judge receives" corrected
+   to `ctxt`; the four contract labels in one grammar; the battery's two engines
+   share one `run_guard` seam, so the judge ref is installed and restored in
+   exactly one place.
+6. Deleted with the judge: `pair ctxt0` bound once (a re-filing of the nitpick
+   §28 discarded); the warning site as one `case` (weaker than the `if`'s
+   structural exclusion); the trace line through `info_pretty` (`warn_pretty`
+   is the trace-gated channel, four sibling sites); the dead `timed` of
+   `guard_refute.ML` (pre-existing, inside a block marked TEMPORARY); a
+   claimed `expect` shadowing (none exists).
+The author's answers (2026-09-10): `timed1_tac` confirmed dead (its
+definition is its only occurrence in the repository) and deleted; the
+battery renamed **`Test/Guard_Decision_Smoke.thy`** (§10 step 2's
+`Guard_Race_Smoke.thy` is this file); the probe categories `p_auto_probe`
+and `nitpick_probe` stay deleted, and with them the last piece of the race
+era's scaffolding, `guard_refute.ML`'s TEMPORARY `refuter_probe` category
+with its `plain_term`, `probe_lock` and the timing inside `nitpick` — the
+function is now the preprocessing and the one Nitpick call.  Not touched:
+`\<phi>log_guess_inst = true` in `PLPR.thy` and the `guess_inst` category
+(`guess_instantiate.ML`), another subsystem's instrumentation, left for the
+author to rule on.  One measurement worth recording: with the corpus
+imports reloading alongside the battery, the `CHAIN`-of-1000 probe once
+missed the 400 ms bound although it proves in ~220 ms on a quiet machine —
+thread CPU excludes waiting but not the slowdown contention inflicts on
+the work itself; the construct is now 700 elements, well inside the bound.
+Rulings of 2026-09-11: the 400 ms bound stays at 400 ms; it is P-auto's, and
+R-conv, "G.simpcut" and the `is_F` shortcut — all searches on the calling
+thread — keep thread CPU as implemented ("没问题. 就这样继续"); R-nitpick keeps
+wall clock, since Nitpick's work is not this thread's CPU.  The flip of §30.9
+is shelved until it recurs ("等这个问题又再次出现了我们再说").  A measurement made
+before the shelving, with a TEMPORARY probe (P-auto's thread CPU per decision,
+the bound raised to 10 s; both reverted; the load was ~12 on 14 cores): over
+341 decisions every proved guard's P-auto took at most 204 ms of thread CPU
+(p99 133 ms); guards P-auto cannot prove burn CPU until the bound; and the two
+guards that flipped at `Phi_Types.thy:2608` proved in 0 ms — so that flip was
+NOT a bound miss: P-auto returned empty at once, cause unknown (the drafter's
+one hypothesis: an in-flight cancellation of a PIDE re-evaluation converted
+to `TIMEOUT` by `accounted_timeout.ML`'s shadow and read as "failed").
+Verification after these fixes: PLPR.thy clean (the same four pre-existing ML
+warnings, `timed1_tac` among them; three after its deletion); the battery clean; `PhiTest_Arithmetic.thy`
+clean on a warm table (355 decisions, 145 `Refuted` hits, no first
+refutation, 22.1 s of guard time; one loud guard warning on a §7 flip); the
+TEMPORARY diagnostic declare reverted and PLPR.thy re-evaluated clean.
+
+## 33. The `Phi_Types.thy:2608` flip diagnosed (2026-09-11) — pending the author's fix
+
+The flip of §30.9 recurred on the close-out corpus run and the author lifted
+the shelving ("你再跑一下？会不会是 digest 碰撞？"; "你可以随意加临时探针调查此事件").
+Diagnosed with TEMPORARY probes, all reverted (`reasoners.ML` and
+`Phi_Types.thy` restored; the analysis scripts in the session scratchpad):
+
+1. **Not a digest collision.** The decision record's `subgoals` field
+   separated the two guards' 42 decisions cleanly: every 0-subgoal decision
+   was `proved` in 0 ms, every 1-subgoal decision ran to the 400 ms bound.
+   The digest is taken BEFORE the "G.simpcut" pass and the subgoal count
+   AFTER it, so the same guard reached P-auto in two shapes: fully
+   simplified away (nothing to prove) or untouched.  The pre-pass goal texts
+   under one digest were identical.
+2. **The cause: the "G.simpcut" pass's 400 ms thread-CPU bound is too tight
+   for these guards.** With the pass's own thread CPU recorded per decision:
+   under the 400 ms bound, of 368 corpus decisions the 19 "G.simpcut"
+   timeouts all belonged to the six guards of `Phi_Types.thy:2591–2611` and
+   `:2690–2734` (the `len_intvl` arithmetic guards; `linarith_split_limit`
+   traces); every other guard's pass stayed under the bound (proved p99
+   359 ms, max 384 ms; refuted max 359 ms).  With the bound raised to 4000 ms
+   on that segment alone, at load 2.0, the pass took 437 ms and 420 ms for
+   the two flipping guards (`45bdcdbe2e68b82b`, `cb5b59ba802ff7ed`) and
+   371–400 ms for the twin calls in the second lemma; the segment was clean.
+   Back at 400 ms, at load 1.5, both timed out again and the statement
+   failed — so the flip is not load: the guards' cost straddles the bound
+   (371–437 ms across calls and runs) and the run-to-run variance decides.
+   The pass's timeout is silent and yields the unsimplified state, and P-auto
+   then repeats the same work under its own 400 ms and fails.  §32's "not a
+   bound miss" was wrong: the 0 ms P-auto figures were the good runs, and
+   the decision timer (`prove_or_refute`'s) starts after the pass.
+   Before step 1 (`5103d7b6`) this pass ran unbounded inside the old
+   `auto_tac`; the bound is step 1's [author 2026-09-09].  Wall/CPU of the
+   pass was 100–118 %: the CPU clock is honest.
+3. **Side finding — the `is_F` shortcut's search never runs.** For a guard
+   that is literally `\<condition> False` (the idiom of `Phi_BI.thy`
+   `ToA_case_sum_src`, `ToA_case_sum_src_R`: prove the contextual premises
+   inconsistent, cut the chain), `simpcut_tac` either closes the goal (simp
+   finds the contradiction) or `quick_cut` drops the state on the `False`
+   conclusion — so the 250 ms `auto_search_tac` of the shortcut only ever
+   sees a state with no visible subgoal, or is not entered.  Measured with
+   `ai-artifacts/Guard_False_Probe.thy`: useful facts `x = None`, `x = Some y`
+   → PROVED in 1 ms; `∃x. ∀y. RR x y`, `∀x. ¬ RR x x` → FAILED in 1 ms
+   (empty; `blast` and `auto` prove it, `asm_full_simp` and `p_auto_body` do
+   not).  The idiom is therefore simp-only; the search was dead in the
+   2024-05-15 original too (`9d3bd92c`: the same simp-and-quick_cut before
+   the `is_F` split).  Not unsound: an undetected contradiction leaves the
+   inconsistent branch unpruned.
+4. **Side finding — the loud guard warning fires by design on a shared
+   entry.** Digest `3d7696d10790e4a8` (`\<condition>[\<no>-\<inst>] x = None`)
+   is reached from two call sites with different aux facts: with `x = None`
+   among them simp closes it (0 subgoals, `Proved` written), without it
+   R-nitpick refutes it (`Refuted` written); every warm run flips the entry
+   and warns once.  The consequence of §1's sharing ruling ("the entry is
+   advice"); the warning is a false alarm there.  Open.
+5. **Rename applied** [author 2026-09-11]: the factory `guard_condition_solver`
+   is `gen_guard_condition_solver` (`reasoners.ML` `:94`, `:1582`, `:1616`,
+   `:1625`; `PLPR.thy:1995`; `Test/Guard_Decision_Smoke.thy:71`;
+   `guess_instantiate.ML:307`).  The instances `guard_condition_solver'` /
+   `guard_condition_solver1` keep their names.  Where this document says
+   `guard_condition_solver` for the factory, read the new name.
+
+**Rulings of 2026-09-11 on item 2, applied**: the "G.simpcut" pass's bound
+is 5 s of thread CPU, fixed in the code with no option ("直接定死 5s x the
+scale" — `Thread_CPU.apply` applies `timeout_scale` itself); on its timeout
+the pass warns, unconditionally, `The system simplifier probably loops on:`
+with the visible subgoals, then behaves as before (the unsimplified state
+to the solving function: "超时并警告之后, 保持现状"); P-auto and R-conv stay
+at `\<phi>guard_classic_prover_timeout`'s 400 ms (a refuted guard burns
+P-auto's whole bound before R-nitpick: 900–2300 ms at a 4000 ms bound, so
+P-auto's bound must not grow with the pass's).  `simpcut_tac`, used
+nowhere else, is now a local function of `gen_guard_condition_solver`
+("建议挪动进 gen_guard_condition_solver 里").  §1 "G.simpcut" and the §10
+option table carry the ruling.
+
+**Still pending the author**: the `is_F` shortcut (the drafter's proposal:
+bypass "G.simpcut" and run the 250 ms `auto_search_tac` directly, which
+proves both kinds of contradiction — or leave it to the follow-up below);
+item 4.
+
+**Follow-up proposed by the author (2026-09-11), after the current work**: a
+new antecedent constant `\<check> \<hypothesis> \<consistency>`, defined as
+`False`, and reasoners dedicated to it and to `\<condition> False` — at a
+priority above the condition solver — whose one job is proving the
+contextual premises inconsistent, replacing the `is_F` shortcut as the home
+of that idiom.

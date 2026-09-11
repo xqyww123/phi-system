@@ -304,7 +304,7 @@ fun add_guess_inst_solver ctxt = Raw_Simplifier.set_solvers [guess_inst_solver c
 
 (*EXPERIMENT 1 (2026-08-29, author's step 1): the looper is no longer installed
   into the theory simpset for EVERY simplification.  It is added only where
-  guard conditions are preprocessed (reasoners.ML, guard_condition_solver).
+  guard conditions are preprocessed (reasoners.ML, gen_guard_condition_solver).
   The global installation, kept for reference:
     val _ = Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)
   Restore it if Phi_Examples fails to go through under this scope.*)

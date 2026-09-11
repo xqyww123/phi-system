@@ -25,6 +25,13 @@ val guard_cache : bool Config.T            (*\<phi>guard_cache: read and write t
 val guard_lemma_apply_limit : int Config.T (*\<phi>guard_lemma_apply_limit: Frequent's budget, the ceiling*)
 val budget_of_tier : Proof.context -> tier -> int
 
+(*the store, keyed by the guard digest; TRANSITIONAL (plan step 2): one in-memory
+  table per process, which step 4 replaces by the persistent store Phi_Guard_Store
+  behind these two functions -- the theory then selects the file.  Not gated by
+  \<phi>guard_cache: the switch is enforced by prove_or_refute at its read and writes.*)
+val lookup_entry : theory -> Hasher.digest -> entry option
+val write_entry : theory -> Hasher.digest -> entry -> unit
+
 (*user-declared rewrite rules strengthening guard proving; attribute \<phi>guard_simp*)
 structure Guard_Simp_SS : SIMPSET
 
@@ -36,8 +43,9 @@ val get_lemmas : Proof.context -> (thm * int) list
   one canonical proposition is stored once -- unless a theorem of that
   proposition is present, which keeps its budget*)
 val add_lemma : Proof.context -> thm * int -> Proof.context -> Proof.context
-(*the judge's replacement: the list becomes exactly the given theorems*)
-val replace_lemmas : Proof.context -> (thm * int) list -> Proof.context -> Proof.context
+(*the same, but a theorem of that proposition already present takes the given budget:
+  the judge's lemmas (plan section 5 step 6)*)
+val update_lemma : Proof.context -> thm * int -> Proof.context -> Proof.context
 
 (*the ONE way a consumer gets the lemmas into its simplifier, under the lemma
   budget: every rewrite rule of every lemma is weakened with a last premise
@@ -61,6 +69,14 @@ fun budget_of_tier ctxt tier =
   let val limit = Config.get ctxt guard_lemma_apply_limit
    in Int.min (limit, case tier of Only_Once => 3 | Rarely => 30 | Normal => 300 | Frequent => limit)
   end
+
+(*the store's key (plan section 1): the compact rendering, never printed*)
+fun key_of d = "PLPRGUARD" ^ Hasher.compact d
+
+val table = Synchronized.var "Phi_Guard_Cache.table" (Symtab.empty : entry Symtab.table)
+
+fun lookup_entry _ d = Symtab.lookup (Synchronized.value table) (key_of d)
+fun write_entry _ d entry = Synchronized.change table (Symtab.update (key_of d, entry))
 
 structure Guard_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS
@@ -86,14 +102,19 @@ fun canonical_form ctxt0 th =
    |> Drule.zero_var_indexes
   end
 
-fun add_lemma ctxt0 (th, budget) =
+(*on_present decides the budget of a theorem of the same canonical proposition
+  already in the list, given (its budget, the new one)*)
+fun add_lemma_with on_present ctxt0 (th, budget) =
   let val th' = canonical_form ctxt0 th
+      fun same (th'', _) = Thm.eq_thm_prop (th', th'')
    in Guard_Lemmas.map (fn lemmas =>
-        if exists (fn (th'', _) => Thm.eq_thm_prop (th', th'')) lemmas then lemmas
+        if exists same lemmas
+        then map (fn l as (th'', b) => if same l then (th'', on_present (b, budget)) else l) lemmas
         else lemmas @ [(th', budget)])
   end
 
-fun replace_lemmas ctxt0 new = Guard_Lemmas.put [] #> fold (add_lemma ctxt0) new
+val add_lemma = add_lemma_with fst
+val update_lemma = add_lemma_with snd
 
 (*the guard-cache export hook: at every run and block boundary the outer lemma
   list is OVERWRITTEN with the inner one, each theorem through export_aux_lemma

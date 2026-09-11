@@ -1971,14 +1971,14 @@ ML_file "library/reasoners.ML"
 
 method_setup \<phi>guard_P_auto = \<open>
   Scan.succeed (fn ctxt => SIMPLE_METHOD (
-    Phi_Reasoners.timed_tac (Phi_Reasoners.guard_classic_prover_bound ctxt)
+    Phi_Reasoners.cpu_bounded_tac (Phi_Reasoners.guard_classic_prover_bound ctxt)
                             (Phi_Reasoners.p_auto_body ctxt)))
 \<close> "P-auto: the one proof attempt every prove_or_refute call makes on a guard, with \<phi>guard_simp and the guard cache's lemmas, under \<phi>guard_classic_prover_timeout"
 
-(*TEMPORARY (2026-08-30): the guard-race experiments read these two Event_Log
-  categories; both default off.  Placed upstream of every evaluation target so the
-  whole chain logs (author's ruling in GUARD_NITPICK_FALSIFY_PLAN.md Section 22.3).*)
-declare [[\<phi>log_guard_race = true, \<phi>log_guess_inst = true]]
+(*TEMPORARY (2026-08-30): the guess_inst experiments read this Event_Log category;
+  default off.  Placed upstream of every evaluation target so the whole chain logs
+  (author's ruling in GUARD_NITPICK_FALSIFY_PLAN.md Section 22.3).*)
+declare [[\<phi>log_guess_inst = true]]
 
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =
@@ -1987,7 +1987,7 @@ val Phi_Reasoner_solve_obligation_and_no_defer =
 (*an obligation solved on the spot: the guard factory over fastforce in a
   \<phi>guard_simp-enhanced context, unbounded, no store; not proved = backtrack*)
 fun solve_obligation_now ctxt th =
-  Phi_Reasoners.guard_condition_solver (K ()) (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
+  Phi_Reasoners.gen_guard_condition_solver (K ()) (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
       Phi_Reasoners.try_prove_or_give_up NONE (fn ctxt => ALLGOALS (Clasimp.fast_force_tac ctxt))
           (Phi_Guard_Cache.Guard_Simp_SS.enhance ctxt) th
       |> Seq.map (pair ctxt0))

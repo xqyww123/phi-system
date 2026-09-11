@@ -85,17 +85,20 @@ signature PHI_REASONERS = sig
 
   (*The guard factory (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md): the preprocessing template
     -- oblg_template, the is_F shortcut, the case split, the aux-fact insertion, the
-    "G.simpcut" pass under \<phi>guard_classic_prover_timeout -- parameterised by the
+    "G.simpcut" pass under its 5 s of thread CPU -- parameterised by the
     solving function it ends with (prove_or_refute's type: can_inst, the guard-side
     context, what the digest step computed, then the state) and by that digest step,
     computed on the state after the case split and before the insertion.  A result
     carries the context the factory was called on plus what the solving function
     added.  The annotation of \<open>case_split\<close> is supported.*)
-  val guard_condition_solver : (thm -> 'd)
+  val gen_guard_condition_solver : (thm -> 'd)
                             -> (bool -> Proof.context -> 'd -> context_state -> context_state Seq.seq)
                             -> {can_inst: bool} -> context_state -> context_state Seq.seq
   (*the in-run instance: the factory over prove_or_refute with the guard digest*)
   val guard_condition_judge : {can_inst: bool} -> context_state -> context_state Seq.seq
+  (*the guard digest: of the guard's own subgoals, on the state the factory holds after
+    the case split and before the aux-fact insertion*)
+  val guard_digest : thm -> Hasher.digest
   val prove_or_refute : bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
   (*the out-of-run instances: the factory over P-auto once, no store*)
   val guard_condition_solver': {can_inst: bool}
@@ -103,13 +106,13 @@ signature PHI_REASONERS = sig
                              -> Proof.context -> thm -> thm
   val guard_condition_solver1: {can_inst: bool} -> Proof.context -> thm -> thm
 
-  (*run the tactic once, under the bound if given, and keep only a solved state*)
+  (*run the tactic once, under the bound (thread CPU) if given, and keep only a solved state*)
   val try_prove_or_give_up : Time.time option -> (Proof.context -> tactic) -> Proof.context -> thm -> thm Seq.seq
   (*P-auto's body, in a context with \<phi>guard_simp and the guard cache's lemmas enabled;
-    P-auto = timed_tac \<phi>guard_classic_prover_timeout o p_auto_body*)
+    P-auto = cpu_bounded_tac (guard_classic_prover_bound ctxt) o p_auto_body*)
   val p_auto_body : Proof.context -> tactic
-  val timed_tac : Time.time -> tactic -> tactic
-  val guard_classic_prover_timeout : int Config.T (*milliseconds, 400 provisional*)
+  val cpu_bounded_tac : Time.time -> tactic -> tactic    (*thread CPU; an error without a CPU clock*)
+  val guard_classic_prover_timeout : int Config.T (*milliseconds of thread CPU, 400 provisional*)
   val guard_classic_prover_bound : Proof.context -> Time.time
 
   val safe_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
@@ -166,19 +169,21 @@ signature PHI_REASONERS = sig
   (*structure Local_Premises_of_Obligation : NAMED_THMS
       (*You can add any facts to be reported as premises of a proof obligation*)*)
 
-  (*guard race (prove_or_refute) -- see Docs/GUARD_NITPICK_FALSIFY_PLAN.md*)
-  val guard_race_timeout : int Config.T
-      (*milliseconds; per-racer budget -- when the race degrades to serial
-        execution, the wall-clock upper bound is #racers * budget.  The budget
-        is virtual time (Timeout.apply scales it by timeout_scale and
-        discounts GC) while the logged elapsed is wall clock, so a logged
-        race may honestly exceed its nominal budget.*)
-  val log_guard_race : bool Config.T
-      (*context-level switch of the guard_race Event_Log category (default
-        off): one record per race -- verdict (proved/refuted/undecided),
-        winner racer or "-", wall-clock ms, #subgoals, mode (forked/serial),
-        per-racer exits (win/none/timeout/crash/cancelled/discarded), and the
-        raced guards themselves (goals, assumptions, schematic type vars)*)
+  (*the judge of the guard cache (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, sections 1 and
+    5): one optional function in a process-global ref, default NONE, consulted by
+    prove_or_refute after the refuters; thm is the goal state, ctxt the guard-side
+    context carrying the lemma list as it was BEFORE this entry's lemmas were added,
+    outer_ctxt the run's context.  Provable carries the lemmas that REPLACE this
+    entry's, with RAW measured times.*)
+  type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm}
+  datatype judgement = Provable of Phi_Guard_Cache.lemma list | Unprovable
+  val judge : (judge_arg -> judgement) option Unsynchronized.ref
+
+  val log_guard_decision : bool Config.T
+      (*context-level switch of the guard_decision Event_Log category (default
+        off): one record per prove_or_refute call -- verdict (proved/refuted/unknown),
+        hit (the entry's verdict, or none), refuter (R-conv/R-nitpick/-), judge
+        (Provable/Unprovable/-), wall-clock ms, the guard digest in hex, #subgoals*)
 
 end
 
@@ -957,21 +962,6 @@ fun hammer_obligation_solver' opts wrap id =
 
 fun norm_tac tac th = Seq.make (fn () => Seq.pull (tac th))
 
-fun timed_seq time s =
-  Seq.make (fn () => 
-    Timeout.apply time Seq.pull s
-      handle Timeout.TIMEOUT _ => NONE )
-
-fun timed_tac time tac th = timed_seq time (tac th)
-
-fun timed1_tac time t' tac th =
-  let val s = tac th
-   in Seq.make (fn () =>
-      Timeout.apply time Seq.pull s
-      handle Timeout.TIMEOUT t'' =>
-        if t'' > t' then raise Timeout.TIMEOUT t'' else NONE )
-  end
-
 fun quick_cut i th =
   case Logic.strip_assums_concl (Logic.nth_prem (i, Thm.prop_of th))
     of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>False\<close>, _) => Seq.empty
@@ -1008,7 +998,7 @@ fun auto_search_tac ctxt =
   unbounded DFS and proved 4x slower, so the kernel stays.  The only change
   from auto_search_tac is the OPENING: one asm_full_simp pass + quick_cut
   (drop on a conclusion rewritten to False) in place of the leading
-  safe_tac.  Gate and R-conv keep auto_search_tac.*)
+  safe_tac.  R-conv and the is_F shortcut keep auto_search_tac.*)
 fun p_auto_search_tac ctxt =
   let
     val ctxt = Context_Position.set_visible false ctxt
@@ -1036,32 +1026,40 @@ fun dest_all ct used =
       in SOME ((x, Thm.ctyp_of_cterm v), (ct', used')) end
   | _ => NONE)
 
-(*** Guard Race ***)
+(*** Guard decision ***)
 
-(*Docs/GUARD_NITPICK_FALSIFY_PLAN.md §1–§3.  After the 30ms serial quick-proof
-  attempt, proving and refuting racers race under a per-racer budget on the
-  race engine of Performant_Isabelle_ML (Race.race, library/race.ML): the
-  winner is the lowest-indexed racer that recorded a claim (the first claim
-  to arrive ends the race), losers are cancelled promptly, every racer gets
-  a truthful exit, and every racer has terminated before the race returns —
-  the join barrier the post-race record below relies on.  The engine never
-  converts an interrupt into a result: external cancellation re-raises out
-  of the race, while a racer's own internal interrupt is absorbed as that
-  racer's Cancelled exit; a racer's crash is that racer's failure only,
-  reported post-race from its exit.  The interrupt test shared with the race
-  engine and auto_sledgehammer's sledgehammer_solver.ML (normalise) is
-  Interrupt_Family (Performant_Isabelle_ML, library/accounted_timeout.ML).*)
+(*One prove_or_refute call decides one guard (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md,
+  sections 5 and 6): the entry under the guard digest is read from the store, its
+  lemmas are replayed and enabled, P-auto proves the guard or fails, and on a failure
+  the entry's verdict selects what runs next -- the refuters R-conv and R-nitpick,
+  then the judge -- one after another on the run's thread, each bounding itself.
+  A non-interrupt exception of a prover, a refuter, a replay or the judge is the
+  run's exception.*)
 
-(** Racers **)
+(*400 ms of thread CPU, provisional (plan section 10): the bound of P-auto and of
+  R-conv, and the replay floor of a judge lemma; the "G.simpcut" pass has its own 5 s
+  (the factory).  Thread CPU, not wall clock, so that machine load cannot flip a
+  verdict [author 2026-09-09].*)
+val guard_classic_prover_timeout =
+      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_classic_prover_timeout\<close> (K 400)
+(*a budget < 1ms would mean NO timeout at all (Timeout.ignored) -- clamp*)
+fun guard_classic_prover_bound ctxt =
+      Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_classic_prover_timeout))
 
-datatype race_result = Proved of thm | Refuted of string
-  (*Refuted carries the REFUTER's name: a refutation can reach the winner
-    slot by relay (see the early-finish protocol below), so attribution
-    travels in the result, not in the racer name the engine reports.*)
+(*the guard side's one way of bounding a computation: the calling thread's CPU, no
+  wall clock -- Thread_CPU.apply raises an error where the thread has no CPU clock,
+  by ruling; the refuter that waits on an external process, R-nitpick, keeps wall
+  clock (Thread_CPU: "a blocked thread never reaches the limit")*)
+fun cpu_bounded bound f x = Thread_CPU.apply {thread_cpu = bound, wall = NONE} f x
+fun cpu_bounded_seq bound s =
+  Seq.make (fn () => cpu_bounded bound Seq.pull s handle Timeout.TIMEOUT _ => NONE)
+fun cpu_bounded_tac bound tac th = cpu_bounded_seq bound (tac th)
 
-(*the shared acceptance criterion of the searching racers and the quick
-  gate: the search's solved states, as a lazy sequence -- nothing runs until
-  it is pulled, so a caller's timeout still covers the search*)
+(** The provers **)
+
+(*the acceptance criterion of every search: its solved states, as a lazy
+  sequence -- nothing runs until it is pulled, so a caller's timeout still
+  covers the search*)
 fun solved_states search st = Seq.filter Thm.no_prems (search st)
 fun search_solved search st =
   Option.map #1 (Seq.pull (solved_states search st))
@@ -1075,85 +1073,19 @@ val enhance_for_guard =
   is this under \<phi>guard_classic_prover_timeout (the method \<phi>guard_P_auto)*)
 fun p_auto_body ctxt = solved_states (p_auto_search_tac (enhance_for_guard ctxt))
 
-(*Early-finish protocol (plan §8, author-ruled 2026-08-25): let a refutation
-  end the race the moment it is known that no proof can still arrive.  Both
-  events live in ONE variable, so each racer publishes its own event and
-  reads the other's inside a single critical section — whenever both events
-  occur, the second racer to enter the critical section sees the first's,
-  and no ordering argument is needed.
-    pauto_finished — P-auto ran to completion without proving.  Set on that
-      normal empty-handed return only: a timeout or crash leaves the body by
-      an exception path, which the racer exit discipline does not intercept.
-    refuted_by — a refutation was found, recorded under the refuter's name.
-      A refutation computed but not yet committed can be lost to a perfectly
-      timed interrupt; the cost is one suppressed default-off warning (all
-      three failure exits are observationally equivalent, plan §11.1 ⑤).
-  A refutation may END the race only when pauto_finished is already set.
-  P-auto is the only producer of Proved, so this pre-empts no still-possible
-  proof; the verdict is the same one the no-winner path would read from the
-  record (visible there because the engine joins all racers first) — the
-  protocol only moves it earlier.  With today's two racers the time saved is
-  about zero; the protocol pays once R-nitpick joins and an early verdict
-  cancels racers still burning budget (plan §8).  "No winner" implies P-auto
-  failed, which structurally closes the vacuous-hypothesis guard (a
-  contradictory hypothesis H makes both H \<Longrightarrow> C and H \<Longrightarrow> \<not>C provable):
-  P-auto would have won.  Synchronized.change_result, never
-  Synchronized.assign (assign makes the variable Immutable).
-  R-nitpick writes this ledger too (author ruling 2026-08-27, closing the
-  question plan §18.5 left open).  A model refutation cannot be trusted to
-  pre-empt a running proof: under user_axioms = false Nitpick can never
-  certify a model genuine, so what this racer reports is always
-  quasi_genuine, and a model of a theory the guard does not actually live in
-  would otherwise end the race and cancel a P-auto that was about to
-  succeed.  Routing it through the ledger removes that structurally, and
-  costs almost nothing: once P-auto has finished empty-handed the refutation
-  still ends the race at once, and P-auto finishes in 80ms at the median.
-  Whether R-nunchaku joins the ledger is a §2.4 decision.*)
-
-(*TEMPORARY probe (2026-09-02): P-auto's OWN timing and outcome per race leg
-  -- the guard_race record's elapsed_ms is the whole race, not P-auto's.
-  Records all three of Timing.result: elapsed (raw wall clock), cpu (usr+sys
-  incl. gc), gc.  elapsed-gc is the measure Timeout.apply {physical=false}
-  actually bounds (Event_Timer adds gc back into the deadline).  win/none run
-  to completion; a cancelled or timed-out leg logs its timing under
-  exn:<name> then reraises.  Same shape as nitpick_probe.*)
-val p_auto_probe_category =
-  Event_Log.category {name = "p_auto_probe", enabled = fn () => true,
-    encode = fn (outcome, el, cpu, gc) =>
-      ([("outcome", outcome), ("elapsed_ms", string_of_int el),
-        ("cpu_ms", string_of_int cpu), ("gc_ms", string_of_int gc)], [])}
-
-fun p_auto_racer body protocol th : race_result Race.racer =
-  ("P-auto", fn () =>
-     let val t0 = Timing.start ()
-         val r = Exn.capture_body (fn () => Option.map #1 (Seq.pull (body th)))
-         val {elapsed, cpu, gc} = Timing.result t0
-         val outcome = case r of Exn.Res (SOME _) => "win"
-                               | Exn.Res NONE => "none"
-                               | Exn.Exn e => "exn:" ^ General.exnName e
-         val _ = Event_Log.append p_auto_probe_category
-                   (outcome, Time.toMilliseconds elapsed,
-                    Time.toMilliseconds cpu, Time.toMilliseconds gc)
-      in case r of
-           Exn.Res (SOME th') => SOME (Proved th')
-         | Exn.Res NONE =>
-             Synchronized.change_result protocol
-               (fn {pauto_finished = _, refuted_by} =>
-                 (Option.map Refuted refuted_by,
-                  {pauto_finished = true, refuted_by = refuted_by}))
-         | Exn.Exn e => Exn.reraise e
-      end)
+(** The refuters **)
 
 val negation = \<^cterm>\<open>Not\<close>
 
-(*R-conv (plan §2.2): refute by PROVING the negation — each subgoal's
-  conclusion is negated under its \<And>/\<Longrightarrow> prefix and handed to the same
-  classical search.  The whole computation, negation included, runs inside
-  the racer body (plan §8 D6): it is bounded by this racer's budget and
-  covered by the engine's exception discipline, and a non-Trueprop
-  conclusion (Unsupported) just comes back empty-handed.
-  ctxt is the inner, goal-side context; ctxt0 the outer context of
-  guard_condition_solver — Variable.export ctxt ctxt0 is direction-
+(*R-conv (GUARD_NITPICK_FALSIFY_PLAN §2.2): refute by PROVING the negation — each
+  subgoal's conclusion is negated under its \<And>/\<Longrightarrow> prefix and handed to the
+  classical search in the context enhanced (\<phi>guard_simp, the lemmas under fresh
+  budgets).  The whole computation, negation included, runs under
+  \<phi>guard_classic_prover_timeout of thread CPU; TIMEOUT and a non-Trueprop
+  conclusion (Unsupported) are "not refuted".
+  ctxt is prove_or_refute's ctxt_g, the guard-side context with the lemmas;
+  ctxt0 the run's context, the one
+  gen_guard_condition_solver was called on — Variable.export ctxt ctxt0 is direction-
   sensitive, do not swap the two.  can_inst = true freezes the residual
   schematics (a universal refutation); false exports them back (an
   existential refutation — an accepted completeness-only weakening, plan
@@ -1162,55 +1094,50 @@ val negation = \<^cterm>\<open>Not\<close>
   duality note in plan §2.3.
   N1 ruling (plan §8, 2026-08-25): the freeze branch MUST build its own
   search over the import context ctxt' — its goals carry Frees only ctxt'
-  declares, and the race runs under USER proof contexts, whose claset
+  declares, and the search runs under USER proof contexts, whose claset
   wrappers (a stock user extension point, outside any audit of phi-system)
-  must not receive a ledger that misdescribes the frozen Frees.  The
+  must not receive a context that misdescribes the frozen Frees.  The
   export branch deliberately keeps the shared ctxt search: its goals live
   in ctxt0 and ctxt merely over-declares (ctxt extends ctxt0) — the safe
   direction; do not "fix" it to search under ctxt0.  Only a bool leaves
-  this racer; consuming the proved state would additionally require
+  this refuter; consuming the proved state would additionally require
   Variable.export through ctxt'.  (That search_solved accepts on no_prems
   alone, ignoring hyps/tpairs, is a recorded hardening candidate —
   plan §8.)*)
-fun r_conv_racer can_inst ctxt ctxt0 protocol goals : race_result Race.racer =
-  ("R-conv", fn () =>
-     let exception Unsupported
-         fun conv_goal used ctm =
-           case Thm.term_of ctm
-             of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
-                   let val (f,a) = Thm.dest_comb ctm
-                    in Thm.apply f (conv_goal used a)
-                   end
-              | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
-                   let val (q,b) = Thm.dest_comb ctm
-                       val (x', used') = Name.variant x used;
-                       val (v, b') = Thm.dest_abs_fresh x' b
-                    in Thm.apply q (Thm.lambda v (conv_goal used' b'))
-                   end
-              | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
-                   let val (c,b) = Thm.dest_comb ctm
-                    in Thm.apply c (Thm.apply negation b)
-                   end
-              | _ => raise Unsupported
-         val refuted =
-           (map (fn goal =>
-                Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
-              ) goals
-              |> (fn gs =>
-                   if can_inst
-                   then let val ((_, gs'), ctxt') = Variable.import false gs ctxt
-                         in exists (is_some o search_solved (auto_search_tac (enhance_for_guard ctxt'))) gs'
-                        end
-                   else Variable.export ctxt ctxt0 gs
-                        |> exists (is_some o search_solved (auto_search_tac (enhance_for_guard ctxt)))))
-           handle Unsupported => false
-      in if refuted
-         then Synchronized.change_result protocol
-                (fn {pauto_finished, refuted_by = _} =>
-                  (if pauto_finished then SOME (Refuted "R-conv") else NONE,
-                   {pauto_finished = pauto_finished, refuted_by = SOME "R-conv"}))
-         else NONE
-     end)
+fun r_conv can_inst ctxt ctxt0 goals =
+  let exception Unsupported
+      fun conv_goal used ctm =
+        case Thm.term_of ctm
+          of Const(\<^const_name>\<open>Pure.imp\<close>, _) $ _ $ _ =>
+                let val (f,a) = Thm.dest_comb ctm
+                 in Thm.apply f (conv_goal used a)
+                end
+           | Const(\<^const_name>\<open>Pure.all\<close>, _) $ Abs (x,_,_) =>
+                let val (q,b) = Thm.dest_comb ctm
+                    val (x', used') = Name.variant x used;
+                    val (v, b') = Thm.dest_abs_fresh x' b
+                 in Thm.apply q (Thm.lambda v (conv_goal used' b'))
+                end
+           | Const(\<^const_name>\<open>Trueprop\<close>, _) $ _ =>
+                let val (c,b) = Thm.dest_comb ctm
+                 in Thm.apply c (Thm.apply negation b)
+                end
+           | _ => raise Unsupported
+      fun refuted () =
+        (map (fn goal =>
+             Goal.init (conv_goal (Term.declare_free_names (Thm.term_of goal) Name.context) goal)
+           ) goals
+           |> (fn gs =>
+                if can_inst
+                then let val ((_, gs'), ctxt') = Variable.import false gs ctxt
+                      in exists (is_some o search_solved (auto_search_tac (enhance_for_guard ctxt'))) gs'
+                     end
+                else Variable.export ctxt ctxt0 gs
+                     |> exists (is_some o search_solved (auto_search_tac (enhance_for_guard ctxt)))))
+        handle Unsupported => false
+   in cpu_bounded (guard_classic_prover_bound ctxt) refuted ()
+      handle Timeout.TIMEOUT _ => false
+  end
 
 
 (*R-nitpick (plan §2.3): refute by MODEL — a finite countermodel of the
@@ -1219,7 +1146,7 @@ fun r_conv_racer can_inst ctxt ctxt0 protocol goals : race_result Race.racer =
   the memory-model and per-struct rewrites, datatype case splits, and a
   slice down to the conclusion's variables) and then hands the result to the
   patched Nitpick copy Phi_Nitpick, whose premises are trusted rather than
-  re-derived.  That recipe is what makes the racer useful: on the replayed
+  re-derived.  That recipe is what makes the refuter useful: on the replayed
   corpus it refutes 222 of 247 guards where the unpreprocessed call refutes
   far fewer, at zero misjudgment over 161 guards known provable (plan §22).
   The variable discipline is zero-transform, intentionally OPPOSITE to
@@ -1231,7 +1158,7 @@ fun r_conv_racer can_inst ctxt ctxt0 protocol goals : race_result Race.racer =
   travel with the goal so the model must satisfy them (plan §2.3: dropping
   one breaks the immunity argument; the context asked is the goal-side ctxt
   — #2 ruling, Nitpick's own entry does the same); which of them survive is
-  Phi_Guard_Refute's premise filter, not this racer's business.*)
+  Phi_Guard_Refute's premise filter, not this refuter's business.*)
 
 (*verbatim from nitpick.ML:972-982 (not exported); the call below mirrors
   the entry recipe of pick_nits_in_subgoal, nitpick.ML:984-996 — the full
@@ -1261,17 +1188,17 @@ fun extract_fixed_frees ctxt (assms, t) =
   load-bearing beyond silence: spying would call Proof.goal on the
   goal-less Proof.init state below; the NITPICK_SPY env var ORs past this
   pin and is guarded at assembly instead.  The nitpick_params command
-  validates KEYS only, so a malformed stored value errors HERE; this must
-  therefore stay a function called from inside a racer body, where pollution
-  surfaces as that racer's Crashed exit and never as a tactic error
-  (§1.2-5).  Time strings are decimal seconds (§1.2-4); tac_timeout pinned
+  validates KEYS only, so a malformed stored value errors HERE, inside
+  R-nitpick, and propagates as the run's exception like any other exception
+  of a refuter (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md section 5).  Time strings
+  are decimal seconds (§1.2-4); tac_timeout pinned
   low because the 0.5s default is billed per candidate type in pre-Kodkod
   monotonicity checks (§1.2-2).
 
   The budget passed in is the model search's OWN timeout, fixed and never
   charged for preprocessing (author ruling 2026-08-28).  Nitpick divides the
   number across the card scopes, and its own net (budget + timeout_bonus)
-  enforces it; preprocessing is covered only by the assembly's hang net.
+  enforces it; preprocessing is covered only by R-nitpick's bound per subgoal.
 
   mono = true drops Nitpick's per-type monotonicity INFERENCE (default
   "smart", nitpick_commands.ML:43) and simply assumes monotonicity, so the
@@ -1296,12 +1223,12 @@ fun extract_fixed_frees ctxt (assms, t) =
   abstract types do not enter the problem at all, so pinning them is idle
   at best (measured worse — it raised one guard's domains and lost a
   refutation).  Worst case over the corpus: 1434ms.*)
-(*The model search's own timeout, separate from the racer's watchdog: charging
+(*The model search's own timeout, separate from R-nitpick's bounds: charging
   preprocessing against the search would make its reach depend on a quantity
   that has nothing to do with it (author ruling 2026-08-28).  Declared to
-  Nitpick, whose own net (+ timeout_bonus) enforces it; the assembly's hang
-  net derives from it too, so the two stay consistent.  2000: see the note
-  at guard_race_timeout.*)
+  Nitpick, whose own net (+ timeout_bonus) enforces it; R-nitpick's bound per
+  subgoal and its outer net derive from it too, so the three stay consistent.
+  2000 ms (author ruling 2026-09-01).*)
 val guard_refute_timeout =
       Attrib.setup_config_int \<^binding>\<open>\<phi>guard_refute_timeout\<close> (K 2000)
 
@@ -1320,118 +1247,117 @@ fun pinned_nitpick_params ctxt budget =
   ruling): kodkod_scala forced false, so each invocation launches its own JVM
   ($KODKODI/bin/kodkodi, spawned through the bash_process server; never
   overlord, never a *_JNI SAT solver).  Measured against in-process on the
-  same tree (A/B 2026-09-02): +0.4s median per solver-reaching call, race
-  wall +17%, corpus wall +6%, zero key-level refutation loss.  The JVM launch
-  runs inside Nitpick's own net, so the hang net's margin is unchanged.  The
+  same tree (A/B 2026-09-02, under the race engine of that time): +0.4s median
+  per solver-reaching call, the race's wall +17%, corpus wall +6%, zero
+  key-level refutation loss.  The JVM launch
+  runs inside Nitpick's own net, so the bounds' margins are unchanged.  The
   in-process Scala call was the pipeline's only source of
-  Output.Protocol_Message, so its absorbing arms below are commented out —
-  a stray one now leaves the body and is reported Crashed truthfully.*)
-(*Refuted goes to the ledger, never straight to the winner slot — the ruling
-  is argued at the protocol above.  Provable means the preprocessing simplifier
-  closed the guard, which is a real proof of the ORIGINAL guard but yields no
-  proof object here; this racer therefore only stands down, and P-auto is left
-  to produce the theorem.
+  Output.Protocol_Message; a stray one now leaves R-nitpick as the run's
+  exception.*)
+(*Provable means the preprocessing simplifier closed the guard, which is a
+  real proof of the ORIGINAL guard but yields no proof object here; this
+  refuter therefore only stands down -- P-auto, which has already failed, was
+  the one to produce the theorem.
 
   quasi_genuine counts as a refutation (author ruling 2026-08-26, plan
   §18.2/§18.5).  It has to: under user_axioms = false Nitpick can never
   certify a model genuine, so the two codes together are the only refutation
-  this racer can ever report.  What that costs, now that the ledger holds it
-  back: (a) what is waived are phi-system's ten monomorphic user axioms, all
-  derivable from HOL's own, so a model ignoring them models a theory no
-  stronger than HOL's; (b) a wrong refutation costs COMPLETENESS only — a
-  guard judged false leaves one reasoning rule unapplied, and the undecided
-  exit already assumes the guard fails — and it can no longer cancel a P-auto
-  that was about to succeed; (c) quasi_genuine does not say WHICH check
-  downgraded it, so accepting it also accepts downgrades from wf / finitize /
-  total_consts / bisim_depth.  Over the replayed corpus only user_axioms ever
-  fired — a property of that corpus, not a guarantee.
+  this refuter can ever report.  What that costs: (a) what is waived are
+  phi-system's ten monomorphic user axioms, all derivable from HOL's own, so
+  a model ignoring them models a theory no stronger than HOL's; (b) a wrong
+  refutation costs COMPLETENESS only — a guard judged false leaves one
+  reasoning rule unapplied, and the undecided exit already assumes the guard
+  fails — and P-auto has already had its attempt; (c) quasi_genuine does not
+  say WHICH check downgraded it, so accepting it also accepts downgrades from
+  wf / finitize / total_consts / bisim_depth.  Over the replayed corpus only
+  user_axioms ever fired — a property of that corpus, not a guarantee.
   Unknown (Nitpick found nothing, or the budget was already spent in
   preprocessing) stands down as well.  Other exceptions are NOT absorbed:
-  they leave the body and the engine reports this racer truthfully (errors =>
-  Crashed, Timeout.TIMEOUT => Timed_Out, interrupts => Cancelled) — we bypass
+  they leave the refuter as the run's exception — we bypass
   Nitpick_Commands.handle_exceptions, incidentally a silence win (its
-  NOT_SUPPORTED bare warning is unreachable).*)
-(*TEMPORARY probe (2026-08-31): what does the refuter actually answer inside
-  the race?  In isolation the goals that the race reports `none` for are
-  refuted in 0.3 s; this records, per racer run, the verdict and the wall
-  clock, in its own Event_Log category.*)
-val nitpick_probe_category =
-  Event_Log.category {name = "nitpick_probe", enabled = fn () => true,
-    encode = fn (racer, outcome, ms) =>
-      ([("racer", racer), ("outcome", outcome), ("elapsed_ms", string_of_int ms)], [])}
+  NOT_SUPPORTED bare warning is unreachable).
 
-fun r_nitpick_racer params ctxt protocol (i, n) goal name : race_result Race.racer =
-  (name, fn () =>
-     let val t0 = Timing.start ()
-         val v = Exn.capture_body (fn () =>
-                   Phi_Guard_Refute.nitpick ctxt (Lazy.force params) (i, n) goal)
-         val outcome =
-           (case v of
-              Exn.Res Phi_Guard_Refute.Refuted => "Refuted"
-            | Exn.Res Phi_Guard_Refute.Provable => "Provable"
-            | Exn.Res Phi_Guard_Refute.Unknown => "Unknown"
-            (*unreachable since kodkod_scala was forced false (2026-09-02);
-              the generic arm labels a stray one "exn:Protocol_Message"
-            | Exn.Exn (Output.Protocol_Message _) => "Protocol_Message"*)
-            | Exn.Exn e => "exn:" ^ General.exnName e)
-         val _ = Event_Log.append nitpick_probe_category
-                   (name, outcome, Time.toMilliseconds (#elapsed (Timing.result t0)))
-      in
-        (case v of
-           Exn.Res Phi_Guard_Refute.Refuted =>
-             Synchronized.change_result protocol
-               (fn {pauto_finished, refuted_by = _} =>
-                 (if pauto_finished then SOME (Refuted name) else NONE,
-                  {pauto_finished = pauto_finished, refuted_by = SOME name}))
-         | Exn.Res _ => NONE
-         (*unreachable since kodkod_scala was forced false (2026-09-02): the
-           in-process Scala call was its only source; a stray one reraises
-           and the engine reports this racer Crashed
-         | Exn.Exn (Output.Protocol_Message _) => NONE*)
-         | Exn.Exn e => Exn.reraise e)
-      end)
+  The bounds (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md section 6), wall clock since
+  the search waits on an external process: the subgoals one after another,
+  each under \<phi>guard_refute_timeout + 5 s -- strictly above worst
+  preprocessing (2.6 s) + Nitpick's net (+1 s) at any config value, with
+  preprocessing (0.4 s median) uncharged -- so one subgoal's overrun moves on
+  to the next; the whole under \<phi>guard_refute_timeout + 5 s x the number of
+  subgoals -- below the sum of the bounds per subgoal from two subgoals on,
+  equal to it at one -- so the net normally ends R-nitpick inside the
+  running subgoal.  Either TIMEOUT is "not refuted" for what it covers.
+  The screen: a schematic TYPE variable in any assumption silences the whole
+  refuter, in a subgoal silences that subgoal (no monotonization —
+  "substitute a typical type and refute" is unsound, since type
+  instantiation is also the prover's choice).  NITPICK_SPY=yes ORs past the
+  spy pin and would crash on the goal-less Proof.init state — ruled an
+  absent-refuter condition.  The tested term is derived from the screened
+  one by subst_atomic over screened assumptions (which cannot introduce
+  TVars — the global assumption screen is load-bearing for the per-goal
+  one), and the assumptions are asked once from the goal-side ctxt (ruling
+  #2 made structural).*)
+fun r_nitpick ctxt goals =
+  let val refute_timeout = Time.fromMilliseconds (Config.get ctxt guard_refute_timeout)
+      val margin = seconds 5.0
+      val bound = refute_timeout + margin   (*one subgoal*)
+      fun tvar_free t = null (Term.add_tvars t [])
+      val nctxt = Config.put Kodkod.kodkod_scala false ctxt
+      val assms0 = map Thm.term_of (Assumption.all_assms_of nctxt)
+   in getenv "NITPICK_SPY" <> "yes" andalso forall tvar_free assms0 andalso
+      let val params = Lazy.lazy (fn () => pinned_nitpick_params nctxt refute_timeout)
+          val n = length goals
+          fun refutes (k, goal) =
+            let val t0 = Thm.term_of goal
+             in tvar_free t0 andalso
+                (Timeout.apply bound (fn () =>
+                   Phi_Guard_Refute.nitpick nctxt (Lazy.force params) (k + 1, n)
+                     (extract_fixed_frees nctxt (assms0, t0)) = Phi_Guard_Refute.Refuted) ()
+                 handle Timeout.TIMEOUT _ => false)
+            end
+       in Timeout.apply (refute_timeout + Time.scale (Real.fromInt n) margin)
+            (fn () => exists refutes (map_index I goals)) ()
+          handle Timeout.TIMEOUT _ => false
+      end
+  end
 
 
-(** Guard Solver **)
+(** The judge **)
 
-(*2000ms (author ruling 2026-09-01).  Since 2026-08-28 this bounds P-auto and
-  R-conv only -- the refuter family's bound derives from
-  \<phi>guard_refute_timeout -- so the value is a decision about the two
-  SEARCHING racers alone.  It is paid on nearly every guard: races carrying a
-  timeout consume 97.9% of all race wall clock (P-auto times out on 41% of
-  races, R-conv on 45%).  2000 vs a uniform 5000: identical verdicts on the
-  common corpus, race wall clock 2067s -> 898s (2026-09-01 full-chain runs).*)
-val guard_race_timeout =
-      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_race_timeout\<close> (K 2000)
-val log_guard_race =
-      Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guard_race\<close> (K false)
+(*ONE optional function in a process-global ref (plan section 1), default NONE,
+  installed by ML code (phase 2: the LLM judge).  Consulted by prove_or_refute
+  where section 5 says, on the run's own thread, concurrently across runs, with
+  the guard-side context as it was before this entry's lemmas were added -- the
+  lemmas of earlier guards are in it.  Its lemmas REPLACE this entry's; each
+  must be a closed statement of type prop, certifiable by Thm.cterm_of
+  outer_ctxt and provable by its own method text citing theory-level facts
+  only, with RAW measured times, which prove_or_refute normalises on receipt.
+  A run re-entered inside the judge enables its own lemmas on top of ctxt's
+  (nesting is not designed for).*)
+type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm}
+datatype judgement = Provable of Phi_Guard_Cache.lemma list | Unprovable
+val judge : (judge_arg -> judgement) option Unsynchronized.ref = Unsynchronized.ref NONE
 
-(*the guard_race Event_Log category (EVENT_LOG_PLAN 2.6): the successor of the
-  \<phi>guard_race_log TSV probe, with the former .goals companion file merged
-  into the same record (multi-line content is just sub-elements here)*)
-val guard_race_category =
-  Event_Log.category {name = "guard_race", enabled = fn () => true,
-    encode = fn {verdict, winner, elapsed_ms, n_goals, forked, exits,
-                 tvars, assms, goals} =>
-      ([("verdict", verdict), ("winner", winner),
-        ("elapsed_ms", string_of_int elapsed_ms),
-        ("subgoals", string_of_int n_goals),
-        ("mode", if forked then "forked" else "serial")],
-       map (fn (racer, code) =>
-              XML.Elem (("exit", [("racer", racer), ("code", code)]), [])) exits @
-       map (Event_Log.elem_text "tvar") tvars @
-       map (Event_Log.elem_text "assm") assms @
-       map (Event_Log.elem_text "goal") goals)}
 
-(*EXPERIMENT 1 (2026-08-29): guess_inst's looper is no longer in the theory
-  simpset (guess_instantiate.ML).  It reaches every simplification below
-  through ctxt, which guard_condition_solver's auto_tac already equipped:
-  auto_search_tac for the 30ms quick attempt, P-auto and R-conv (and r_conv's
-  own call on the imported ctxt'), and Nitpick_Refute_SS.enhance for R-nitpick,
-  which MERGES this ctxt's simpset.  Experiment 2 takes it back off the refuter
-  alone, where a non-most-general instantiation is unsound: a guard's schematic
-  is existential, so specialising it strengthens the guard, and refuting the
-  stronger form proves nothing.*)
+(** One prove_or_refute call **)
+
+val log_guard_decision =
+      Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guard_decision\<close> (K false)
+
+(*the guard_decision Event_Log record, the one permanent record of the guard cache
+  (plan section 10): the verdict, the path -- the entry's verdict (hit), which
+  refuter, the judge's answer -- the call's wall clock, the guard digest and the
+  number of subgoals*)
+val guard_decision_category =
+  Event_Log.category {name = "guard_decision", enabled = fn () => true,
+    encode = fn {verdict, hit, refuter, judge, elapsed_ms, digest, n_goals} =>
+      ([("verdict", verdict), ("hit", hit), ("refuter", refuter), ("judge", judge),
+        ("elapsed_ms", string_of_int elapsed_ms), ("digest", digest),
+        ("subgoals", string_of_int n_goals)], [])}
+
+fun string_of_verdict Phi_Guard_Cache.Proved = "proved"
+  | string_of_verdict Phi_Guard_Cache.Refuted = "refuted"
+  | string_of_verdict Phi_Guard_Cache.Unknown = "unknown"
+
 (*the undecided-guard warning: neither a proof nor a refutation, and no judge --
   trace-gated like every reasoner warning*)
 fun undecided_guard_warning ctxt goals =
@@ -1442,225 +1368,6 @@ fun undecided_guard_warning ctxt goals =
               block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
     end)) goals
 
-(*TRANSITIONAL (plan step 1): the race stays until step 2 replaces it by the
-  sequential protocol of the plan's section 5; prove_or_refute below already has the
-  plan's type and wraps it.*)
-fun guard_race can_inst ctxt ctxt0 =
-  let val search = auto_search_tac ctxt
-      val p_search = p_auto_body ctxt
-      (*Author ruling 2026-09-01: the gate passes only a SOLVED state
-        (solved_states, shared with the racers) -- auto_search_tac never
-        fails, so an empty-handed return used to skip the race (guard assumed
-        false, unrefuted, wall-clock-dependent).  Admitted guards end
-        refuted or undecided only (measured 78/11/0): the race's P-auto is
-        a deterministic replay, kept as the sole producer of pauto_finished
-        (<35ms).  Lifts the plan-§5 deferral.  35 not 30 (author ruling
-        2026-09-01): guards proved right at the old boundary flickered in
-        and out of the race log with machine load; the margin absorbs them
-        in place of a gate-side record point.*)
-   in timed_tac (Time.fromMilliseconds 35) (solved_states search) ORELSE
-  (fn th =>
-    let val timer = Timing.start ()
-        val goals = Thm.cprems_of th
-        val fail = Seq.make (fn () => (undecided_guard_warning ctxt goals; NONE))
-
-        (*a budget < 1ms would mean NO timeout at all (Timeout.ignored) — clamp*)
-        val budget = Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_race_timeout))
-
-        fun diag level msg =
-          Phi_Reasoner.warn_pretty (Context.Proof ctxt) level
-            (fn () => Pretty.str ("guard race: " ^ msg ()))
-
-        (*diagnostic I/O must never decide a proof: on any failure, record it
-          (EVENT_LOG_PLAN 7, record point), report via diag, never fail the
-          tactic*)
-        fun checked_io what f =
-          (case Exn.capture_body f of
-             Exn.Res r => SOME r
-           | Exn.Exn exn =>
-               (if Exception_Log.default_record exn
-                then Event_Log.append Exception_Log.category
-                       {site = "guard race checked_io " ^ what, exn = exn, trace = []}
-                else ();
-                if Interrupt_Family.contains_interrupt exn then Exn.reraise exn
-                else (diag 2 (fn () => what ^ ": " ^ Runtime.exn_message exn); NONE)))
-
-        val protocol = Synchronized.var "guard_race.protocol"
-                         {pauto_finished = false, refuted_by = NONE : string option}
-
-        (*R-nitpick racers (plan §2.3): one per subgoal, each on the full
-          budget.  A schematic TYPE variable in any assumption silences all
-          of them, in one subgoal silences that subgoal's racer (no
-          monotonization — "substitute a typical type and refute" is
-          unsound, since type instantiation is also the prover's choice).
-          NITPICK_SPY=yes ORs past the spy pin and would crash on the
-          goal-less Proof.init state — ruled an absent-racer condition.
-          Everything a racer consumes is derived HERE, once: the tested
-          term is derived from the screened one by subst_atomic over
-          screened assumptions (which cannot introduce TVars — the global
-          assumption screen is load-bearing for the per-goal one), and the
-          assumptions are asked once from the goal-side ctxt (ruling #2
-          made structural).*)
-        val refute_timeout =
-          Time.fromMilliseconds (Config.get ctxt guard_refute_timeout)
-        val nitpick_racers =
-          let fun tvar_free t = null (Term.add_tvars t [])
-              val nctxt = Config.put Kodkod.kodkod_scala false ctxt
-              val assms0 = map Thm.term_of (Assumption.all_assms_of nctxt)
-           in if getenv "NITPICK_SPY" <> "yes" andalso forall tvar_free assms0
-              then let val params =
-                     Lazy.lazy (fn () => pinned_nitpick_params nctxt refute_timeout)
-                       val n = length goals
-                    in map_filter (fn (k, goal) =>
-                         let val t0 = Thm.term_of goal
-                          in if tvar_free t0
-                             then SOME (r_nitpick_racer params nctxt protocol (k + 1, n)
-                                          (extract_fixed_frees nctxt (assms0, t0))
-                                          ("R-nitpick" ^ string_of_int (k + 1)))
-                             else NONE
-                         end)
-                       (map_index I goals)
-                   end
-              else []
-          end
-
-        (*engine contract, both caller obligations: (a) racer bodies must be
-          self-bounded — each gets its own Timeout.apply here; (b) this call
-          site must not defer interrupts — nothing in phi-system does.
-          P-auto stays first: the engine breaks concurrent claims to the
-          lowest index and starts serial racers in order, both biasing ties
-          toward Proved.
-          Per-racer knives (author ruling 2026-09-01): searching racers keep
-          the race budget; the R-nitpick family's wrap is only a HANG NET --
-          its knife is Nitpick's own net (declared timeout + timeout_bonus,
-          vendored phi_nitpick.ML), with preprocessing (0.4s median / 2.6s
-          worst) uncharged.  A uniform 2000ms watchdog cost exactly the
-          three Quicksort:47 refutations (racer legs 4.6-6s).*)
-        (*strictly above worst preprocessing (2.6s) + Nitpick's net (+1s)
-          at any config value*)
-        val hang_net = refute_timeout + seconds 5.0
-        fun wrap t (name, body) =
-          (name, fn () =>
-             (*capture site (EVENT_LOG_PLAN 7): a racer crash gets its frame
-               list before the engine converts it to Crashed; the region is
-               bounded by t*)
-             Exception_Log.capture
-               {site = "guard-racer " ^ name, record = Exception_Log.default_record}
-               (fn () => Timeout.apply t body ()))
-        val racers =
-          wrap budget (p_auto_racer p_search protocol th) ::
-          wrap budget (r_conv_racer can_inst ctxt ctxt0 protocol goals) ::
-          map (wrap hang_net) nitpick_racers
-
-        val {winner, exits, forked} = Race.race racers
-
-        val _ = List.app (fn (name, Race.Crashed exn) =>
-                                diag 2 (fn () => "racer " ^ name ^ " crashed: " ^ Runtime.exn_message exn)
-                            | _ => ()) exits
-
-        (*total outcome mapping (D7 schema): a single-token verdict plus the
-          winner's name feed both the TSV log and the human summary; the
-          direct-win and post-race-record refutations share one verdict
-          token — the exits column tells them apart (a recorded refutation
-          has no "win" exit)*)
-        val recorded_refuter =
-          (case winner of
-             NONE => #refuted_by (Synchronized.value protocol)
-           | SOME _ => NONE)
-        val (verdict, vwinner, result) =
-          (case winner of
-             SOME (name, Proved th') => ("proved", name, Seq.single th')
-           | SOME (_, Refuted refuter) => ("refuted", refuter, Seq.empty)
-           | NONE =>
-               (case recorded_refuter of
-                  SOME refuter => ("refuted", refuter, Seq.empty)
-                | NONE => ("undecided", "-", fail)))
-        val verdict_text =
-          verdict ^ (if vwinner = "-" then "" else " by " ^ vwinner) ^
-          (if is_some recorded_refuter then " (post-race record)" else "")
-
-        val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
-        (*one guard_race record per race (EVENT_LOG_PLAN 2.6): the successor
-          of the TSV line and its .goals companion, merged -- the raced
-          guards, their assumptions, and their schematic type variables ride
-          in the same record as the verdict; the source position comes from
-          the record's standard attributes.  Term printing runs inside
-          checked_io: a failing printer is recorded, never decides a proof.*)
-        val _ =
-          if not (Config.get ctxt log_guard_race) then ()
-          else
-            ignore (checked_io "guard race record" (fn () =>
-              let fun exit_code Race.Won = "win"
-                    | exit_code Race.Gave_None = "none"
-                    | exit_code Race.Timed_Out = "timeout"
-                    | exit_code (Race.Crashed _) = "crash"
-                    | exit_code Race.Cancelled = "cancelled"
-                    | exit_code (Race.Discarded _) = "discarded"
-                  val gctxt = ctxt |> Config.put show_types true
-                                   |> Config.put show_sorts true
-                  val show = Protocol_Message.clean_output o Syntax.string_of_term gctxt
-                  val assms0 = map Thm.term_of (Assumption.all_assms_of ctxt)
-                  val goals0 = map Thm.term_of goals
-                  val tvs = fold (fn t => fold (insert (op =)) (Term.add_tvars t []))
-                                 (goals0 @ assms0) []
-                  fun show_tvar ((s, i), S) =
-                        "?" ^ s ^ (if i = 0 then "" else string_of_int i) ^
-                        " :: " ^ @{make_string} S
-               in Event_Log.append guard_race_category
-                    {verdict = verdict, winner = vwinner, elapsed_ms = elapsed,
-                     n_goals = length goals, forked = forked,
-                     exits = map (apsnd exit_code) exits,
-                     tvars = map show_tvar tvs,
-                     assms = map show assms0, goals = map show goals0}
-              end))
-        val _ = diag 2 (fn () =>
-                  verdict_text ^ " in " ^ string_of_int elapsed ^ "ms, " ^
-                  string_of_int (length goals) ^ " subgoal(s), " ^
-                  (if forked then "forked" else "serial"))
-     in result end)
-  end
-
-  
-
-
-(*One prove_or_refute call (plan section 5), in its final type: can_inst, the
-  guard-side context, the guard digest, then the run's state -- the run's context
-  ctxt0 and the goal state.  TRANSITIONAL body (step 1): the race above, its result
-  paired with ctxt0 unchanged; step 2 installs the sequential protocol.*)
-fun prove_or_refute can_inst ctxt (_ : Hasher.digest) (ctxt0, th) =
-  guard_race can_inst ctxt ctxt0 th |> Seq.map (pair ctxt0)
-
-
-(*** The guard factory ***)
-
-(*400 ms, provisional (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 10): the bound of
-  P-auto, of R-conv and of the "G.simpcut" pass, and the replay floor of a judge
-  lemma.*)
-val guard_classic_prover_timeout =
-      Attrib.setup_config_int \<^binding>\<open>\<phi>guard_classic_prover_timeout\<close> (K 400)
-(*a budget < 1ms would mean NO timeout at all (Timeout.ignored) -- clamp*)
-fun guard_classic_prover_bound ctxt =
-      Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_classic_prover_timeout))
-
-(*the "G.simpcut" pass: asm_full_simp then quick_cut on every subgoal, in the guard-side
-  context enhanced, under \<phi>guard_classic_prover_timeout.  TIMEOUT yields the state it
-  was given, unchanged, so the solving function runs on the unsimplified guard; a
-  subgoal simplified to False stays an empty sequence.  Not timed_tac, whose timeout
-  is an empty sequence and would read as a refutation.  A deliberate narrowing: the
-  first simplified state only (Seq.take 1), so the one bound covers the whole pass and
-  the solving function runs once per call [author 2026-09-09].*)
-fun simpcut_tac ctxt th =
-  let val seq = Seq.take 1 (ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt) THEN_ALL_NEW quick_cut) th)
-   in Seq.make (fn () =>
-        Timeout.apply (guard_classic_prover_bound ctxt) Seq.pull seq
-        handle Timeout.TIMEOUT _ => SOME (th, Seq.empty))
-  end
-
-(*run the tactic once, under the bound if given; keep only a solved state*)
-fun try_prove_or_give_up bound tac ctxt th =
-  let val seq = Seq.take 1 (solved_states (tac ctxt) th)
-   in case bound of NONE => seq | SOME t => timed_seq t seq end
-
 (*the loud guard warning: the entry said Proved, P-auto could not prove the guard with
   the entry's lemmas, and the call ends Refuted or Unknown; printed unconditionally,
   with the refuters' and the judge's results*)
@@ -1670,6 +1377,176 @@ fun loud_guard_warning ctxt goals results =
             :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) goals
             @ [block (text ("The refuters and the judge answered: " ^ results))])
   end))
+
+(*The replay of one lemma (plan section 5 step 1): the statement certified in ctxt0
+  and proved by its own method text in ctxt0 exactly as the run holds it -- nothing
+  enhanced, no other lemma enabled -- under Phi_Proof_Store.replay_limits of the
+  recorded times, each floored by the classic bound.  Fails_To_Certify = TYPE, TERM
+  or THM (the last from Thm.trivial on a non-prop); Fails_To_Replay = Auto_Fail, the
+  whole failure vocabulary of eval_prf_str; anything else, the interrupt family
+  included, propagates.*)
+datatype failure = Fails_To_Certify | Fails_To_Replay
+datatype replay = Replayed of thm | Failed of failure
+
+fun failure_text Fails_To_Certify = "fails to certify (its statement is not a well-typed prop in this context)"
+  | failure_text Fails_To_Replay =
+      "fails to replay (its method text cites a fact this context does not have, or overruns its recorded time)"
+
+fun replay_lemma ctxt0 ((stmt, (times, script), _) : Phi_Guard_Cache.lemma) =
+  let val floor = guard_classic_prover_bound ctxt0
+      val limits = Phi_Proof_Store.replay_limits
+                     {thread_cpu = Time.max (#thread_cpu times, floor), wall = Time.max (#wall times, floor)}
+      val kws = Keyword.no_major_keywords (Thy_Header.get_keywords (Proof_Context.theory_of ctxt0))
+   in case (SOME (Thm.trivial (Thm.cterm_of ctxt0 stmt))
+            handle TYPE _ => NONE | TERM _ => NONE | THM _ => NONE) of
+        NONE => Failed Fails_To_Certify
+      | SOME goal =>
+          (Replayed (snd (snd (Phi_Sledgehammer_Solver.eval_prf_str kws 1 limits script (ctxt0, goal))))
+           handle Phi_Sledgehammer_Solver.Auto_Fail _ => Failed Fails_To_Replay)
+  end
+
+(*the dropped-lemma warning: unconditional, naming the statement and the failure*)
+fun dropped_lemma_warning ctxt0 stmt failure =
+  warning (Pretty.string_of (Pretty.block [
+    Pretty.str ("The guard cache drops a lemma that " ^ failure_text failure ^ ":"),
+    Pretty.brk 1, Syntax.pretty_term ctxt0 stmt]))
+
+(*One prove_or_refute call (plan sections 5 and 6): can_inst, the guard-side context,
+  the guard digest, then the run's state -- the run's context ctxt0 and the goal
+  state.  The context it returns is ctxt0 plus this guard's lemmas.*)
+fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+  let val timer = Timing.start ()
+      val goals = Thm.cprems_of th
+      val thy = Proof_Context.theory_of ctxt0
+      val use_store = Config.get ctxt0 Phi_Guard_Cache.guard_cache
+      val entry = if use_store then Phi_Guard_Cache.lookup_entry thy d else NONE
+      val entry_verdict = Option.map #verdict entry
+      fun write lemmas verdict =
+        if use_store then Phi_Guard_Cache.write_entry thy d {lemmas = lemmas, verdict = verdict} else ()
+      fun budget_of ((_, _, tier) : Phi_Guard_Cache.lemma) = Phi_Guard_Cache.budget_of_tier ctxt0 tier
+      (*the replayed lemmas into the lemma lists of the call's two base contexts --
+        ctxt0 (returned) and ctxt (the provers'): step 1 and step 6 both start from
+        these, never from each other's result*)
+      fun add_lemmas add replayed =
+        let fun into c = fold (fn (lemma, th) => add ctxt0 (th, budget_of lemma)) replayed c
+         in (into ctxt0, into ctxt) end
+
+      (*step 1: the entry's lemmas replayed in ctxt0, in order; a failure drops the
+        lemma from the entry; the survivors go into the lemma list of ctxt0 (ctxt1,
+        returned) and of ctxt (ctxt_g, where every prover of this call starts)*)
+      val replays = map (fn lemma => (lemma, replay_lemma ctxt0 lemma)) (these (Option.map #lemmas entry))
+      val replayed = map_filter (fn (lemma, Replayed th) => SOME (lemma, th) | _ => NONE) replays
+      val lemmas = map fst replayed
+      val _ = List.app (fn (_, Replayed _) => ()
+                         | ((stmt, _, _), Failed failure) => dropped_lemma_warning ctxt0 stmt failure) replays
+      (*a dropped lemma rewrites the entry: the survivors, its verdict unchanged*)
+      val _ = case entry of
+                SOME {lemmas = stored, verdict} =>
+                  if length lemmas < length stored then write lemmas verdict else ()
+              | NONE => ()
+      val (ctxt1, ctxt_g) = add_lemmas Phi_Guard_Cache.add_lemma replayed
+
+      (*step 2: P-auto, under the classic bound of thread CPU; p_auto_body enhances
+        the context itself, so every P-auto run has fresh lemma budgets*)
+      fun p_auto ctxt' =
+        Option.map #1 (Seq.pull (cpu_bounded_tac (guard_classic_prover_bound ctxt0) (p_auto_body ctxt') th))
+
+      (*step 6: the judge, on the guard-side context as it was BEFORE this entry's
+        lemmas were added; its lemmas, times normalised on receipt, REPLACE this
+        entry's: they are added to the lists of that moment (ctxt, ctxt0), an earlier
+        guard's lemma staying and one the judge re-proposes taking the judge's budget;
+        a lemma that fails, or a P-auto that still fails, is the judge's error*)
+      fun consult j =
+        case j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst = can_inst, thm = th} of
+          Provable new =>
+            let val new = map (fn (stmt, (times, script), tier) =>
+                                 (stmt, (Phi_Proof_Store.standard_time times, script), tier)) new
+                val replayed' = map (fn lemma as (stmt, _, _) =>
+                      case replay_lemma ctxt0 lemma of
+                        Replayed th => (lemma, th)
+                      | Failed failure => error (Pretty.string_of (Pretty.block [
+                            Pretty.str ("The judge is broken: its lemma " ^ failure_text failure ^ ":"),
+                            Pretty.brk 1, Syntax.pretty_term ctxt0 stmt]))) new
+                val (ctxt1', ctxt_g') = add_lemmas Phi_Guard_Cache.update_lemma replayed'
+             in case p_auto ctxt_g' of
+                  SOME solved =>
+                    (write new Phi_Guard_Cache.Proved;
+                     {verdict = Phi_Guard_Cache.Proved, refuter = NONE, judge = SOME "Provable",
+                      result = Seq.single (ctxt1', solved)})
+                | NONE => error "The judge is broken: P-auto cannot prove the guard with the lemmas it proposed."
+            end
+        | Unprovable =>
+            (write lemmas Phi_Guard_Cache.Refuted;
+             {verdict = Phi_Guard_Cache.Refuted, refuter = NONE, judge = SOME "Unprovable", result = Seq.empty})
+
+      fun refuted_by name =
+        (write lemmas Phi_Guard_Cache.Refuted;
+         {verdict = Phi_Guard_Cache.Refuted, refuter = SOME name, judge = NONE, result = Seq.empty})
+
+      (*no refuter refuted: the judge if installed, else Unknown; an entry already
+        Unknown is not rewritten*)
+      fun judge_or_give_up () =
+        case ! judge of
+          SOME j => consult j
+        | NONE =>
+            (if entry_verdict = SOME Phi_Guard_Cache.Unknown then () else write lemmas Phi_Guard_Cache.Unknown;
+             {verdict = Phi_Guard_Cache.Unknown, refuter = NONE, judge = NONE, result = Seq.empty})
+
+      (*steps 2 to 4*)
+      val outcome =
+        case p_auto ctxt_g of
+          SOME solved =>
+            (if entry_verdict = SOME Phi_Guard_Cache.Proved orelse is_none entry then ()
+             else write lemmas Phi_Guard_Cache.Proved;
+             {verdict = Phi_Guard_Cache.Proved, refuter = NONE, judge = NONE, result = Seq.single (ctxt1, solved)})
+        | NONE =>
+            (case entry_verdict of
+               SOME Phi_Guard_Cache.Refuted =>
+                 {verdict = Phi_Guard_Cache.Refuted, refuter = NONE, judge = NONE, result = Seq.empty}
+             | SOME Phi_Guard_Cache.Unknown => judge_or_give_up ()
+             | _ => if r_conv can_inst ctxt_g ctxt0 goals then refuted_by "R-conv"
+                    else if r_nitpick ctxt goals then refuted_by "R-nitpick"
+                    else judge_or_give_up ())
+
+      val {verdict, refuter, judge = judge_answer, result} = outcome
+      (*the two warnings, mutually exclusive at this one site: the loud guard warning
+        when a call from a Proved entry ends otherwise, the undecided-guard warning
+        when a call from any other entry ends Unknown [author 2026-09-09]*)
+      val _ =
+        if entry_verdict = SOME Phi_Guard_Cache.Proved
+        then if verdict = Phi_Guard_Cache.Proved then ()
+             else loud_guard_warning ctxt goals
+                    (case (refuter, judge_answer) of
+                       (SOME name, _) => name ^ " refuted it; the judge was not consulted"
+                     | (NONE, SOME answer) => "neither R-conv nor R-nitpick refuted it; the judge answered " ^ answer
+                     | (NONE, NONE) => "neither R-conv nor R-nitpick refuted it; no judge is installed")
+        else if verdict = Phi_Guard_Cache.Unknown then undecided_guard_warning ctxt goals
+        else ()
+
+      val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
+      val _ =
+        if Config.get ctxt0 log_guard_decision
+        then Event_Log.append guard_decision_category
+               {verdict = string_of_verdict verdict,
+                hit = (case entry_verdict of NONE => "none" | SOME v => string_of_verdict v),
+                refuter = the_default "-" refuter, judge = the_default "-" judge_answer,
+                elapsed_ms = elapsed, digest = Hasher.hex d, n_goals = length goals}
+        else ()
+      val _ = Phi_Reasoner.warn_pretty (Context.Proof ctxt) 2 (fn () =>
+                Pretty.str ("guard decision: " ^ string_of_verdict verdict ^
+                            (case refuter of SOME name => " by " ^ name | NONE => "") ^
+                            (case judge_answer of SOME answer => ", the judge: " ^ answer | NONE => "") ^
+                            " in " ^ string_of_int elapsed ^ "ms, " ^
+                            string_of_int (length goals) ^ " subgoal(s)"))
+   in result end
+
+
+(*** The guard factory ***)
+
+(*run the tactic once, under the bound (thread CPU) if given; keep only a solved state*)
+fun try_prove_or_give_up bound tac ctxt th =
+  let val seq = Seq.take 1 (solved_states (tac ctxt) th)
+   in case bound of NONE => seq | SOME t => cpu_bounded_seq t seq end
 
 (*a guard is a premise of the \<condition> family*)
 fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
@@ -1687,26 +1564,48 @@ fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
   would make the export hook drop the lemmas; only `solve` may replace the context.
   guess_inst's looper and solver enter the guard machinery here and only here: the
   "G.simpcut" pass, the is_F shortcut, and everything `solve` simplifies through the
-  guard-side context ctxt_g.*)
-fun guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
+  guard-side context guard_ctxt -- prove_or_refute's ctxt, from which it derives its
+  ctxt_g by adding the entry's lemmas (plan section 5 step 1).*)
+fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
   let fun is_false (Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ Const(\<^const_name>\<open>False\<close>, _))
             = is_guard_mode mode
         | is_false (Const(\<^const_name>\<open>Trueprop\<close>, _) $ X) = is_false X
         | is_false _ = false
       val is_F = is_false (Thm.major_prem_of th0)
 
+      (*the "G.simpcut" pass: asm_full_simp then quick_cut on every subgoal, in the
+        guard-side context enhanced, under 5 s of thread CPU (Thread_CPU.apply scales
+        it by timeout_scale) -- ten times the corpus maximum of 437 ms, so a timeout
+        means the simplifier is looping and is warned about; it then yields the state
+        it was given, unchanged, and the solving function runs on the unsimplified
+        guard [author 2026-09-11].  A subgoal simplified to False stays an empty
+        sequence.  Not a bound whose timeout is an empty sequence, which would read as
+        a refutation.  A deliberate narrowing: the first simplified state only
+        (Seq.take 1), so the one bound covers the whole pass and the solving function
+        runs once per call [author 2026-09-09].*)
+      fun simpcut_tac ctxt th =
+        let val seq = Seq.take 1 (ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt) THEN_ALL_NEW quick_cut) th)
+         in Seq.make (fn () =>
+              cpu_bounded (Time.fromSeconds 5) Seq.pull seq
+              handle Timeout.TIMEOUT _ =>
+                (warning (Pretty.string_of (let open Pretty in
+                   chunks (block (text "The system simplifier probably loops on:")
+                           :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) (Thm.cprems_of th)) end));
+                 SOME (th, Seq.empty)))
+        end
+
    in oblg_template true {can_inst = can_inst, fix_level = if can_inst then 1 else 2}
                     {inj = pair ctxt0, on_thm = apsnd}
   (fn ctxt => fn th =>
       apply_tac snd ctxt (fn (ctxt, pre, aux, _) => fn th =>
-        let val ctxt_g = Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}
-                         |> Guess_Instantiate.add_guess_inst_looper
+        let val guard_ctxt = Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}
+                             |> Guess_Instantiate.add_guess_inst_looper
             fun solving d th =
-              simpcut_tac ctxt_g th |> Seq.maps (fn th =>
+              simpcut_tac guard_ctxt th |> Seq.maps (fn th =>
                 if is_F
-                then timed_tac (Time.fromMilliseconds 250) (auto_search_tac ctxt_g) th
+                then cpu_bounded_tac (Time.fromMilliseconds 250) (auto_search_tac guard_ctxt) th
                      |> Seq.map (pair ctxt0)
-                else solve can_inst ctxt_g d (ctxt0, th))
+                else solve can_inst guard_ctxt d (ctxt0, th))
          in quick_cut 1 th
          |> Seq.maps (head_only' (pair ctxt0) apsnd (fn th =>
               (pre THEN HEADGOAL (case_split_by_annotations_leading_subgoal ctxt)) th
@@ -1722,7 +1621,7 @@ fun guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
 (*the guard digest: the guard's own subgoals, each with its parameters and premises*)
 val guard_digest = Hasher.terms o map Thm.term_of o Thm.cprems_of
 
-fun guard_condition_judge cfg = guard_condition_solver guard_digest prove_or_refute cfg
+fun guard_condition_judge cfg = gen_guard_condition_solver guard_digest prove_or_refute cfg
 
 (*the out-of-run instance: P-auto once under \<phi>guard_classic_prover_timeout, no store*)
 fun p_auto_solving _ ctxt _ (ctxt0, th) =
@@ -1731,7 +1630,7 @@ fun p_auto_solving _ ctxt _ (ctxt0, th) =
 
 fun guard_condition_solver' cfg =
   context_tactic_to_state_transition (fn ctxt => fn th =>
-    guard_condition_solver (K ()) p_auto_solving cfg (ctxt, th) |> Seq.map snd)
+    gen_guard_condition_solver (K ()) p_auto_solving cfg (ctxt, th) |> Seq.map snd)
 
 fun guard_condition_solver1 can_inst ctxt sequent =
   guard_condition_solver' can_inst (fn _ =>

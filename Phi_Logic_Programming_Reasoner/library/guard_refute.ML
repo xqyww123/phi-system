@@ -13,9 +13,9 @@ is loaded from PLPR, which precedes all of them.
 
 signature PHI_GUARD_REFUTE =
 sig
-  (*Not reasoners.ML's race_result: Provable carries no proof object, only the
-    news that this refuter should keep its hands off.  The caller maps into
-    the race -- today Refuted wins, Provable and Unknown give up.*)
+  (*Provable carries no proof object, only the news that this refuter should
+    keep its hands off.  For the caller (R-nitpick, reasoners.ML) Refuted
+    refutes; Provable and Unknown do not.*)
   datatype verdict = Refuted | Provable | Unknown
 
   (*arg = Proof.context, state = term list; see the structure below*)
@@ -214,72 +214,24 @@ fun preprocess ctxt assms goal =
   cost (author ruling 2026-08-28).  Charging preprocessing against the search
   makes the search's reach depend on a quantity that has nothing to do with
   it, and makes two measurements incomparable whenever preprocessing differs.
-  Since 2026-09-01 the assembly wrap is only a hang net; the search's bound
-  is Nitpick's own internal net (see the note at the search call below).*)
-
-(*TEMPORARY probe (2026-08-31): the refuter as it runs INSIDE the race -- the
-  residue it hands to Nitpick and what Nitpick answers.  Text is markup-free.*)
-val refuter_probe_category =
-  Event_Log.category {name = "refuter_probe", enabled = fn () => true,
-    encode = fn {i, n, n_assms, n_prems, n_subst, code, pre_ms, search_ms, residue, msgs,
-                 rerun_same, rerun_global, rerun_more, ml} =>
-      ([("subgoal", string_of_int i ^ "/" ^ string_of_int n),
-        ("assms", string_of_int n_assms), ("prems", string_of_int n_prems),
-        ("subst", string_of_int n_subst),
-        ("code", code), ("pre_ms", string_of_int pre_ms), ("search_ms", string_of_int search_ms),
-        (*the four rerun columns are constantly "-": their bisection reruns
-          were disabled with the per-racer knife (2026-09-01, unbounded
-          without a uniform outer knife); fields stay until the probe's
-          removal*)
-        ("rerun_same", rerun_same), ("rerun_global", rerun_global),
-        ("rerun_external", #1 rerun_more), ("rerun_locked", #2 rerun_more)],
-       [Event_Log.elem_text "residue" residue, Event_Log.elem_text "msgs" msgs,
-        Event_Log.elem_text "ml" ml])}
-
-fun plain_term ctxt t =
-  XML.content_of (YXML.parse_body (Print_Mode.setmp []
-    (Syntax.string_of_term (ctxt |> Config.put show_types true |> Config.put show_sorts true)) t))
-
-(*served the disabled "locked" rerun; kept until the probe's removal*)
-val probe_lock = Synchronized.var "refuter_probe_lock" ()
+  Since 2026-09-01 the caller's bound per subgoal (R-nitpick, reasoners.ML) is
+  only a safety net; the search's bound is Nitpick's own internal net (see the
+  note at the search call below).*)
 
 fun nitpick ctxt params (i, n) (subst, assms, goal) =
-  let val t0 = Timing.start ()
-      val pre = preprocess ctxt assms goal
-      val pre_ms = Time.toMilliseconds (#elapsed (Timing.result t0))
-      fun log n_prems code search_ms residue msgs reruns rerun_more ml =
-        Event_Log.append refuter_probe_category
-          {i = i, n = n, n_assms = length assms, n_prems = n_prems, n_subst = length subst,
-           code = code, pre_ms = pre_ms, search_ms = search_ms, residue = residue, msgs = msgs,
-           rerun_same = fst reruns, rerun_global = snd reruns, rerun_more = rerun_more, ml = ml}
-      fun plain s = XML.content_of (YXML.parse_body s)
-      fun run prems concl =
-        let val t = Timing.start ()
-            val (code, msgs) =
-              Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params true
-                Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
-         in (code, msgs, Time.toMilliseconds (#elapsed (Timing.result t))) end
-      fun timed (code, _, ms) = code ^ "@" ^ string_of_int ms ^ "ms"
-  in
-  (case pre of
-     NONE => (log 0 "simp_proved" 0 "-" "-" ("-", "-") ("-", "-") "-"; Provable)
+  (case preprocess ctxt assms goal of
+     NONE => Provable
    | SOME (prems, concl) =>
-       (*no knife here (author ruling 2026-09-01): the model search's bound
+       (*no bound is imposed here (author ruling 2026-09-01): the model search's bound
          is Nitpick's own Timeout.apply (timeout + timeout_bonus) inside the
-         vendored phi_nitpick.ML -- a rebase must keep it; the assembly's
-         hang net is the only bound this module owns.  Preprocessing stays
-         uncharged (ruling 2026-08-28).*)
-       let val (code, msgs, search_ms) = run prems concl
-           val reruns = ("-", "-")  (*disabled; see the category's note*)
-           val rerun_more = ("-", "-")
-           val _ = log (length prems) code search_ms
-                       (plain_term ctxt (Logic.list_implies (prems, concl)))
-                       (cat_lines (map plain msgs)) reruns rerun_more
-                       (if code = Phi_Nitpick.noneN
-                        then ML_Syntax.print_term (Logic.list_implies (prems, concl)) else "-")
+         vendored phi_nitpick.ML -- a rebase must keep it; R-nitpick's bound
+         per subgoal is the only other bound.  Preprocessing stays uncharged
+         (ruling 2026-08-28).  Auto_Try mode: the messages are buffered and dropped.*)
+       let val (code, _) =
+             Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params true
+               Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
         in if code = Phi_Nitpick.genuineN orelse code = Phi_Nitpick.quasi_genuineN
            then Refuted else Unknown
        end)
-  end
 
 end

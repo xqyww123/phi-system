@@ -239,8 +239,7 @@ fun eval_line' (cfg, auto_lev, auto_lev_no_input) toks stat0 =
   single-slot frame trace_var (verified in exn_debugger.ML): this owns the
   slot, so same-thread deeper sites (e.g. Phi_Reasoner.reason) pass through
   and no longer record separately -- their frames now ride this record under
-  one generic site name instead of their own.  Racer sites run on fork
-  threads (own trace_var) and are unaffected.  Happy-path cost is O(1) per
+  one generic site name instead of their own.  Happy-path cost is O(1) per
   statement (start/stop_trace only fire in the exception branch).*)
 fun eval_line args toks =
   Phi_CP_IDE.call_of_state_sequent (fn stat0 =>
