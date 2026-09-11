@@ -2950,3 +2950,41 @@ same redex (P-auto's search backtracks past the rewrite), to be read off
 stages A and B; 3 stays until then.  The judge's two proposed permanent
 changes (per-lemma charge fields on `guard_decision`; retrying once at a
 raised limit before the "judge is broken" error) are not adopted; open.
+
+## 34. Step 3, first half done (2026-09-11) — the export hook end to end
+
+`Test/Guard_Export_Smoke.thy` (not in any ROOT; evaluated on demand on
+Phi_System_Base like the other smoke theories; test design the drafter's,
+by the author's delegation "与测试相关的事项可以由你自主决定").  Two guard
+families `GX`, `GY` with no rule at all, so a guard of theirs ends with the
+judge (P-auto cannot prove it, R-conv cannot refute a truth, R-nitpick
+finds no countermodel); a test judge in the ref answers the family's lemma
+(`\<And>n. GX n` by `(simp add: GX_def)`, `Normal`) on its FIRST consultation
+per family and raises on any later one — the failure signal "the lemma did
+not arrive".  A trigger reasoner (`\<phi>reasoner_ML`, highest priority,
+no cut, on `PROP ?P`, like `Stateful_Reasoning_Smoke`'s marker) decides,
+when armed, a fresh guard of the armed family through the real machinery
+(`guard_condition_judge` on the run's context) and continues the run in
+the context that call returns.  Every guard argument is a process serial:
+the in-memory store outlives a re-evaluation.  Verified clean:
+(a) one run, two guards — `GX2_rule`'s `\<condition> GX a \<Longrightarrow>
+\<condition> GX b \<Longrightarrow> GX2 a b` driven by `Phi_Reasoner.reason`:
+the judge consulted once, the second guard proved with the lemma, and the
+context the run returns (through the hook at the run boundary) carries it;
+(b) a `proc` block: the lemma enabled by statement 1's run is in the block
+context after the statement and the next statement's guard is proved with
+it (the judge still at one consultation);
+(c) a nested block — the else branch of an `if` — enabling `GY`: the
+enclosing block holds the lemma after the branch closes, and the statement
+after the `if` proves its `GY` guard with it.
+Two facts worth the record.  The two branches of an `if` are sibling blocks
+from one starting context and each close OVERWRITES the enclosing list
+(§1 the export hook, H2), so a lemma enabled in the FIRST branch is gone
+once the second branch closes — the ruling's consequence, exercised by the
+test's shape (the lemma is enabled in the branch closed last), not a
+defect of the hook.  And a theory that imports `PhiSem_Machine_Integer`
+next to `PhiSem_Int_ArbiPrec` cannot open the branch of an `if` on a
+`\<val> \<nat>` (`Thm.cprem_of` on a goal without premises in
+`toplevel0.ML`'s block open — the `@{print}` at `:267` is a leftover) — a
+pre-existing phi-system matter outside this plan, avoided by importing what
+`PhiTest_Arithmetic` imports.

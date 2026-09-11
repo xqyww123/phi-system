@@ -78,11 +78,12 @@ closes or cuts every `\<condition> False` guard first) — the idiom is simp-onl
    pre-factory function).  Still open with the author: §33 item 4 (the loud guard
    warning on a shared entry — explained, decision pending).
 
-## Then: STEP 3 (plan §10 step 3)
-The export hook end to end — a lemma enabled at one call reaching the next call of the
-run and the next statement of the block (model: the V2 smoke test of
-`ai-artifacts/STATEFUL_PLPR_REASONING_PLAN.md`); the budget tiers measured on the corpus
-with test-injected lemmas per tier on the budget's own unit (one consumer run).  Then step
+## STEP 3 (plan §10 step 3): first half DONE (§34), second half SHELVED (§33)
+The export hook end to end is verified by `Test/Guard_Export_Smoke.thy` (same run, `;`
+boundary, nested block; §34).  The tier measurement is shelved by the author (§33, the
+brainstorm dossier in `ai-artifacts/TIER_MEASUREMENT_BRAINSTORM_2026-09-11.md`; the
+drafter's plan when it resumes: stages A and B).  Corpus loads under MCP still need the
+TEMPORARY `AoA_driver = "test"` declare in PLPR.thy (add, run, revert).  Then step
 4 (persistence: `cache_file.ML` store functor, `Phi_Guard_Store`, the entry codec over
 `RPC_Pretty_Bytes`, gitignore; needs the author's approval to rebuild Phi_System_Base),
 step 5 (corpus acceptance via Isa-REPL with the AoA gate closed).  After the plan: move
