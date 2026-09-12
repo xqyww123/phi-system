@@ -2974,15 +2974,19 @@ context the run returns (through the hook at the run boundary) carries it;
 (b) a `proc` block: the lemma enabled by statement 1's run is in the block
 context after the statement and the next statement's guard is proved with
 it (the judge still at one consultation);
-(c) a nested block — the else branch of an `if` — enabling `GY`: the
-enclosing block holds the lemma after the branch closes, and the statement
-after the `if` proves its `GY` guard with it.
-Two facts worth the record.  The two branches of an `if` are sibling blocks
-from one starting context and each close OVERWRITES the enclosing list
-(§1 the export hook, H2), so a lemma enabled in the FIRST branch is gone
-once the second branch closes — the ruling's consequence, exercised by the
-test's shape (the lemma is enabled in the branch closed last), not a
-defect of the hook.  And a theory that imports `PhiSem_Machine_Integer`
+(c) a nested block — the FIRST branch of an `if` — enabling `GY`: the
+second branch starts from the enclosing context as the first branch's
+close left it (`GY` present at its entry), the enclosing block holds the
+lemma after the `if`, and the statement after the `if` proves its `GY`
+guard with it.  CORRECTION: the drafter first wrote here that the two
+branches are sibling blocks from one starting context, so that the
+second branch's close — the hook OVERWRITES the enclosing list (§1, H2) —
+would lose a lemma enabled in the first branch; the author doubted it
+("第二个分支应该是继承了第一个分支写入到 the outer context 的内容的, 对吗?")
+and the measurement (this test, 2026-09-12) proves the author right:
+each branch's close writes the enclosing context, the next branch starts
+from that context, and overwriting loses nothing.
+One fact worth the record: a theory that imports `PhiSem_Machine_Integer`
 next to `PhiSem_Int_ArbiPrec` cannot open the branch of an `if` on a
 `\<val> \<nat>` (`Thm.cprem_of` on a goal without premises in
 `toplevel0.ML`'s block open — the `@{print}` at `:267` is a leftover) — a

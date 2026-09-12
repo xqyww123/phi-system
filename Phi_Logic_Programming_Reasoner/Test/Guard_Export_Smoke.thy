@@ -73,6 +73,8 @@ fun expect_lemma name fam ctxt =
 fun expect_absent name fam ctxt =
   if has_lemma fam ctxt then error (name ^ ": the " ^ fam ^ " lemma is present too early")
   else tracing (name ^ ": the " ^ fam ^ " lemma is absent, as expected")
+fun report name fam ctxt =
+  tracing (name ^ ": the " ^ fam ^ " lemma is " ^ (if has_lemma fam ctxt then "PRESENT" else "ABSENT"))
 fun expect_consulted name fam n =
   if count fam = n then tracing (name ^ ": the judge was consulted " ^ string_of_int n ^ " time(s) for " ^ fam)
   else error (name ^ ": expected " ^ string_of_int n ^ " consultation(s) for " ^ fam ^
@@ -135,21 +137,22 @@ proc GX_blocks:
   \<semicolon> $v \<rightarrow> val w \<semicolon>
   ML_prf \<open>Export_Smoke.expect_consulted "statement 2: the next statement's guard proved with the lemma" "GX" 1;
           Export_Smoke.expect_absent "before the nested block" "GY" \<^context>\<close>
-  (*the two branches are sibling blocks from one starting context, and a block close
-    OVERWRITES the enclosing list (plan section 1, the export hook), so the lemma is
-    enabled in the branch closed LAST; the first branch only checks that GX arrived*)
+  (*GY is enabled inside the FIRST branch; the second branch reports whether it starts
+    from the enclosing context as the first branch's close left it (GY present) or from
+    the context before the if (GY absent); the enclosing block is asserted after the if*)
   \<semicolon> if \<open>$x = 0\<close> \<medium_left_bracket>
     $w \<rightarrow> val u \<semicolon>
     ML_prf \<open>Export_Smoke.expect_lemma "the first branch" "GX" \<^context>;
-            Export_Smoke.expect_absent "the first branch" "GY" \<^context>\<close>
-    \<semicolon> $u
+            Export_Smoke.expect_absent "the first branch, at entry" "GY" \<^context>;
+            Export_Smoke.arm "GY"\<close>
+    \<semicolon> $u \<rightarrow> val u' \<semicolon>
+    ML_prf \<open>Export_Smoke.expect_consulted "inside the first branch" "GY" 1;
+            Export_Smoke.expect_lemma "inside the first branch" "GY" \<^context>\<close>
+    \<semicolon> $u'
   \<medium_right_bracket> \<medium_left_bracket>
     $w \<rightarrow> val u \<semicolon>
-    ML_prf \<open>Export_Smoke.arm "GY"\<close>
-    \<semicolon> $u \<rightarrow> val u' \<semicolon>
-    ML_prf \<open>Export_Smoke.expect_consulted "inside the nested block" "GY" 1;
-            Export_Smoke.expect_lemma "inside the nested block" "GY" \<^context>\<close>
-    \<semicolon> $u'
+    ML_prf \<open>Export_Smoke.report "the second branch, at entry" "GY" \<^context>\<close>
+    \<semicolon> $u
   \<medium_right_bracket> \<rightarrow> val z \<semicolon>
   ML_prf \<open>Export_Smoke.expect_lemma "the enclosing block after the nested block" "GY" \<^context>;
           Export_Smoke.arm "GY"\<close>
