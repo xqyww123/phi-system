@@ -65,9 +65,8 @@ signature PHI_REASONERS = sig
     second pull.  A caller passing true must re-examine it.
 
     A caveat for whoever turns this on: a soft failure makes the reasoner take
-    another path in silence.  The premise-loss defect fixed in 2026-08-11 was
-    found only because the obligation failed loudly.  Pair any `true` with a
-    trace that reports the backtracking.*)
+    another path in silence -- a defect was once found only because the obligation
+    failed loudly.  Pair any `true` with a trace that reports the backtracking.*)
   val hammer_obligation_solver :
         {async_mode : Phi_Sledgehammer_Solver.async_mode,
          read_store : bool option, write_store : bool option,
@@ -96,10 +95,10 @@ signature PHI_REASONERS = sig
                             -> {can_inst: bool} -> context_state -> context_state Seq.seq
   (*the in-run instance: the factory over prove_or_refute with the guard digest*)
   val guard_condition_judge : {can_inst: bool} -> context_state -> context_state Seq.seq
-  (*the guard digest: of the whole goal state -- the guard's subgoals and the protected
-    rest of the sequent with its conclusion -- and the context's assumptions, on the
-    state the factory holds after the case split and before the aux-fact insertion
-    (the aux facts are derivable, so they are not part of the key) [author 2026-09-11]*)
+  (*the guard digest: the whole goal state -- the guard's subgoals and the protected
+    rest of the sequent -- and the context's assumptions, on the state after the case
+    split and before the aux facts are inserted (those are derivable, so not part of
+    the key)*)
   val guard_digest : Proof.context -> thm -> Hasher.digest
   val prove_or_refute : bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
   (*the out-of-run instances: the factory over P-auto once, no store*)
@@ -895,8 +894,8 @@ fun hammer_obligation_solver
          |> head_only (apply_tac I ctxt (fn (ctxt,pre,aux,_) =>
             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                 THEN (fn st =>
-                   let (*The one place all failure text is composed (D51, revised
-                         2026-08-09): the forked report and the promise branch
+                   let (*The one place all failure text is composed: the forked
+                         report and the promise branch
                          receive it via the failure_msg hook; the sync error
                          path is the handle right below the call.  This is the
                          innermost layer holding both the obligation (st) and the
@@ -994,13 +993,9 @@ fun auto_search_tac ctxt =
       #> Seq.take 1 )
   end;
 
-(*EXPERIMENT (2026-09-02, rev 3): P-auto search aimed at PROVABLE speed
-  (author proposal).  KEEPS the committed bounded search kernel
-  (nodup_depth_tac, depth 10) -- rev 2's fastforce swapped it for an
-  unbounded DFS and proved 4x slower, so the kernel stays.  The only change
-  from auto_search_tac is the OPENING: one asm_full_simp pass + quick_cut
-  (drop on a conclusion rewritten to False) in place of the leading
-  safe_tac.  R-conv and the is_F shortcut keep auto_search_tac.*)
+(*P-auto's search: the bounded kernel nodup_depth_tac (depth 10) behind an opening of
+  one asm_full_simp pass and quick_cut (a conclusion rewritten to False drops the
+  state).  R-conv and the is_F shortcut use auto_search_tac instead.*)
 fun p_auto_search_tac ctxt =
   let
     val ctxt = Context_Position.set_visible false ctxt
@@ -1038,10 +1033,9 @@ fun dest_all ct used =
   A non-interrupt exception of a prover, a refuter, a replay or the judge is the
   run's exception.*)
 
-(*400 ms of thread CPU, provisional (plan section 10): the bound of P-auto and of
-  R-conv, and the replay floor of a judge lemma; the "G.simpcut" pass has its own 5 s
-  (the factory).  Thread CPU, not wall clock, so that machine load cannot flip a
-  verdict [author 2026-09-09].*)
+(*400 ms of thread CPU: the bound of P-auto and of R-conv, and the replay floor of a
+  judge lemma; the "G.simpcut" pass has its own 5 s (the factory).  Thread CPU, not
+  wall clock, so that machine load cannot flip a verdict.*)
 val guard_classic_prover_timeout =
       Attrib.setup_config_int \<^binding>\<open>\<phi>guard_classic_prover_timeout\<close> (K 400)
 (*a budget < 1ms would mean NO timeout at all (Timeout.ignored) -- clamp*)
@@ -1049,9 +1043,9 @@ fun guard_classic_prover_bound ctxt =
       Time.fromMilliseconds (Int.max (1, Config.get ctxt guard_classic_prover_timeout))
 
 (*the guard side's one way of bounding a computation: the calling thread's CPU, no
-  wall clock -- Thread_CPU.apply raises an error where the thread has no CPU clock,
-  by ruling; the refuter that waits on an external process, R-nitpick, keeps wall
-  clock (Thread_CPU: "a blocked thread never reaches the limit")*)
+  wall clock -- Thread_CPU.apply raises an error where the thread has no CPU clock;
+  the refuter that waits on an external process, R-nitpick, keeps wall clock
+  (Thread_CPU: "a blocked thread never reaches the limit")*)
 fun cpu_bounded bound f x = Thread_CPU.apply {thread_cpu = bound, wall = NONE} f x
 fun cpu_bounded_seq bound s =
   Seq.make (fn () => cpu_bounded bound Seq.pull s handle Timeout.TIMEOUT _ => NONE)
@@ -1094,7 +1088,7 @@ val negation = \<^cterm>\<open>Not\<close>
   §2.3).  This variable discipline is the proof-searcher's own,
   intentionally different from R-nitpick's as-is discipline — see the
   duality note in plan §2.3.
-  N1 ruling (plan §8, 2026-08-25): the freeze branch MUST build its own
+  The freeze branch MUST build its own
   search over the import context ctxt' — its goals carry Frees only ctxt'
   declares, and the search runs under USER proof contexts, whose claset
   wrappers (a stock user extension point, outside any audit of phi-system)
@@ -1157,9 +1151,9 @@ fun r_conv can_inst ctxt ctxt0 goals =
   (= refute every instantiation) and lets the model pick the Frees
   (= arbitrary but fixed).  Auto_Try mode is silent by construction
   (messages are buffered into the ignored second component).  Assumptions
-  travel with the goal so the model must satisfy them (plan §2.3: dropping
-  one breaks the immunity argument; the context asked is the goal-side ctxt
-  — #2 ruling, Nitpick's own entry does the same); which of them survive is
+  travel with the goal so the model must satisfy them (dropping one breaks the
+  immunity argument; the context asked is the goal-side ctxt, as Nitpick's own
+  entry does); which of them survive is
   Phi_Guard_Refute's premise filter, not this refuter's business.*)
 
 (*verbatim from nitpick.ML:972-982 (not exported); the call below mirrors
@@ -1198,20 +1192,15 @@ fun extract_fixed_frees ctxt (assms, t) =
   monotonicity checks (§1.2-2).
 
   The budget passed in is the model search's OWN timeout, fixed and never
-  charged for preprocessing (author ruling 2026-08-28).  Nitpick divides the
-  number across the card scopes, and its own net (budget + timeout_bonus)
-  enforces it; preprocessing is covered only by R-nitpick's bound per subgoal.
+  charged for preprocessing.  Nitpick divides the number across the card
+  scopes, and its own net (budget + timeout_bonus) enforces it; preprocessing
+  is covered only by R-nitpick's bound per subgoal.
 
   mono = true drops Nitpick's per-type monotonicity INFERENCE (default
   "smart", nitpick_commands.ML:43) and simply assumes monotonicity, so the
-  scope search does not spend the budget re-deriving it.  Every replayed
-  measurement of this refuter carried it; production did not, and the
-  omission was an oversight, not a decision (author ruling 2026-08-28).
+  scope search does not spend the budget re-deriving it.
 
-  card and user_axioms carry a measured choice, not a default (plan §18.3,
-  84 replayed undecided guards, one configuration swept over the whole
-  corpus at a time — adjacent configurations on one guard would read each
-  other's answer out of Kodkod's single-slot result cache).  user_axioms =
+  card and user_axioms are measured choices, not defaults.  user_axioms =
   false keeps phi-system's ten monomorphic user axioms out of the problem:
   the flag that decides certification does NOT consult the relevance filter
   (got_all_mono_user_axioms, nitpick_preproc.ML:1038, is
@@ -1219,18 +1208,14 @@ fun extract_fixed_frees ctxt (assms, t) =
   existence in the theory would downgrade every verdict anyway — see the
   verdict map below, which is what pays for this.  card = 1-6 is an
   INTERVAL on purpose: its scopes go to Kodkod in one batch and the
-  smallest model short-circuits the rest, where a single value (card = 6)
-  lost 34 of 81 refutations and cost five times the total time.  No
-  per-type cardinality is pinned: with the axioms out, phi-system's
-  abstract types do not enter the problem at all, so pinning them is idle
-  at best (measured worse — it raised one guard's domains and lost a
-  refutation).  Worst case over the corpus: 1434ms.*)
-(*The model search's own timeout, separate from R-nitpick's bounds: charging
-  preprocessing against the search would make its reach depend on a quantity
-  that has nothing to do with it (author ruling 2026-08-28).  Declared to
-  Nitpick, whose own net (+ timeout_bonus) enforces it; R-nitpick's bound per
-  subgoal and its outer net derive from it too, so the three stay consistent.
-  2000 ms (author ruling 2026-09-01).*)
+  smallest model short-circuits the rest, where a single value loses
+  refutations and costs several times the total time.  No per-type
+  cardinality is pinned: with the axioms out, phi-system's abstract types
+  do not enter the problem at all, so pinning them is idle at best.*)
+(*The model search's own timeout, separate from R-nitpick's bounds: preprocessing is
+  not charged against the search, whose reach should not depend on it.  Declared to
+  Nitpick, whose own net (+ timeout_bonus) enforces it; R-nitpick's bound per subgoal
+  and its outer net derive from it, so the three stay consistent.*)
 val guard_refute_timeout =
       Attrib.setup_config_int \<^binding>\<open>\<phi>guard_refute_timeout\<close> (K 2000)
 
@@ -1244,25 +1229,18 @@ fun pinned_nitpick_params ctxt budget =
      ("timeout", Real.fmt (StringCvt.FIX (SOME 3)) (Time.toReal budget)),
      ("tac_timeout", "0.05")]
 
-(*No availability guard, still single-path, but the path is now the EXTERNAL
-  kodkodi process (author ruling 2026-09-02, reversing plan §2.3's in-process
-  ruling): kodkod_scala forced false, so each invocation launches its own JVM
-  ($KODKODI/bin/kodkodi, spawned through the bash_process server; never
-  overlord, never a *_JNI SAT solver).  Measured against in-process on the
-  same tree (A/B 2026-09-02, under the race engine of that time): +0.4s median
-  per solver-reaching call, the race's wall +17%, corpus wall +6%, zero
-  key-level refutation loss.  The JVM launch
-  runs inside Nitpick's own net, so the bounds' margins are unchanged.  The
-  in-process Scala call was the pipeline's only source of
-  Output.Protocol_Message; a stray one now leaves R-nitpick as the run's
-  exception.*)
+(*Single path: the external kodkodi process (kodkod_scala forced false), so each
+  invocation launches its own JVM ($KODKODI/bin/kodkodi through the bash_process
+  server; never overlord, never a *_JNI SAT solver).  The JVM launch runs inside
+  Nitpick's own net, so the bounds' margins are unchanged.  The in-process Scala call
+  was the pipeline's only source of Output.Protocol_Message; a stray one now leaves
+  R-nitpick as the run's exception.*)
 (*Provable means the preprocessing simplifier closed the guard, which is a
   real proof of the ORIGINAL guard but yields no proof object here; this
   refuter therefore only stands down -- P-auto, which has already failed, was
   the one to produce the theorem.
 
-  quasi_genuine counts as a refutation (author ruling 2026-08-26, plan
-  §18.2/§18.5).  It has to: under user_axioms = false Nitpick can never
+  quasi_genuine counts as a refutation.  It has to: under user_axioms = false Nitpick can never
   certify a model genuine, so the two codes together are the only refutation
   this refuter can ever report.  What that costs: (a) what is waived are
   phi-system's ten monomorphic user axioms, all derivable from HOL's own, so
@@ -1296,8 +1274,7 @@ fun pinned_nitpick_params ctxt budget =
   absent-refuter condition.  The tested term is derived from the screened
   one by subst_atomic over screened assumptions (which cannot introduce
   TVars — the global assumption screen is load-bearing for the per-goal
-  one), and the assumptions are asked once from the goal-side ctxt (ruling
-  #2 made structural).*)
+  one), and the assumptions are asked once from the goal-side ctxt.*)
 fun r_nitpick ctxt goals =
   let val refute_timeout = Time.fromMilliseconds (Config.get ctxt guard_refute_timeout)
       val margin = seconds 5.0
@@ -1513,7 +1490,7 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
       val {verdict, refuter, judge = judge_answer, result} = outcome
       (*the two warnings, mutually exclusive at this one site: the loud guard warning
         when a call from a Proved entry ends otherwise, the undecided-guard warning
-        when a call from any other entry ends Unknown [author 2026-09-09]*)
+        when a call from any other entry ends Unknown*)
       val _ =
         if entry_verdict = SOME Phi_Guard_Cache.Proved
         then if verdict = Phi_Guard_Cache.Proved then ()
@@ -1576,15 +1553,12 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
       val is_F = is_false (Thm.major_prem_of th0)
 
       (*the "G.simpcut" pass: asm_full_simp then quick_cut on every subgoal, in the
-        guard-side context enhanced, under 5 s of thread CPU (Thread_CPU.apply scales
-        it by timeout_scale) -- ten times the corpus maximum of 437 ms, so a timeout
-        means the simplifier is looping and is warned about; it then yields the state
-        it was given, unchanged, and the solving function runs on the unsimplified
-        guard [author 2026-09-11].  A subgoal simplified to False stays an empty
-        sequence.  Not a bound whose timeout is an empty sequence, which would read as
-        a refutation.  A deliberate narrowing: the first simplified state only
-        (Seq.take 1), so the one bound covers the whole pass and the solving function
-        runs once per call [author 2026-09-09].*)
+        guard-side context enhanced, under 5 s of thread CPU -- far above what any
+        guard needs, so a timeout means the simplifier is looping: it is warned about,
+        and the pass yields the state it was given, unchanged.  A subgoal simplified to
+        False stays an empty sequence; a timeout must not, since an empty sequence
+        would read as a refutation.  The first simplified state only (Seq.take 1), so
+        the one bound covers the whole pass.*)
       fun simpcut_tac ctxt th =
         let val seq = Seq.take 1 (ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt) THEN_ALL_NEW quick_cut) th)
          in Seq.make (fn () =>
@@ -1620,9 +1594,9 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
       |> Seq.pull) ctxt0 th0
   end
 
-(*the guard digest: one hash of the whole goal state (Thm.prop_of: the guard's subgoals
-  and, under Goal.protect, the rest of the sequent with its conclusion) and of the
-  context's assumptions; the aux facts, derivable, stay out [author 2026-09-11]*)
+(*the guard digest: one hash of the whole goal state (the guard's subgoals and, under
+  Goal.protect, the rest of the sequent with its conclusion) and of the context's
+  assumptions; the aux facts, derivable, stay out*)
 fun guard_digest ctxt th =
   Hasher.terms (Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt))
 

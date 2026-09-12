@@ -6,9 +6,9 @@ holds for one guard (an entry: the judge's lemmas with their tiers and the last
 verdict), the user simpset strengthening guard proving (Guard_Simp_SS), the
 lemma list carried by the context (Guard_Lemmas), the lemma budget enforced
 inside the simplifier (enhance_with_lemmas), the export hook carrying the
-lemma list across run and block boundaries, the store instance Phi_Guard_Store
-(<thy>.guard-cache beside the theory) and the entry codec.  prove_or_refute,
-the factory, the refuters and the judge live in reasoners.ML.
+lemma list across run and block boundaries, and the entry codec over the proof
+store of auto_sledgehammer (the theory's <thy>.proof-store holds the entries).
+prove_or_refute, the factory, the refuters and the judge live in reasoners.ML.
 *)
 
 signature PHI_GUARD_CACHE = sig
@@ -25,11 +25,11 @@ val guard_cache : bool Config.T            (*\<phi>guard_cache: read and write t
 val guard_lemma_apply_limit : int Config.T (*\<phi>guard_lemma_apply_limit: Frequent's budget, the ceiling*)
 val budget_of_tier : Proof.context -> tier -> int
 
-(*the store, keyed by the guard digest: the theory's <thy>.guard-cache, an
-  instance of the proof store's functor (plan section 8), read and written through
-  these two functions only.  An entry that does not decode is no entry.  Not gated
-  by \<phi>guard_cache: the switch is enforced by prove_or_refute at its read and
-  writes.*)
+(*the store, keyed by the guard digest: the theory's proof store (<thy>.proof-store,
+  auto_sledgehammer's Phi_Proof_Store; plan section 8), read and written through
+  these two functions only, under ids no proof obligation uses.  An entry that
+  does not decode is no entry.  Not gated by \<phi>guard_cache: the switch is
+  enforced by prove_or_refute at its read and writes.*)
 val lookup_entry : theory -> Hasher.digest -> entry option
 val write_entry : theory -> Hasher.digest -> entry -> unit
 
@@ -56,14 +56,6 @@ val enhance_with_lemmas : Proof.context -> Proof.context
 
 end
 
-(*the guard cache's view of its store instance (plan section 8)*)
-signature PHI_GUARD_STORE = sig
-  val store_path : theory -> Path.T
-  val get_cached_proof : theory -> string -> Phi_Proof_Store.proof_cache option
-  val update_cached_proof : theory -> {id: string, hash: Hasher.digest option}
-                            -> Phi_Proof_Store.proof_cache -> unit
-end
-
 structure Phi_Guard_Cache : PHI_GUARD_CACHE = struct
 
 datatype tier = Only_Once | Rarely | Normal | Frequent
@@ -79,20 +71,9 @@ fun budget_of_tier ctxt tier =
    in Int.min (limit, case tier of Only_Once => 3 | Rarely => 30 | Normal => 300 | Frequent => limit)
   end
 
-(*The store: the proof store's functor over the guard cache's kind -- no legacy
-  file to migrate, no write marks (an entry is legitimately rewritten), its own
-  words in the two user-facing messages, \<phi>guard_cache as the switch the
-  functor requires (it gates nothing inside).  Ascribed PHI_GUARD_STORE: the two
-  entry points the guard cache uses and the path; the by-hash surface stays unused.*)
-structure Phi_Guard_Store : PHI_GUARD_STORE = Proof_Store (struct
-  val ext = "guard-cache"
-  val migrates = false
-  val marks_writes = false
-  val describe = ("Guard cache", "cached guard advice")
-  val switch = guard_cache
-end)
-
-(*the store's key (plan section 1): the compact rendering, never printed*)
+(*A guard entry is a record of the theory's proof store under an id no proof
+  obligation uses -- this prefix and the digest -- with no goal hash, zero times
+  and the packed entry as its text.*)
 fun key_of d = "PLPRGUARD" ^ Hasher.compact d
 
 (*The entry codec (plan section 8): the entry value packed with the msgpack
@@ -138,11 +119,11 @@ fun decode_entry s =
 end
 
 fun lookup_entry thy d =
-  case Phi_Guard_Store.get_cached_proof thy (key_of d) of
+  case Phi_Proof_Store.get_cached_proof thy (key_of d) of
     NONE => NONE
   | SOME (_, payload) => decode_entry payload
 fun write_entry thy d entry =
-  Phi_Guard_Store.update_cached_proof thy {id = key_of d, hash = NONE}
+  Phi_Proof_Store.update_cached_proof thy {id = key_of d, hash = NONE}
     (Phi_Proof_Store.zero_times, encode_entry entry)
 
 structure Guard_Simp_SS = Simpset (

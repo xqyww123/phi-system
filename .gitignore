@@ -13,9 +13,6 @@ output
 *.phi-cache
 
 *.proof-store.lock
-*.guard-cache
-*.guard-cache.lock
-*.guard-cache.tmp*
 *.unicode.thy
 
 # Python bytecode caches, never artefacts of this component

@@ -48,8 +48,8 @@ val log_category =
     encode = fn {ctxt, goal, entries, n_others, other_hits, occurrences} =>
       let val show = Protocol_Message.clean_output o Syntax.string_of_term ctxt
           val unforced = length (filter_out #1 entries)
-            (*structurally 0 since the forced-only gate in `inst` (2026-09-01);
-              field and UNFORCED verdict kept as a regression tripwire*)
+            (*structurally 0 under the forced-only gate in `inst`; the field and
+              the UNFORCED verdict stay as a regression tripwire*)
       in
         ([("verdict", if unforced = 0 then "forced" else "UNFORCED"),
           ("choices", string_of_int (length entries)),
@@ -84,10 +84,10 @@ fun probe_record entry =
 fun inst bans tab (v, args) cterm0 =
   if not (probe_forced bans args)
   then tab
-    (*forced-only (author ruling 2026-09-01): an unforced candidate never
-      commits (nor conflicts).  probe_forced is the Miller-pattern uniqueness
-      test -- necessary, not sufficient: the step_selector path can fabricate
-      a passing constructor choice.  Measured cost on the corpus: zero.*)
+    (*forced-only: an unforced candidate never commits (nor conflicts).
+      probe_forced is the Miller-pattern uniqueness test -- necessary, not
+      sufficient: the step_selector path can fabricate a passing constructor
+      choice.*)
   else
   let val cterm = Phi_Help.beta_eta_contract_cterm (Thm.instantiate_cterm (TVars.empty, tab) cterm0)
                |> fold_rev Thm.lambda args
@@ -302,12 +302,10 @@ fun add_guess_inst_looper ctxt = ctxt |> Simplifier.add_loop ("inst_var_by_Ctr_s
 fun add_guess_inst_solver ctxt = Raw_Simplifier.set_solvers [guess_inst_solver ctxt] ctxt
 
 
-(*EXPERIMENT 1 (2026-08-29, author's step 1): the looper is no longer installed
-  into the theory simpset for EVERY simplification.  It is added only where
-  guard conditions are preprocessed (reasoners.ML, gen_guard_condition_solver).
-  The global installation, kept for reference:
-    val _ = Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)
-  Restore it if Phi_Examples fails to go through under this scope.*)
+(*The looper is not installed into the theory simpset for every simplification;
+  it is added only where guard conditions are preprocessed (reasoners.ML,
+  gen_guard_condition_solver).  The global installation would be
+    val _ = Theory.setup (Simplifier.map_theory_simpset add_guess_inst_looper)*)
 
 
 end

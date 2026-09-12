@@ -1228,61 +1228,52 @@ the judge may — a nested call is an ordinary call against the store.
 
 ## 8. Persistence
 
-- **Store functor** [within §11.10's delegation; shape: seventh review U6].
-  `cache_file.ML`'s store body becomes a functor over `{ext, migrates,
-  marks_writes, describe, switch}`; `Phi_Proof_Store` is instantiated in
-  `cache_file.ML` with `{ext = "proof-store", migrates = true, marks_writes
-  = true, describe = ("Proof cache", "cached proofs"), switch = <the
-  existing enable_proof_store binding>}` — unchanged name, signature and
-  callers — and **`Phi_Guard_Store`** is instantiated in `guard_cache.ML`
-  with `{ext = "guard-cache", migrates = false, marks_writes = false,
-  describe = ("Guard cache", "cached guard advice"), switch =
-  \<phi>guard_cache}` (`RPC_Pretty` is not visible from Auto_Sledgehammer,
-  `Auto_Sledgehammer.thy:2`; it reaches PLPR via `PLPR_error_msg.thy:8` →
-  `Minilang_AoA.thy:2-3`).  Every module-level piece of state
-  (`append_locks`, `warned_dirs`, `openning_stores`, the `Theory.at_end`)
-  is per instance; the guard instance is ascribed a narrower signature
-  without the by-hash surface; the honest cost is one unused by-hash index
-  compiled per instance.  `switch` is a functor argument only because
-  `Attrib.setup_config_bool` (`cache_file.ML:270`) cannot declare one
-  binding twice; it gates NOTHING inside the store (the only `Config.get`
-  of a switch, `:952`, is in the by-hash surface) — the guard switch is
-  enforced by `prove_or_refute` at its read and its writes (§4) [eighth
-  review].  Per-kind behavior: `migrates = false` → no legacy
-  `.proof-cache` fallback, an absent file is an empty table; `marks_writes
-  = false` → no `written`/`proof_mark` collision alarm (an entry is
-  legitimately rewritten); `describe` feeds `warn_not_writable` (`:510`,
-  "Guard cache for theory … is not writable (…); cached guard advice will
-  be read but not recorded." [author 2026-09-03 11:22, wording adjusted to
-  the redesign]) and `report_cache_is_outdated` (`:829`).  In the shared
-  `at_end` (`:892-906`) only the `compact_store` (`:642-652`) call is
-  gated by `if File.is_file (store_path thy)` — before `compact_store`'s
-  own `with_file_lock`, whose `Posix.FileSys.createf` (`:448`) creates the
-  lock file before `compact_store`'s inner `File.is_file` test (`:649`)
-  can run; the branch that waits for registered async tasks before
-  compacting stays — otherwise every theory in the build gets a
-  `<thy>.guard-cache.lock` plus a writability probe at its end; measured
-  2026-09-03 as 85 `*.proof-store.lock` files against 38 `*.proof-store`
-  files in `contrib/phi-system` [drafter, seventh review U14 / eighth and
-  ninth reviews].  This gate is the second behaviour-changing change to
-  code outside PLPR (§9).  The dead `bool` in `openning_stores`'s value
-  triple (`:687-688`; constructed at `:706`, `:713`, `:730`, `:763`,
-  `:821`, `:842`; destructured at `:685`, `:717`, `:728`, `:807`, `:842`,
-  `:852` — every one of which discards it or threads it back unchanged,
-  so it is never consumed) is dropped in the same pass.
-- **Two entry points of `Phi_Guard_Store`**, no new ones [author
-  2026-09-03 13:19]: read = `get_cached_proof thy key : proof_cache
-  option` (`:767`), the entry being its string half; write =
-  `update_cached_proof thy {id = key, hash = NONE}
-  (Phi_Proof_Store.zero_times, value)` (`:797`; the times half unused).
-  `invalidate_proof_cache` (`:834`) is not used: nothing is deleted.  The
-  store's locking (`store_append_lock` `:495`, `with_file_lock` `:445`,
-  lock order v → fcntl → `openning_stores`, `:506`, `:585`, `:749-750`)
-  is inherited unchanged.
-- Entries live in `<thy>.guard-cache`, GITIGNORED [author 2026-09-02
-  13:01]: `*.guard-cache`, `*.guard-cache.lock`, `*.guard-cache.tmp*`
-  (`write_state_new`, `:419`) in `contrib/phi-system/.gitignore` [author
-  2026-09-03 14:57].
+- **The store IS the proof store of `auto_sledgehammer`** — the theory's
+  `<thy>.proof-store`, `Phi_Proof_Store` in `cache_file.ML`, unchanged
+  [author 2026-09-03 02:18 "我设计的是 proof store 只有一个 entry…"; 03:02
+  "proof store 应该只接受 string 对吗？"; 04:33 "Unknown 根本就不应该进 proof
+  store"; 04:42 "the default warnner 给的 refuted 应当被一视同仁, 而且应该进
+  store"; 10:53 "proof store 中…要多一个字段记录 the lemmas"; 16:00
+  `record_key = "PLPRGUARD" ^ Hasher.compact …`; 2026-09-12 "我的本意是你利用
+  auto_sledgehammer 的 proof store 啊, 用统一的 .proof-store 文件啊"].  The
+  entries therefore live in the tracked `*.proof-store` files beside the
+  theories and are committed and shared with the proofs [author 2026-09-12
+  "1. 好"]; nothing is gitignored for them.  CORRECTION of the record: from
+  2026-09-03 to 2026-09-12 this section described a functor over the store
+  body and a second instance writing a gitignored `<thy>.guard-cache`; that
+  was a review agent's shape (seventh review U6) adopted by the drafter under
+  citations that answered narrower questions (the "gitignore 放
+  contrib/phi-system/.gitignore  好的" of 14:57 approved only where a gitignore
+  line would go), never the author's design; step 4 implemented it, the
+  author rejected it on 2026-09-12 ("纯粹是胡闹…必须撤回这些"), and it was
+  reverted (`auto_sledgehammer` commit `316f143` reverted by `5ac4877`;
+  `cache_file.ML` is byte-identical to before).  The other two changes that
+  revert carried away — the dead `bool` of `openning_stores`'s value triple
+  and `compact_store` skipping a missing store file (no `<thy>.proof-store.lock`
+  behind a theory that never wrote) — were the drafter's as well and are NOT
+  adopted unless the author asks for them.
+- **Two entry points**, no new ones [author 2026-09-03 13:19]: read =
+  `Phi_Proof_Store.get_cached_proof thy key : proof_cache option`, the entry
+  being its string half; write = `Phi_Proof_Store.update_cached_proof thy
+  {id = key, hash = NONE} (Phi_Proof_Store.zero_times, value)` (the times half
+  unused).  `invalidate_proof_cache` is not used: nothing is deleted.  The
+  key is `"PLPRGUARD" ^ Hasher.compact d`, an id no proof obligation
+  produces.  The store's locking, migration, compaction and `at_end` are the
+  proof store's, untouched.
+- **OPEN — the proof store's key-collision alarm.**  The store marks, per
+  session, what it wrote under each key (`written`, the SHA1 of the text) and
+  warns "Proof store: this session has written two DIFFERENT proofs under one
+  key" when a second, different write lands under a key this session already
+  wrote — built to expose two obligations sharing one proof id.  A guard entry
+  is legitimately rewritten in one session (Unknown → Proved, Refuted →
+  Proved, a judge's lemmas), so with the entries in the proof store this alarm
+  fires on them unless the store is told.  Choices put to the author on
+  2026-09-12: (a) the write carries one explicit bit that this key may be
+  rewritten (a field added to `update_cached_proof`'s record argument; its
+  four external callers name it); (b) the store exempts ids with the
+  `PLPRGUARD` prefix (no interface change; `auto_sledgehammer` then knows a
+  PLPR prefix).  Undecided; until then the alarm fires on rewrites and the
+  corpus runs count them.
 - **Entry value**: `{lemmas : (term * proof_cache * tier) list, verdict}`
   packed with the mlmsgpack packers through a `BytesIO` outstream and
   taken as a string (`encode_record`'s shape, `cache_file.ML:104-111`)

@@ -15,9 +15,9 @@ begin
    prove_or_refute: the atoms below carry classical rules only, never a simp
    rule, and no guard is an equation.
 
-   The store is this theory's Guard_Decision_Smoke.guard-cache file (plan step
-   4; gitignored) with no deletion, and it outlives a re-evaluation of this
-   theory and the process: a guard decided once keeps its entry.  So every probe
+   The store is this theory's proof store, Guard_Decision_Smoke.proof-store (plan
+   step 4), with no deletion, and it outlives a re-evaluation of this theory and
+   the process: a guard decided once keeps its entry.  So every probe
    gives its guard an argument no call in this or any earlier run used (`fresh`: a
    wall-clock run tag plus a process serial), and a probe that needs an entry
    writes it first.
@@ -495,7 +495,7 @@ ML \<open>test schematic \<^context> "instantiable guard, some instance provable
   (expect ("proved", "none", "-", "-") "no entry")
   ("\<condition> (CHAIN (" ^ fresh () ^ " # " ^ intro_chain ^ ") \<and> SOMETRUE ?x)")\<close>
 
-(*the control -- every instantiation false: R-conv's frozen-Free branch (the N1 ruling)*)
+(*the control -- every instantiation false: R-conv's frozen-Free branch*)
 ML \<open>test schematic \<^context> "instantiable guard, every instance false (refuted by R-conv)"
   (expect ("refuted", "none", "R-conv", "-") "Refuted with 0 lemma(s)")
   ("\<condition> (BLIND_SPIN ?x \<and> SPIN " ^ fresh () ^ ")")\<close>

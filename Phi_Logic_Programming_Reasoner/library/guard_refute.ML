@@ -79,10 +79,9 @@ structure Simpset_Hooks = Hooks (
 
 (*** Which context assumptions travel with the guard ***)
 
-(*Premise-tagged ones only (author ruling, plan 19.2); an obligation is a
-  goal, not a fact.  Dropping a premise ENLARGES the model space, so this
-  filter widens the misjudgment surface -- it is a ruling, not an
-  optimisation.*)
+(*Premise-tagged ones only: an obligation is a goal, not a fact.  Dropping a
+  premise ENLARGES the model space, so this filter widens the misjudgment
+  surface -- a deliberate choice, not an optimisation.*)
 
 (*The tag sits on the CONCLUSION, so an assumption that is itself an hhf
   formula is classified by what it concludes; it then travels whole, binders
@@ -182,11 +181,9 @@ fun preprocess ctxt assms goal =
       Nitpick_Refute_SS.enhance ctxt
         |> Simpset_Hooks.invoke (Context.Proof ctxt) ()
         |> fold Splitter.add_split (case_splits ctxt prepared)
-        (*EXPERIMENT 2 (2026-08-30, author's step 2): R-nitpick's preprocessing
-          runs WITHOUT the guess_inst looper, which `enhance` inherits from the
-          ambient context (equipped once in guard_condition_solver's auto_tac,
-          reasoners.ML).  P-auto and R-conv keep it.  Compare the R-nitpick
-          refutation count against experiment 1 (312 of 640 on cslh19).*)
+        (*R-nitpick's preprocessing runs WITHOUT the guess_inst looper, which
+          `enhance` inherits from the ambient context (equipped in the guard
+          factory, reasoners.ML); P-auto and R-conv keep it.*)
         |> Raw_Simplifier.del_loop "inst_var_by_Ctr_sels"
     val st =
       (case SINGLE (Simplifier.asm_full_simp_tac simp_ctxt 1)
@@ -210,23 +207,21 @@ fun preprocess ctxt assms goal =
   genuine and quasi_genuine both count, as in reasoners.ML's verdict map and
   for its reason: under user_axioms = false nothing can be certified genuine.
 
-  The model search gets its OWN timeout, independent of what preprocessing
-  cost (author ruling 2026-08-28).  Charging preprocessing against the search
-  makes the search's reach depend on a quantity that has nothing to do with
-  it, and makes two measurements incomparable whenever preprocessing differs.
-  Since 2026-09-01 the caller's bound per subgoal (R-nitpick, reasoners.ML) is
-  only a safety net; the search's bound is Nitpick's own internal net (see the
-  note at the search call below).*)
+  The model search gets its own timeout, independent of what preprocessing cost:
+  charging preprocessing against the search would make its reach depend on a
+  quantity unrelated to it.  The caller's bound per subgoal (R-nitpick,
+  reasoners.ML) is only a safety net; the search's bound is Nitpick's own
+  internal net (see the note at the search call below).*)
 
 fun nitpick ctxt params (i, n) (subst, assms, goal) =
   (case preprocess ctxt assms goal of
      NONE => Provable
    | SOME (prems, concl) =>
-       (*no bound is imposed here (author ruling 2026-09-01): the model search's bound
-         is Nitpick's own Timeout.apply (timeout + timeout_bonus) inside the
-         vendored phi_nitpick.ML -- a rebase must keep it; R-nitpick's bound
-         per subgoal is the only other bound.  Preprocessing stays uncharged
-         (ruling 2026-08-28).  Auto_Try mode: the messages are buffered and dropped.*)
+       (*no bound is imposed here: the model search's bound is Nitpick's own
+         Timeout.apply (timeout + timeout_bonus) inside the vendored phi_nitpick.ML --
+         a rebase must keep it; R-nitpick's bound per subgoal is the only other bound.
+         Preprocessing stays uncharged.  Auto_Try mode: the messages are buffered and
+         dropped.*)
        let val (code, _) =
              Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params true
                Phi_Nitpick.Auto_Try i n 0 subst [] prems concl

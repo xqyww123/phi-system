@@ -1,91 +1,132 @@
-# Handoff: guard cache — steps P/0/1/2/3(first half)/4 DONE; step 5 next (updated 2026-09-12)
+# Handoff: guard cache — step 4 REDONE on the author's design (entries in the proof store); uncommitted; audit findings pending the author (updated 2026-09-12 evening)
 
-Supersedes `GUARD_CACHE_RESUME_HANDOFF_2026-09-09.md`.  Plan:
-`contrib/phi-system/Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` **rev 24** — §1 glossary
-authoritative (the guard digest bullet carries the 2026-09-11 CORRECTION); §30–§32 step 2
-and its two reviews; §33 the `Phi_Types.thy:2608` flip diagnosed and fixed, the tier
-measurement SHELVED, the budget semantics ruled; §34 step 3 first half (the export hook
-end to end) with its correction; **§35 step 4 (the persistent store) done and reviewed,
-one AUTHOR_DECISION open**.  Read §33–§35 before touching anything.
+Plan: `contrib/phi-system/Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` rev 24.  §1 glossary (the guard digest
+bullet carries the 2026-09-11 correction); §33 the 2608 flip + tier measurement shelved; §34 step 3
+first half; §8 REWRITTEN 2026-09-12 to the author's design (the store IS the proof store) with a
+CORRECTION of the record; §35 still describes the withdrawn functor design and must be rewritten.
 
-## Committed (NOT pushed — push only when told, only to origin)
-2026-09-09: Performant_Isabelle_ML `4e850dd`, Isabelle_RPC `65cdbaa`, Isa-Mini `1ce791f`,
-auto_sledgehammer `1360b21`, phi-system `d19e4521` + `1d376c80`, root `bf4fd202`.
-2026-09-11: phi-system `b83790d5` (step 2 + the 2608 fix), `da0fd908`, `602e2a41` (the
-digest = whole goal state + assumptions), `9c2a29e6`, `377dc749` (step 3 first half);
-root bumps up to `8c0796bd`.  2026-09-12: phi-system `9dd703c1` (§34 correction), root
-`53002977`; auto_sledgehammer: the functor commit (step 4); phi-system: the step 4 commit;
-root bump — see `git log` for the last three.
+## What happened on 2026-09-12 (read this first)
+1. Step 4 was first implemented as a functor over `cache_file.ML` plus a second store instance writing
+   `<thy>.guard-cache` (auto_sledgehammer `316f143`, phi-system `1cc4e95e`, root `859c1174`).  The
+   author rejected it: their design, said repeatedly on 2026-09-03 and again today, is that guard
+   entries go INTO the existing proof store `<thy>.proof-store` through `Phi_Proof_Store.get_cached_proof`
+   / `update_cached_proof`, key `"PLPRGUARD" ^ Hasher.compact d`, `hash = NONE`, `zero_times`, the
+   packed entry as the text.  The functor was the drafter's/reviewers' invention filed under author
+   citations — "纯粹是胡闹…必须撤回这些".  REVERTED: auto_sledgehammer `5ac4877` (cache_file.ML
+   byte-identical to `1360b21`, i.e. the dead `openning_stores` bool and the `at_end`/`compact_store`
+   gate are gone too — both were the drafter's, not adopted).  guard_cache.ML now calls
+   `Phi_Proof_Store` directly; `.gitignore` lines removed; all `*.guard-cache*` files deleted.
+   Entries land in the git-TRACKED `*.proof-store` files (42 in phi-system): intended ("1. 好").
+2. Source comments were rewritten to be for readers: no `[author …]`, dates, review labels or
+   measurement logs (reasoners.ML, guard_cache.ML, guard_refute.ML, guess_instantiate.ML, the battery).
+   Rule from the author: comments are short, load-bearing, never the drafter's notes.
+3. Three feedback drafts filed (digest scope; separate store file; comment style).
+4. An Opus audit of the plan's provenance found more over-claims — see "Pending the author".
 
-## The code, as it stands
-- `auto_sledgehammer/library/cache_file.ML`: `functor Proof_Store (Kind : STORE_KIND) :
-  PHI_PROOF_STORE`; `Phi_Proof_Store` instantiated at the file's end; `compact_store` does
-  nothing for a missing file; `openning_stores : (store * written)`.  Compiled INTO the
-  `Phi_System_Base` heap from source (the heap holds phi-system's external deps): an edit
-  needs `isabelle build -b -d /home/qiyuan/Current/MLML Phi_System_Base` (author's approval
-  each time; ~45 s) and an Isabelle-MCP relaunch (`isabelle_terminate`, `isabelle_launch
-  Phi_System_Base`).  The Auto_Sledgehammer/Minilang heaps are NOT rebuilt by that; Isabelle
-  invalidates them itself when someone builds them.
-- `phi-system/Phi_Logic_Programming_Reasoner/library/guard_cache.ML`: `PHI_GUARD_STORE`,
-  `Phi_Guard_Store` (`<thy>.guard-cache` beside the theory, gitignored), the entry codec
-  (`encode_entry`/`decode_entry`), `lookup_entry`/`write_entry`; the lemma list, budget,
-  export hook as before.  `reasoners.ML`: `prove_or_refute`, the factory
-  `gen_guard_condition_solver` with `simpcut_tac` local under 5 s of thread CPU (warns
-  "The system simplifier probably loops on:"), `guard_digest ctxt th` over the whole state
-  plus `Assumption.all_prems_of ctxt`.
-- Tests (none in a ROOT; evaluate on demand on Phi_System_Base): `Test/Guard_Decision_Smoke.thy`
-  (every prove_or_refute path; `fresh` = wall-clock run tag + serial), `Test/Guard_Export_Smoke.thy`
-  (the export hook: same run, `;` boundary, nested block), `ai-artifacts/Guard_False_Probe.thy`.
+## Current state of the tree (UNCOMMITTED in phi-system; auto_sledgehammer committed at 5ac4877)
+phi-system modified: `.gitignore`, `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` (§8 rewritten), `PLPR.thy`
+(carries the TEMPORARY declare `[[\<phi>log_guard_decision = true, AoA_driver = "test",
+AoA_write_proof_store = false]]` after the `\<phi>guard_P_auto` method_setup — REVERT before commit),
+`Test/Guard_Decision_Smoke.thy` (comment; `fresh` = run tag + serial), `library/guard_cache.ML`,
+`library/guard_refute.ML`, `library/guess_instantiate.ML`, `library/reasoners.ML` (comments only),
+plus the proof stores the corpus run wrote guard entries into (`Phi_System/Phi_Types.proof-store`,
+`Phi_Test/PhiTest_Arithmetic.proof-store`, `Phi_Semantics/PhiSem_CF_{Basic,Break,Breakable}.proof-store`,
+new `Phi_System/Resource_Template.proof-store`, new `Test/Guard_Decision_Smoke.proof-store`).
+`Phi_Semantics/PhiSem_Real_Abst.proof-store` (untracked) is another agent's — leave it.
+Verified on the reverted heap: PLPR.thy clean, battery clean, cold corpus clean (355 decisions, 129 s
+of guard time, entries written).  The Phi_System_Base heap was rebuilt again (4th time today) because
+other sessions changed Isa-Mini/Semantic_Embedding; the WARM corpus run in a fresh process (expect
+146 Refuted + 5 Unknown hits read from the proof stores, ~21 s) was about to start.
 
-## OPEN WITH THE AUTHOR
-- §35: `val store_path` in `PHI_GUARD_STORE` has no caller; §8 says two entry points, no
-  new ones.  (a) drop it [recommended] or (b) expose it via `PHI_GUARD_CACHE` so the battery
-  deletes its own store file at entry.
-- §33: item 4 (closed by the digest ruling); the tier measurement (shelved; the drafter's
-  plan when resumed: stages A and B of `ai-artifacts/TIER_MEASUREMENT_BRAINSTORM_2026-09-11.md`,
-  not C without the author); phase-2 design points: a budgeted lemma is a CONDITIONAL rule
-  (tried after unconditional rules, refused past `simp_depth_limit`), `Frequent` = the
-  ceiling, whether a judge lemma may cite the context's assumptions; the `is_F` shortcut
-  left to the follow-up constant `\<check> \<hypothesis> \<consistency>`.
+## Remaining for step 4
+- warm corpus run; revert the TEMPORARY declare; re-evaluate PLPR.thy; rewrite §35 (and §1/§4/§10
+  mentions of `Phi_Guard_Store`/`<thy>.guard-cache`, see audit A3); commit phi-system (master) and
+  bump both submodule pointers in the root (`git add -f contrib/phi-system contrib/auto_sledgehammer`).
+  NO push.
+- The proof store's key-collision alarm (`written` table + "two DIFFERENT proofs under one key"
+  warning in cache_file.ML): never approved by the author (archaeology 2026-09-12: settled by review
+  agents K1/K2 on 2026-08-16, implemented after a blanket "开始动手"); misfires on legitimate guard
+  entry rewrites AND on interactive re-evaluation in PIDE (the table is a process-global
+  Synchronized.var keyed by theory name, closed only at Theory.at_end).  Options put to the author:
+  (i) delete the mechanism; (ii) keep, exempt guard entries (explicit bit on the write / prefix);
+  (iii) keep, reword.  UNDECIDED — do nothing until ruled.
 
-## NEXT: STEP 5 (plan §10 step 5) — corpus acceptance via Isa-REPL
-A cache-on and a cache-off leg (`\<phi>guard_cache`), a concurrent Isa-REPL leg, a
-consecutive-run leg with a hit-rate floor; measure wall time, verdict flips per guard
-cache-on vs cache-off, first-decision latency, the path distribution (hit kinds, refuters,
-judge), lemma replay cost, budget cut-offs, hard failures attributable to guard-side
-exceptions, digest cost, store I/O, the forked-proof write, the export hook's cost per run
-boundary; re-measure the 400 ms bound.  Isa-REPL against Phi_System_Base sources; the AoA
-gate is CLOSED under Isa-REPL (no interactive frontend) — no test-driver declare needed
-there; under Isabelle-MCP it is open and the TEMPORARY `declare [[\<phi>log_guard_decision =
-true, AoA_driver = "test", AoA_write_proof_store = false]]` after the `\<phi>guard_P_auto`
-method_setup in PLPR.thy keeps a failing statement off the LLM (the author calls the
-escalation expected behaviour; the declare is the drafter's practice for deterministic
-verification runs; revert before commit).  Baselines: warm corpus = 355 decisions, 146
-Refuted + 5 Unknown hits, ~21 s of guard time; cold = ~122 s.  After the plan: move the
-term-codec functor to Performant_Isabelle_ML.
+## Pending the author (from the 2026-09-12 audit; do not act before a ruling)
+- A4: plan §1 says the judge "may re-enter PLPR", reversing the author's rule (2026-09-07 13:21 "judge
+  不能重入 PLPR") on the drafter's own bullet; mark [drafter, 待裁].
+- A1: §1 judge contract and §7 cite "2. 不掺" (which ruled assumptions OUT of the digest, since
+  reversed) for "not the simpset/lemmas/local facts"; §7 still says the digest excludes assumptions
+  (false).  A9: unmarked drafter clauses in the judge contract (closed `prop` lemmas; RAW times
+  normalised on receipt; judge must be re-entrant; "no deletion" [descriptive] vs the author's C6
+  "墓碑用 invalidate_proof_cache 采纳").  A2/A6/A7/A8: citation errors (the key's citation points at
+  the author's objection; "two entry points, no new ones" is drafter wording over "C7 好"; tier tag
+  cited to 09-03; the codec-parameter withdrawal was the author's).  A10: §10 "Nothing is pending the
+  author" is false.  C: no author message exists at 2026-09-03 07:48 although the drafter cited it;
+  §10 step 2's deletion of `\<phi>log_guard_race = true` had no ruling.
+- Earlier open items: tier measurement shelved (§33); `is_F` left to the follow-up constant
+  `\<check> \<hypothesis> \<consistency>`; phase-2 points (budgeted lemma = conditional rule; `Frequent`
+  = ceiling; may a judge lemma cite assumptions).
 
-## Working notes
-- Under Isabelle-MCP, editing PLPR.thy makes the MCP re-evaluate every open downstream
-  theory automatically; after reverting the declare, cancel that re-evaluation
-  (`isabelle_cancel_evaluation`) unless it is wanted.
-- The harness kills background `sleep` timers "for low memory" spuriously — poll anyway.
-- Decision statistics: `~/.isabelle/Isabelle2025-2/event_log/guard_decision/<ts>-<pid>.xml`;
-  parse `<record …>` attributes (verdict/hit/refuter/judge/elapsed_ms/digest/subgoals).
-- A theory importing `PhiSem_Machine_Integer` beside `PhiSem_Int_ArbiPrec` cannot open an
-  `if` branch on a `\<val> \<nat>` (pre-existing; `toplevel0.ML:267`'s `@{print}` stays by
-  the author's word).
+## Then: STEP 5 — corpus acceptance via Isa-REPL (plan §10 step 5; AoA gate closed there).
 
 ## Rules (the author's, all binding)
-Edit source with the Edit tool; plan docs by hand; never coin words (fixed terms:
-entry/store/the lemma list/the lemma budget/ctxt_g/ctxt1/guard_ctxt/the canonical form/
-"G.simpcut"/the undecided-guard warning/the loud guard warning/the dropped-lemma warning);
-explain in Chinese, essence first, full context, exact file:line; `isabelle build` only
-with approval; after `.ML` edits re-evaluate, never rebuild heaps for that (except
-cache_file.ML, above); never git stash/checkout/reset/clean; commit on the repo's current
-branch, push origin only, only when told; memory writes need approval; probes must not
-load phi-system theories under NEW names; do not relay agent progress ticks; monitor long
-runs at most every 10 minutes; review shape: workflow, Opus, English, interrogators →
-fresh defenders → judge; the drafter re-verifies every upheld finding; no code change
-before the author agrees on anything classified AUTHOR_DECISION; when narrowing a
-definition beyond the author's words, quote the author verbatim, mark the narrowing
-[drafter] and ask — never file it under an author citation.
+Edit source with the Edit tool; plan docs by hand; never coin words; explain in Chinese, essence first,
+full context, exact file:line; `isabelle build` only with approval (Phi_System_Base rebuilds were
+approved for step 4); after `.ML` edits re-evaluate; never git stash/checkout/reset/clean; commit on the
+repo's current branch, push origin only, only when told; memory writes need approval; probes must not
+load phi-system theories under NEW names; monitor long runs ≤10 min; review shape: workflow, Opus,
+English, interrogators → fresh defenders → judge; no code change on AUTHOR_DECISION items before the
+author agrees; quote the author verbatim and mark any narrowing [drafter] — never file a drafter's or a
+reviewer's design under an author citation; source comments are for readers (short, no citations,
+no dates, no logs).  Corpus loads under Isabelle-MCP: add the TEMPORARY test-driver declare (the
+author calls AoA escalation expected behaviour; the declare keeps verification runs deterministic).
+
+## ADDENDUM 2026-09-12 late — where to resume after compaction
+Everything below is UNDECIDED; do nothing on any of it before the author rules.  The author
+asked to compact and then go through the items ONE BY ONE ("先 compact 然后逐一审议这些问题").
+Full texts: `ai-artifacts/STEP4_REDO_REVIEW_2026-09-12.md` (the code review: judge's report +
+every concern) and `ai-artifacts/PROVENANCE_AUDITS_2026-09-12.md` (four audits).
+
+State of the tree: phi-system UNCOMMITTED (step-4 redo on the author's design; comments
+cleaned; PLPR.thy still carries the TEMPORARY test-driver declare — revert before commit; the
+warm corpus run passed: 146 Refuted + 5 Unknown hits read from the tracked *.proof-store files,
+~21 s); auto_sledgehammer at 5ac4877 (functor reverted); root not yet bumped.  Untracked new
+stores: Test/Guard_Decision_Smoke.proof-store, Test/Guard_Export_Smoke.proof-store,
+Phi_System/Resource_Template.proof-store, Phi_Semantics/PhiSem_Real_Abst.proof-store (the last
+is another agent's).
+
+A. Code review (accepted on condition).  MUST_DISCUSS: (1) the proof store's collision alarm —
+options (a) an explicit bit on update_cached_proof [judge recommends; name it "this id is derived
+from the goal", a fact, not a permission], (b) PLPRGUARD-prefix exemption, (c) delete [the judge
+argues against: hash = NONE records have no by-hash fallback], (d) keep+reword; (2) which new
+*.proof-store files to git add [judge: the two real theories', not the two Test batteries'; no
+.gitignore change].  DRAFTER_MAY_DECIDE (held until the author says go): plan §7:1146-1148 and
+§3:811 and §17.6:1796 still carry the pre-09-11 digest ("2. 不掺" must leave the corrected
+sentence); Test/Guard_Export_Smoke.thy :24 comment and :65/:112 bare serial() → reuse the
+battery's run_tag+serial, then evaluate twice in two processes; the summary said one new store
+file, it is three; §8 one sentence (phase 2 makes one call rewrite a key twice); conditional:
+escape the id/head in collision_message if the alarm stays and guard entries are not exempt.
+Rejected (7, with rebuttals in the file): digest-vs-text alarm; content-key accumulation;
+Hasher.hex; FNV soundness note; single end-of-call write; Unknown freezes R-nitpick; cpu_bounded_seq.
+
+B. Provenance audit — items to go through one by one (the author's order; suggested first: B1):
+B1 Isa-Mini 4e42984 automatic DROP TABLE of the L1 proof cache (plan forbade it; live at
+   proof_store.py:43,:55).  B2 guard cache: canonical form reshaped by three review rounds
+   ("No author ruling was needed"); guard_decision record fields; loud-warning text; dropped-lemma
+   warning ungated; \<phi>log_guess_inst option name.  B3 proof store: ruling O widened
+   (1b05b2b); goal-hash change (0146687); "Find proof" trace (c88ad1d).  B4 phi-system 752be368
+   derived-obligation keys (two audits disagree: one found "好的，赞同，请修复" 2026-08-29 13:30, one
+   found nothing); d4cbde68 bool comparisons in generated C; 08-09 failure text.  B5 Isa-Mini
+   2324fc5 DeepSeek price table; 402a2e1 cost line "author-finalized" claim.  B6
+   Performant_Isabelle_ML 2cf1b52 Event_Log default dir (author ruled $ISABELLE_HOME_USER/log/phi)
+   and the XML boundary transform.  B7 Semantic_Embedding 6cac576 D19 (false "user decision"
+   claim).  B8 Isabelle_RPC 8b7325e pretty_unicode escape regression, never fixed.  B9 jEdit
+   slice: 95d8f799/f27f25c9 store records committed without asking; phi_field_font W3;
+   font name-table "decision 13"; primary-selection memo.  B10 plan-provenance errors in
+   GUARD_CACHE_QUICK_MODE_PLAN.md (A1 "2. 不掺" re-glossed; A2 key citation; A4 judge re-entry
+   reversed by the drafter; A9 unmarked judge-contract clauses; A10 "Nothing is pending").
+   Unverified (audit's own list): Semantic_Embedding 710594e, twin-implementation gate, lock
+   file; 3102b9d; ae1dd806 D7; 87cc212d; fbb528fe "/" separator ruling not found.
+
+C. Feedback drafts filed today (5): digest scope; separate store file; comment style; the
+collision detector implemented on review-agent spec; (earlier) narrowing under author citations.
