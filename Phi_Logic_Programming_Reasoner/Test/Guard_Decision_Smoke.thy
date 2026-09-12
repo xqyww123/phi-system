@@ -15,11 +15,12 @@ begin
    prove_or_refute: the atoms below carry classical rules only, never a simp
    rule, and no guard is an equation.
 
-   The store is one in-memory table per process (plan step 2) with no
-   deletion, and it outlives a re-evaluation of this theory: a guard decided
-   once keeps its entry.  So every probe gives its guard an argument no
-   earlier call used (`fresh`, a process serial), and a probe that needs an
-   entry writes it first.
+   The store is this theory's Guard_Decision_Smoke.guard-cache file (plan step
+   4; gitignored) with no deletion, and it outlives a re-evaluation of this
+   theory and the process: a guard decided once keeps its entry.  So every probe
+   gives its guard an argument no call in this or any earlier run used (`fresh`: a
+   wall-clock run tag plus a process serial), and a probe that needs an entry
+   writes it first.
 
    NB the helpers take the calling block's \<^context> explicitly: the
    antiquotation is static, and a helper-captured context would predate the
@@ -170,8 +171,11 @@ fun with_entry_and_judge lemmas verdict j =
 
 fun expect path store = {path = path, store = store}
 
-(*a numeral no earlier call of this process used, for a guard that must meet no entry*)
-fun fresh () = string_of_int (serial ())
+(*a numeral no call of this or any earlier run used, for a guard that must meet no
+  entry: the store outlives the process, and a process serial alone could repeat
+  one an earlier process used*)
+val run_tag = Time.toNanoseconds (Time.now ())
+fun fresh () = string_of_int (run_tag + serial ())
 \<close>
 
 section \<open>Constructs\<close>

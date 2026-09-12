@@ -5,10 +5,10 @@ The guard cache of PLPR (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md): what the store
 holds for one guard (an entry: the judge's lemmas with their tiers and the last
 verdict), the user simpset strengthening guard proving (Guard_Simp_SS), the
 lemma list carried by the context (Guard_Lemmas), the lemma budget enforced
-inside the simplifier (enhance_with_lemmas), and the export hook carrying the
-lemma list across run and block boundaries.  The store instance and the entry
-codec are added by step 4 of the plan.  prove_or_refute, the factory, the
-refuters and the judge live in reasoners.ML.
+inside the simplifier (enhance_with_lemmas), the export hook carrying the
+lemma list across run and block boundaries, the store instance Phi_Guard_Store
+(<thy>.guard-cache beside the theory) and the entry codec.  prove_or_refute,
+the factory, the refuters and the judge live in reasoners.ML.
 *)
 
 signature PHI_GUARD_CACHE = sig
@@ -25,10 +25,11 @@ val guard_cache : bool Config.T            (*\<phi>guard_cache: read and write t
 val guard_lemma_apply_limit : int Config.T (*\<phi>guard_lemma_apply_limit: Frequent's budget, the ceiling*)
 val budget_of_tier : Proof.context -> tier -> int
 
-(*the store, keyed by the guard digest; TRANSITIONAL (plan step 2): one in-memory
-  table per process, which step 4 replaces by the persistent store Phi_Guard_Store
-  behind these two functions -- the theory then selects the file.  Not gated by
-  \<phi>guard_cache: the switch is enforced by prove_or_refute at its read and writes.*)
+(*the store, keyed by the guard digest: the theory's <thy>.guard-cache, an
+  instance of the proof store's functor (plan section 8), read and written through
+  these two functions only.  An entry that does not decode is no entry.  Not gated
+  by \<phi>guard_cache: the switch is enforced by prove_or_refute at its read and
+  writes.*)
 val lookup_entry : theory -> Hasher.digest -> entry option
 val write_entry : theory -> Hasher.digest -> entry -> unit
 
@@ -55,6 +56,14 @@ val enhance_with_lemmas : Proof.context -> Proof.context
 
 end
 
+(*the guard cache's view of its store instance (plan section 8)*)
+signature PHI_GUARD_STORE = sig
+  val store_path : theory -> Path.T
+  val get_cached_proof : theory -> string -> Phi_Proof_Store.proof_cache option
+  val update_cached_proof : theory -> {id: string, hash: Hasher.digest option}
+                            -> Phi_Proof_Store.proof_cache -> unit
+end
+
 structure Phi_Guard_Cache : PHI_GUARD_CACHE = struct
 
 datatype tier = Only_Once | Rarely | Normal | Frequent
@@ -70,13 +79,71 @@ fun budget_of_tier ctxt tier =
    in Int.min (limit, case tier of Only_Once => 3 | Rarely => 30 | Normal => 300 | Frequent => limit)
   end
 
+(*The store: the proof store's functor over the guard cache's kind -- no legacy
+  file to migrate, no write marks (an entry is legitimately rewritten), its own
+  words in the two user-facing messages, \<phi>guard_cache as the switch the
+  functor requires (it gates nothing inside).  Ascribed PHI_GUARD_STORE: the two
+  entry points the guard cache uses and the path; the by-hash surface stays unused.*)
+structure Phi_Guard_Store : PHI_GUARD_STORE = Proof_Store (struct
+  val ext = "guard-cache"
+  val migrates = false
+  val marks_writes = false
+  val describe = ("Guard cache", "cached guard advice")
+  val switch = guard_cache
+end)
+
 (*the store's key (plan section 1): the compact rendering, never printed*)
 fun key_of d = "PLPRGUARD" ^ Hasher.compact d
 
-val table = Synchronized.var "Phi_Guard_Cache.table" (Symtab.empty : entry Symtab.table)
+(*The entry codec (plan section 8): the entry value packed with the msgpack
+  packers into the record's string half -- a lemma's statement through the
+  term codec of Isabelle_RPC (a runtime symbol travels as its identifier), its
+  times as the store's own (cpu_ms, wall_ms) pair, the tier and the verdict as
+  int tags.  No format version: a payload that does not decode is no entry.*)
+local
+  structure P = MessagePackBytesIO.Pack
+  structure U = MessagePackBytesIO.Unpack
+  fun int_of_tier Only_Once = 0 | int_of_tier Rarely = 1 | int_of_tier Normal = 2 | int_of_tier Frequent = 3
+  fun tier_of_int 0 = Only_Once | tier_of_int 1 = Rarely | tier_of_int 2 = Normal
+    | tier_of_int 3 = Frequent | tier_of_int _ = raise U.Unpack
+  fun int_of_verdict Proved = 0 | int_of_verdict Refuted = 1 | int_of_verdict Unknown = 2
+  fun verdict_of_int 0 = Proved | verdict_of_int 1 = Refuted | verdict_of_int 2 = Unknown
+    | verdict_of_int _ = raise U.Unpack
+  val entry_packer =
+    P.packPair (P.packList (P.packTuple3 (RPC_Pretty_Bytes.pack_raw_term,
+                                          P.packPair (P.packPair (P.packInt, P.packInt), P.packString),
+                                          P.packInt)),
+                P.packInt)
+  val entry_unpacker =
+    U.>> (U.unpackPair (U.unpackList (U.unpackTuple3 (RPC_Pretty_Bytes.unpack_raw_term,
+                                                     U.unpackPair (U.unpackPair (U.unpackInt, U.unpackInt), U.unpackString),
+                                                     U.unpackInt)),
+                        U.unpackInt),
+          fn (lemmas, verdict) =>
+            {lemmas = map (fn (stmt, (ms, script), tier) =>
+                             (stmt, (Phi_Proof_Store.times_of_ms ms, script), tier_of_int tier)) lemmas,
+             verdict = verdict_of_int verdict} : entry)
+in
+fun encode_entry ({lemmas, verdict} : entry) =
+  let val outs = BytesIO.mkOutstream ()
+   in entry_packer (map (fn (stmt, (times, script), tier) =>
+                           (stmt, (Phi_Proof_Store.ms_of_times times, script), int_of_tier tier)) lemmas,
+                    int_of_verdict verdict) outs;
+      BytesIO.toString outs
+  end
+(*catch-all: a truncated payload raises Subscript out of BytesIO, a foreign one
+  Unpack; \<^try> re-raises interrupts*)
+fun decode_entry s =
+  \<^try>\<open>SOME (#1 (U.doUnpack entry_unpacker (BytesIO.fromString s))) catch _ => NONE\<close>
+end
 
-fun lookup_entry _ d = Symtab.lookup (Synchronized.value table) (key_of d)
-fun write_entry _ d entry = Synchronized.change table (Symtab.update (key_of d, entry))
+fun lookup_entry thy d =
+  case Phi_Guard_Store.get_cached_proof thy (key_of d) of
+    NONE => NONE
+  | SOME (_, payload) => decode_entry payload
+fun write_entry thy d entry =
+  Phi_Guard_Store.update_cached_proof thy {id = key_of d, hash = NONE}
+    (Phi_Proof_Store.zero_times, encode_entry entry)
 
 structure Guard_Simp_SS = Simpset (
   val initial_ss = Simpset_Configure.Empty_SS

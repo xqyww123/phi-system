@@ -2992,3 +2992,65 @@ next to `PhiSem_Int_ArbiPrec` cannot open the branch of an `if` on a
 `toplevel0.ML`'s block open — the `@{print}` at `:267` is a leftover) — a
 pre-existing phi-system matter outside this plan, avoided by importing what
 `PhiTest_Arithmetic` imports.
+
+## 35. Step 4 done (2026-09-12) — the persistent store; reviewed, pending acceptance
+
+**What was done** (§8, §10 step 4).  `cache_file.ML`: the proof store's body
+is `functor Proof_Store (Kind : STORE_KIND) : PHI_PROOF_STORE` over
+`{ext, migrates, marks_writes, describe, switch}`; `Phi_Proof_Store` is its
+instance `{ext = "proof-store", migrates = true, marks_writes = true,
+describe = ("Proof cache", "cached proofs"), switch = enable_proof_store}`
+at the end of the file — name, signature, file format, messages and every
+caller unchanged, with the two deliberate changes of §8: the dead `bool` of
+the `openning_stores` triple is gone (`(store * written)`), and
+`compact_store` compacts nothing when the store file does not exist (the
+test sits inside `compact_store`, before the writability probe and the
+lock file's `createf`, so BOTH `Theory.at_end` branches — the immediate
+one and the one deferred behind async tasks — leave no `<thy>.<ext>.lock`
+behind a theory that never wrote; the re-check under the lock stays, for
+`invalidate_store` racing in between).  `migrate_legacy` binds the append
+lock only in the branch that migrates.  `guard_cache.ML`: `signature
+PHI_GUARD_STORE` (the two entry points and `store_path`) and `structure
+Phi_Guard_Store : PHI_GUARD_STORE = Proof_Store (…)` with `{ext =
+"guard-cache", migrates = false, marks_writes = false, describe = ("Guard
+cache", "cached guard advice"), switch = \<phi>guard_cache}`; the entry
+codec over `MessagePackBytesIO` — a lemma's statement through
+`RPC_Pretty_Bytes.pack_raw_term`, its times as the `(cpu_ms, wall_ms)`
+pair, tier and verdict as int tags, no format version, `decode_entry` a
+catch-all `\<^try>` answering `NONE`; `lookup_entry`/`write_entry` over
+`get_cached_proof`/`update_cached_proof thy {id = "PLPRGUARD" ^
+Hasher.compact d, hash = NONE} (zero_times, payload)`; the in-memory table
+of step 2 deleted.  `.gitignore`: `*.guard-cache`, `*.guard-cache.lock`,
+`*.guard-cache.tmp*`.  `Test/Guard_Decision_Smoke.thy`: `fresh` is a
+wall-clock run tag plus the process serial, since the store now outlives
+the process (a repeated numeral would meet an earlier run's entry).
+
+**Verification** (`Phi_System_Base` rebuilt twice on the author's approval
+of 2026-09-12 — `cache_file.ML` is compiled into that heap from source —
+43 s and 46 s; Isabelle-MCP relaunched on it): PLPR.thy clean; the battery
+clean in two fresh processes without deleting its `.guard-cache` between
+them; `Test/Guard_Export_Smoke.thy` clean; the corpus clean three times —
+cold in one process (355 decisions, every one a miss, 122 s of guard
+time, seven `<thy>.guard-cache` files written, `Phi_Types` 5 KB), then in
+a NEW process (146 `Refuted` and 5 `Unknown` hits read from disk, 21 s),
+then again after the review fixes (the same, and no `.proof-store.lock` or
+`.guard-cache.lock` newer than the fix anywhere in the tree).
+
+**Review** (an Opus panel: four interrogators, one fresh defender per
+finding, a judge; 13 agents): ACCEPTED once two drafter fixes were applied
+— the `at_end` gate moved into `compact_store` (the first draft gated only
+the immediate branch), and the battery's `fresh` (above).  Rejected: the
+`marks_writes` branch "duplicating" the update (a branch-shape preference);
+the "fast path, no lock" comment (the append-lock guard is not the lock the
+module means); "no purge path for an entry written by an older codec" (§8
+rules it: an undecodable entry is no entry, and the Refuted/Unknown arms
+overwrite it on the next decision); the write mark computed before the
+`marks_writes` test (pre-existing line; moving it would put a SHA1 inside the
+`openning_stores` critical section).  Notes: the migrate_legacy binding
+(applied, optional); `*.guard-cache` is ignored in phi-system only, where
+every PLPR-importing theory lives today.  AUTHOR_DECISION, open: `val
+store_path` in `PHI_GUARD_STORE` has no caller and §8 rules "two entry
+points, no new ones" — (a) drop it, or (b) expose it through
+`PHI_GUARD_CACHE` so the battery can delete its own store file at entry
+and its "no entry" probes hold by construction; the judge and the drafter
+recommend (a).

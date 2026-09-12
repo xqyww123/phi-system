@@ -1,120 +1,91 @@
-# Handoff: guard cache — step 2 DONE and reviewed twice; the 2608 flip diagnosed and fixed; close-out in progress (2026-09-11)
+# Handoff: guard cache — steps P/0/1/2/3(first half)/4 DONE; step 5 next (updated 2026-09-12)
 
 Supersedes `GUARD_CACHE_RESUME_HANDOFF_2026-09-09.md`.  Plan:
 `contrib/phi-system/Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` **rev 24** — §1 glossary
-authoritative; §30 step 2 as done; §31 the first code review's rulings/fixes; §32 the
-re-review's fixes, the author's rulings of 09-10/09-11, the CPU measurement; **§33 the
-`Phi_Types.thy:2608` flip diagnosed (2026-09-11) and the rulings that fixed it**.  Read
-§31–§33 before touching anything.
+authoritative (the guard digest bullet carries the 2026-09-11 CORRECTION); §30–§32 step 2
+and its two reviews; §33 the `Phi_Types.thy:2608` flip diagnosed and fixed, the tier
+measurement SHELVED, the budget semantics ruled; §34 step 3 first half (the export hook
+end to end) with its correction; **§35 step 4 (the persistent store) done and reviewed,
+one AUTHOR_DECISION open**.  Read §33–§35 before touching anything.
 
-## Committed (2026-09-09; NOT pushed — push only when told, only to origin)
-Performant_Isabelle_ML `4e850dd`, Isabelle_RPC `65cdbaa`, Isa-Mini `1ce791f`,
-auto_sledgehammer `1360b21`, phi-system `d19e4521` + `1d376c80`, root MLML `bf4fd202`.
+## Committed (NOT pushed — push only when told, only to origin)
+2026-09-09: Performant_Isabelle_ML `4e850dd`, Isabelle_RPC `65cdbaa`, Isa-Mini `1ce791f`,
+auto_sledgehammer `1360b21`, phi-system `d19e4521` + `1d376c80`, root `bf4fd202`.
+2026-09-11: phi-system `b83790d5` (step 2 + the 2608 fix), `da0fd908`, `602e2a41` (the
+digest = whole goal state + assumptions), `9c2a29e6`, `377dc749` (step 3 first half);
+root bumps up to `8c0796bd`.  2026-09-12: phi-system `9dd703c1` (§34 correction), root
+`53002977`; auto_sledgehammer: the functor commit (step 4); phi-system: the step 4 commit;
+root bump — see `git log` for the last three.
 
-## Uncommitted — the whole of step 2 plus the 09-11 work (phi-system only, no heap rebuilt)
-`git status` in contrib/phi-system: Docs/GUARD_CACHE_QUICK_MODE_PLAN.md (+ .rev23.md),
-Phi_Logic_Programming_Reasoner/{PLPR.thy, library/reasoners.ML, library/guard_cache.ML,
-library/guard_refute.ML, library/guess_instantiate.ML (one comment)}, Test/Guard_Race_Smoke.thy
-→ Test/Guard_Decision_Smoke.thy (git mv, staged), Phi_System/library/system/processor.ML
-(one comment), ai-artifacts/ handoffs + `ai-artifacts/Guard_False_Probe.thy` (the
-`\<condition> False` probe of §33 item 3; keep, it is evidence).
-Final code shape: reasoners.ML "Guard decision" section — `cpu_bounded`/`cpu_bounded_seq`/
-`cpu_bounded_tac` (thread CPU; the wall-clock `timed_*` family deleted), `r_conv` (thread
-CPU), `r_nitpick` (wall clock; net `refute_timeout + n × 5 s`), the judge ref, the
-`guard_decision` record (verdict/hit/refuter/judge/elapsed_ms/digest/subgoals), the two
-warnings decided at one site, `replay_lemma`, `prove_or_refute` with the pair-valued
-`add_lemmas` over `(ctxt0, ctxt)`, `consult` on `ctxt` (no lemma of this entry) with
-`update_lemma`; the factory is now **`gen_guard_condition_solver`** (renamed 09-11;
-the instances `guard_condition_solver'`/`guard_condition_solver1` keep their names) with
-**`simpcut_tac` as a local function under 5 s of thread CPU, fixed in the code**, warning
-`The system simplifier probably loops on:` on its timeout and then yielding the state
-unchanged; the factory's local `guard_ctxt`.  guard_cache.ML: `lookup_entry`/
-`write_entry` (in-memory `Symtab`, step 4 swaps the store in), `add_lemma_with` →
-`add_lemma`/`update_lemma`.  guard_refute.ML: the `refuter_probe` scaffolding deleted;
-`nitpick` = preprocessing + one Nitpick call.  PLPR.thy: `cpu_bounded_tac` in
-`\<phi>guard_P_auto`; `hide_const`; the `declare` block.
+## The code, as it stands
+- `auto_sledgehammer/library/cache_file.ML`: `functor Proof_Store (Kind : STORE_KIND) :
+  PHI_PROOF_STORE`; `Phi_Proof_Store` instantiated at the file's end; `compact_store` does
+  nothing for a missing file; `openning_stores : (store * written)`.  Compiled INTO the
+  `Phi_System_Base` heap from source (the heap holds phi-system's external deps): an edit
+  needs `isabelle build -b -d /home/qiyuan/Current/MLML Phi_System_Base` (author's approval
+  each time; ~45 s) and an Isabelle-MCP relaunch (`isabelle_terminate`, `isabelle_launch
+  Phi_System_Base`).  The Auto_Sledgehammer/Minilang heaps are NOT rebuilt by that; Isabelle
+  invalidates them itself when someone builds them.
+- `phi-system/Phi_Logic_Programming_Reasoner/library/guard_cache.ML`: `PHI_GUARD_STORE`,
+  `Phi_Guard_Store` (`<thy>.guard-cache` beside the theory, gitignored), the entry codec
+  (`encode_entry`/`decode_entry`), `lookup_entry`/`write_entry`; the lemma list, budget,
+  export hook as before.  `reasoners.ML`: `prove_or_refute`, the factory
+  `gen_guard_condition_solver` with `simpcut_tac` local under 5 s of thread CPU (warns
+  "The system simplifier probably loops on:"), `guard_digest ctxt th` over the whole state
+  plus `Assumption.all_prems_of ctxt`.
+- Tests (none in a ROOT; evaluate on demand on Phi_System_Base): `Test/Guard_Decision_Smoke.thy`
+  (every prove_or_refute path; `fresh` = wall-clock run tag + serial), `Test/Guard_Export_Smoke.thy`
+  (the export hook: same run, `;` boundary, nested block), `ai-artifacts/Guard_False_Probe.thy`.
 
-## The digest (ruling of 2026-09-11, late)
-The store key is the WHOLE goal state plus the context's assumptions:
-`guard_digest ctxt th = Hasher.terms (Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt))`
-(one hash; `Thm.prop_of th` under `Goal.protect` = the guard subgoals + the protected rest
-of the sequent with its conclusion; the aux facts stay out — derivable).  The factory's
-digest step takes `ctxt` (`digest_of : Proof.context -> thm -> 'd`; the non-digest
-instances pass `K (K ())`).  The subgoals-only key of 09-03…09-11 was the DRAFTER's
-narrowing recorded under the author's timing citations — never the author's ruling
-("我从来说的都是整个 sequent"); §1 "guard digest" carries the correction of the record, §33
-item 4 the two measurements that preceded the ruling (77 us per decision; 355 corpus
-decisions → 261 keys, no repeated key among the 162 that hit the store).  Lesson, binding:
-when narrowing a definition beyond the author's words, quote the author verbatim and mark
-the narrowing [drafter] and ask; never file it under an author citation.
+## OPEN WITH THE AUTHOR
+- §35: `val store_path` in `PHI_GUARD_STORE` has no caller; §8 says two entry points, no
+  new ones.  (a) drop it [recommended] or (b) expose it via `PHI_GUARD_CACHE` so the battery
+  deletes its own store file at entry.
+- §33: item 4 (closed by the digest ruling); the tier measurement (shelved; the drafter's
+  plan when resumed: stages A and B of `ai-artifacts/TIER_MEASUREMENT_BRAINSTORM_2026-09-11.md`,
+  not C without the author); phase-2 design points: a budgeted lemma is a CONDITIONAL rule
+  (tried after unconditional rules, refused past `simp_depth_limit`), `Frequent` = the
+  ceiling, whether a judge lemma may cite the context's assumptions; the `is_F` shortcut
+  left to the follow-up constant `\<check> \<hypothesis> \<consistency>`.
 
-## What 09-11 found (details in §33)
-The 2608 flip was the "G.simpcut" pass's 400 ms bound: those `len_intvl` guards need
-371–437 ms of thread CPU in that pass (measured, low load), the timeout was silent and
-P-auto then failed on the unsimplified goal.  Not load, not a digest collision.  Side
-findings: the `is_F` shortcut's 250 ms `auto_search_tac` never sees a goal (the pass
-closes or cuts every `\<condition> False` guard first) — the idiom is simp-only, since
-2024; the loud guard warning fires by design on the shared entry `3d7696d10790e4a8`.
-
-## CLOSE-OUT STEPS REMAINING (do in this order)
-1. `PhiTest_Arithmetic.thy` is being evaluated under Isabelle-MCP (Phi_System_Base) with
-   the TEMPORARY declare in PLPR.thy (`\<phi>log_guard_decision = true, AoA_driver = "test",
-   AoA_write_proof_store = false`, after the `\<phi>log_guess_inst` declare) and the 5 s
-   bound.  Check `isabelle_evaluation_status`; expect clean, no "probably loops" warning
-   (grep the decision log's process file for none; the warning is a PIDE warning, check
-   `isabelle_command_output` at `Phi_Types.thy:2608` and `:2732`).
-2. REVERT the TEMPORARY declare (the four-line block with its comment) so the `declare`
-   reads `[[\<phi>log_guess_inst = true]]` only; re-evaluate PLPR.thy (clean).
-3. Commit in contrib/phi-system on its current branch (master): message naming step 2,
-   the two reviews, the rulings, the 2608 diagnosis and fix (§33), the rename; then the
-   root MLML commit bumping the submodule pointer (`git add -f contrib/phi-system` from
-   the MLML root).  NO push.  Sweep in others' uncommitted tracked edits if any, naming
-   them in the message.  Untracked build products in the tree (`Phi_Examples/*.C`,
-   `*.o`, `PhiTest_Arithmetic.o`, `Phi_Semantics/PhiSem_Real_Abst.proof-store`) are not
-   ours: leave them.
-4. DONE (rulings 2026-09-11): the `\<phi>log_guess_inst = true` declare deleted from
-   PLPR.thy; the `is_F` shortcut left to the follow-up constant; the plan text renamed
-   to `gen_guard_condition_solver` throughout (old name only in quotations and for the
-   pre-factory function).  Still open with the author: §33 item 4 (the loud guard
-   warning on a shared entry — explained, decision pending).
-
-## STEP 3 (plan §10 step 3): first half DONE (§34), second half SHELVED (§33)
-The export hook end to end is verified by `Test/Guard_Export_Smoke.thy` (same run, `;`
-boundary, nested block; §34).  The tier measurement is shelved by the author (§33, the
-brainstorm dossier in `ai-artifacts/TIER_MEASUREMENT_BRAINSTORM_2026-09-11.md`; the
-drafter's plan when it resumes: stages A and B).  Corpus loads under MCP still need the
-TEMPORARY `AoA_driver = "test"` declare in PLPR.thy (add, run, revert).  Then step
-4 (persistence: `cache_file.ML` store functor, `Phi_Guard_Store`, the entry codec over
-`RPC_Pretty_Bytes`, gitignore; needs the author's approval to rebuild Phi_System_Base),
-step 5 (corpus acceptance via Isa-REPL with the AoA gate closed).  After the plan: move
-the term-codec functor to Performant_Isabelle_ML; the author's follow-up of §33: a new
-antecedent constant `\<check> \<hypothesis> \<consistency>` (= `False`) with dedicated
-reasoners for it and for `\<condition> False`, above the condition solver in priority.
+## NEXT: STEP 5 (plan §10 step 5) — corpus acceptance via Isa-REPL
+A cache-on and a cache-off leg (`\<phi>guard_cache`), a concurrent Isa-REPL leg, a
+consecutive-run leg with a hit-rate floor; measure wall time, verdict flips per guard
+cache-on vs cache-off, first-decision latency, the path distribution (hit kinds, refuters,
+judge), lemma replay cost, budget cut-offs, hard failures attributable to guard-side
+exceptions, digest cost, store I/O, the forked-proof write, the export hook's cost per run
+boundary; re-measure the 400 ms bound.  Isa-REPL against Phi_System_Base sources; the AoA
+gate is CLOSED under Isa-REPL (no interactive frontend) — no test-driver declare needed
+there; under Isabelle-MCP it is open and the TEMPORARY `declare [[\<phi>log_guard_decision =
+true, AoA_driver = "test", AoA_write_proof_store = false]]` after the `\<phi>guard_P_auto`
+method_setup in PLPR.thy keeps a failing statement off the LLM (the author calls the
+escalation expected behaviour; the declare is the drafter's practice for deterministic
+verification runs; revert before commit).  Baselines: warm corpus = 355 decisions, 146
+Refuted + 5 Unknown hits, ~21 s of guard time; cold = ~122 s.  After the plan: move the
+term-codec functor to Performant_Isabelle_ML.
 
 ## Working notes
-- Corpus loads under Isabelle-MCP MUST use the `AoA_driver = "test"` declare (the AoA
-  gate is open under an interactive frontend; the 09-09 incident cost agent time).
-- The in-memory table lives in guard_cache.ML: a reload of that file empties it; a
-  reload of reasoners.ML alone keeps it (warm-table runs show ~145 `Refuted` hits, cold
-  ~75 first refutations by R-nitpick at ~1.4 s each).
-- A reload of reasoners.ML re-evaluates the whole corpus in parallel (load 5–9); the
-  harness kills background `sleep` timers "for low memory" spuriously — poll anyway.
-- The battery's guards carry `fresh ()` numerals because the table has no deletion.
-- Decision statistics: `~/.isabelle/Isabelle2025-2/event_log/guard_decision/`; the
-  session scratchpad's scripts (`simpcut_probe.py`, `lowload.py`, `compare_decisions.py`)
-  may be gone after compaction — trivial to rewrite (parse `<record …>` attributes).
-- A thread's CPU for the same work varies ±30 % between runs (SMT contention): a bound
-  needs that margin over the measured maximum.
+- Under Isabelle-MCP, editing PLPR.thy makes the MCP re-evaluate every open downstream
+  theory automatically; after reverting the declare, cancel that re-evaluation
+  (`isabelle_cancel_evaluation`) unless it is wanted.
+- The harness kills background `sleep` timers "for low memory" spuriously — poll anyway.
+- Decision statistics: `~/.isabelle/Isabelle2025-2/event_log/guard_decision/<ts>-<pid>.xml`;
+  parse `<record …>` attributes (verdict/hit/refuter/judge/elapsed_ms/digest/subgoals).
+- A theory importing `PhiSem_Machine_Integer` beside `PhiSem_Int_ArbiPrec` cannot open an
+  `if` branch on a `\<val> \<nat>` (pre-existing; `toplevel0.ML:267`'s `@{print}` stays by
+  the author's word).
 
 ## Rules (the author's, all binding)
 Edit source with the Edit tool; plan docs by hand; never coin words (fixed terms:
 entry/store/the lemma list/the lemma budget/ctxt_g/ctxt1/guard_ctxt/the canonical form/
 "G.simpcut"/the undecided-guard warning/the loud guard warning/the dropped-lemma warning);
 explain in Chinese, essence first, full context, exact file:line; `isabelle build` only
-with approval; after `.ML` edits re-evaluate, never rebuild heaps for that; never git
-stash/checkout/reset/clean; commit on the repo's current branch, push origin only, only
-when told; memory writes need approval; probes must not load phi-system theories under
-NEW names; do not relay agent progress ticks; monitor long runs at most every 10 minutes;
-review shape: workflow, Opus, English, interrogators → more fresh defenders → judge; the
-drafter re-verifies every upheld finding; no code change before the author agrees on
-anything classified AUTHOR_DECISION.
+with approval; after `.ML` edits re-evaluate, never rebuild heaps for that (except
+cache_file.ML, above); never git stash/checkout/reset/clean; commit on the repo's current
+branch, push origin only, only when told; memory writes need approval; probes must not
+load phi-system theories under NEW names; do not relay agent progress ticks; monitor long
+runs at most every 10 minutes; review shape: workflow, Opus, English, interrogators →
+fresh defenders → judge; the drafter re-verifies every upheld finding; no code change
+before the author agrees on anything classified AUTHOR_DECISION; when narrowing a
+definition beyond the author's words, quote the author verbatim, mark the narrowing
+[drafter] and ask — never file it under an author citation.
