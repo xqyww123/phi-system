@@ -1,0 +1,494 @@
+diff --git a/Test/Test_Proof_Store_Double_Key.thy b/Test/Test_Proof_Store_Double_Key.thy
+index aa78b0b..75873a0 100644
+--- a/Test/Test_Proof_Store_Double_Key.thy
++++ b/Test/Test_Proof_Store_Double_Key.thy
+@@ -84,7 +84,7 @@ val _ = S.invalidate_store thy
+ val hA = digest "goal A"
+ 
+ (*4: the frame on disk carries the hash*)
+-val _ = S.update_cached_proof thy {id = "k1", hash = SOME hA} (t1, "pA")
++val _ = S.update_cached_proof thy {id = "k1", hash = SOME hA, rewrites = false} (t1, "pA")
+ val _ = assert (map #hash (puts_of "k1") = [SOME hA]) "test4 disk"
+ 
+ (*5: both keys hit the same record*)
+@@ -107,8 +107,8 @@ val _ = assert (S.get_cached_proof_by_hash thy hA = NONE) "test7 after compactio
+ 
+ (*8: compaction keeps the hash field; 9: a record without one is reachable by id*)
+ val hB = digest "goal B"
+-val _ = S.update_cached_proof thy {id = "k2", hash = SOME hB} (t1, "pB")
+-val _ = S.update_cached_proof thy {id = "k3", hash = NONE} (t1, "pC")
++val _ = S.update_cached_proof thy {id = "k2", hash = SOME hB, rewrites = false} (t1, "pB")
++val _ = S.update_cached_proof thy {id = "k3", hash = NONE, rewrites = false} (t1, "pC")
+ val _ = S.compact_and_store thy
+ val _ = assert (map #hash (puts_of "k2") = [SOME hB] andalso map #hash (puts_of "k3") = [NONE]) "test8 disk"
+ val _ = S.force_reload thy
+@@ -117,25 +117,25 @@ val _ = assert (S.get_cached_proof thy "k3" = SOME (t1, "pC")) "test9 id"
+ 
+ (*10: one hash, two ids: the later write wins*)
+ val hC = digest "goal C"
+-val _ = S.update_cached_proof thy {id = "kA", hash = SOME hC} (t1, "pA1")
+-val _ = S.update_cached_proof thy {id = "kB", hash = SOME hC} (t1, "pB1")
++val _ = S.update_cached_proof thy {id = "kA", hash = SOME hC, rewrites = false} (t1, "pA1")
++val _ = S.update_cached_proof thy {id = "kB", hash = SOME hC, rewrites = false} (t1, "pB1")
+ val _ = assert (S.get_cached_proof_by_hash thy hC = SOME (t1, "pB1")) "test10"
+ 
+ (*11: one id, one text, two hashes and two times: both hash entries stay*)
+ val hD = digest "goal D"
+ val hD' = digest "goal D'"
+ val n11 = length (frames ())
+-val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD} (t1, "pD")
+-val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD'} (t2, "pD")
++val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD, rewrites = false} (t1, "pD")
++val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD', rewrites = false} (t2, "pD")
+ val _ = assert (S.get_cached_proof_by_hash thy hD' = SOME (t2, "pD")) "test11 h'"
+ val _ = assert (S.get_cached_proof_by_hash thy hD = SOME (t1, "pD")) "test11 h"
+ val _ = assert (length (frames ()) = n11 + 2) "test11 two frames"
+ 
+ (*12: the identical write is short-circuited; 12b: a write that differs only
+       in its time is not (ruling O covers the whole record)*)
+-val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD'} (t2, "pD")
++val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD', rewrites = false} (t2, "pD")
+ val _ = assert (length (frames ()) = n11 + 2) "test12 no frame"
+-val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD'} (t3, "pD")
++val _ = S.update_cached_proof thy {id = "kD", hash = SOME hD', rewrites = false} (t3, "pD")
+ val _ = assert (length (frames ()) = n11 + 3) "test12b time-only rewrite is a frame"
+ val _ = assert (S.get_cached_proof_by_hash thy hD' = SOME (t3, "pD")) "test12b by_hash follows"
+ 
+@@ -168,7 +168,7 @@ val _ = assert (S.get_cached_proof thy "x" = SOME (t1, "px")
+ 
+ (*15: forgetting a hash touches neither the id nor the file*)
+ val hF = digest "goal F"
+-val _ = S.update_cached_proof thy {id = "kF", hash = SOME hF} (t1, "pF")
++val _ = S.update_cached_proof thy {id = "kF", hash = SOME hF, rewrites = false} (t1, "pF")
+ val n15 = length (frames ())
+ val _ = S.invalidate_proof_cache_by_hash hF thy
+ val _ = assert (S.get_cached_proof_by_hash thy hF = NONE) "test15 hash gone"
+@@ -207,7 +207,7 @@ val _ = S.invalidate_store thy
+      then overwrites the forgotten hash entry*)
+ val g16 = goal_of ctxt "(x::nat) + 0 = x"
+ val h16 = Hasher.goal_at 1 (ctxt, g16)
+-val _ = S.update_cached_proof thy {id = "other16", hash = SOME h16} (t1, "(fail)[1]")
++val _ = S.update_cached_proof thy {id = "other16", hash = SOME h16, rewrites = false} (t1, "(fail)[1]")
+ val (txt16, st16) = run_auto {read = true, write = true} (SOME "K16") ctxt g16
+ val _ = assert (Thm.no_prems st16) "test16 solved"
+ val _ = assert (tombs_of "K16" = 0 andalso tombs_of "other16" = 0) "test16 no tombstone"
+@@ -221,7 +221,7 @@ val _ = S.invalidate_store thy
+       The preset has no hash while the call has one, so a stray promotion
+       write would differ from it and could not be short-circuited.*)
+ val g16b = goal_of ctxt "(w::nat) + 0 = w"
+-val _ = S.update_cached_proof thy {id = "K16b", hash = NONE} (t1, "(simp)[1]")
++val _ = S.update_cached_proof thy {id = "K16b", hash = NONE, rewrites = false} (t1, "(simp)[1]")
+ val n16b = length (frames ())
+ val (txt16b, st16b) = run_auto {read = true, write = true} (SOME "K16b") ctxt g16b
+ val _ = assert (txt16b = "(simp)[1]" andalso Thm.no_prems st16b) "test16b verbatim"
+@@ -234,7 +234,7 @@ val _ = S.invalidate_store thy
+       under both -- and write_store off writes nothing*)
+ val g16c = goal_of ctxt "(v::nat) + 0 = v"
+ val h16c = Hasher.goal_at 1 (ctxt, g16c)
+-val _ = S.update_cached_proof thy {id = "K16c", hash = SOME h16c} (t1, "(simp)[1]")
++val _ = S.update_cached_proof thy {id = "K16c", hash = SOME h16c, rewrites = false} (t1, "(simp)[1]")
+ val n16c = length (frames ())
+ val (txt16c, st16c) = run_auto {read = false, write = false} (SOME "K16c") ctxt g16c
+ val _ = assert (txt16c <> "(simp)[1]" andalso Thm.no_prems st16c) "test16c searched"
+@@ -247,7 +247,7 @@ val _ = S.invalidate_store thy
+      the hash and is forgotten; write_store off, so no PUT follows*)
+ val g17 = goal_of ctxt "(y::nat) * 1 = y"
+ val h17 = Hasher.goal_at 1 (ctxt, g17)
+-val _ = S.update_cached_proof thy {id = "K17", hash = SOME h17} (t1, "(fail)[1]")
++val _ = S.update_cached_proof thy {id = "K17", hash = SOME h17, rewrites = false} (t1, "(fail)[1]")
+ val (_, st17) = run_auto {read = true, write = false} (SOME "K17") ctxt g17
+ val _ = assert (Thm.no_prems st17) "test17 solved"
+ val _ = assert (tombs_of "K17" = 1 andalso length (puts_of "K17") = 1) "test17 tombstone, no PUT"
+@@ -271,9 +271,9 @@ val _ = \<^try>\<open>ignore (Solver.eval_prf_str kws 1 (S.replay_limits t1) "(c
+                  catch Solver.Auto_Fail _ => ()\<close>
+ val per_replay = !replays
+ val _ = assert (per_replay > 0) "test17b count_fail is reached"
+-val _ = S.update_cached_proof thy {id = "K17b", hash = SOME h17b} (t1, "(count_fail)[1]")
++val _ = S.update_cached_proof thy {id = "K17b", hash = SOME h17b, rewrites = false} (t1, "(count_fail)[1]")
+ val _ = replays := 0
+-(*the search records another text under the preset id: the collision guard warns, as it should*)
++(*the search records another text under the preset id (the collision marks, under ML_debugger, would say so: test 20)*)
+ val (_, st17b) = run_auto {read = true, write = true} (SOME "K17b") ctxt g17b
+ val _ = assert (Thm.no_prems st17b) "test17b solved"
+ val _ = assert (!replays = per_replay) ("test17b replayed once, not twice: " ^ string_of_int (!replays))
+@@ -288,8 +288,8 @@ val g18a = goal_of ctxt "(z::nat) + 0 = z"
+ val g18b = goal_of ctxt "rev (rev (xs::nat list)) = xs"
+ val p18 = "(rule rev_rev_ident)[1]"
+ val h18b = Hasher.goal_at 1 (ctxt, g18b)
+-val _ = S.update_cached_proof thy {id = "K18a", hash = SOME h18b} (t1, p18)
+-(*the search records another text under the preset id: the collision guard warns, as it should*)
++val _ = S.update_cached_proof thy {id = "K18a", hash = SOME h18b, rewrites = false} (t1, p18)
++(*the search records another text under the preset id (the collision marks, under ML_debugger, would say so: test 20)*)
+ val (_, st18a) = run_auto {read = true, write = true} (SOME "K18a") ctxt g18a
+ val _ = assert (Thm.no_prems st18a andalso tombs_of "K18a" = 1) "test18 first call"
+ val (txt18, st18b) = run_auto {read = true, write = true} (SOME "K18b") ctxt g18b
+@@ -306,9 +306,9 @@ val _ = S.invalidate_store thy
+ val g19 = goal_of ctxt "rev (rev (ys::nat list)) = ys"
+ val h19 = Hasher.goal_at 1 (ctxt, g19)
+ val p19 = "(rule rev_rev_ident)[1]"
+-val _ = S.update_cached_proof thy {id = "K19", hash = NONE} (t1, "(fail)[1]")
+-val _ = S.update_cached_proof thy {id = "other19", hash = SOME h19} (t1, p19)
+-(*the promotion rewrites K19 with another text: the collision guard warns, as it should*)
++val _ = S.update_cached_proof thy {id = "K19", hash = NONE, rewrites = false} (t1, "(fail)[1]")
++val _ = S.update_cached_proof thy {id = "other19", hash = SOME h19, rewrites = false} (t1, p19)
++(*the promotion rewrites K19 with another text (the collision marks, under ML_debugger, would say so: test 20)*)
+ val (txt19, st19) = run_auto {read = true, write = true} (SOME "K19") ctxt g19
+ val _ = assert (txt19 = p19 andalso Thm.no_prems st19) "test19 verbatim"
+ val _ = assert (tombs_of "K19" = 1 andalso map #hash (puts_of "K19") = [NONE, SOME h19]) "test19 frames"
+@@ -328,7 +328,7 @@ val g19b = goal_of ctxt "(u::nat) + 0 = u & rev (rev (vs::nat list)) = vs"
+ val _ = assert (Thm.nprems_of g19b = 2) "test19b two subgoals"
+ val h19b = Hasher.all_goals (ctxt, g19b)
+ val p19b = "((rule add_0_right)[1], (rule rev_rev_ident)[1])"
+-val _ = S.update_cached_proof thy {id = "other19b", hash = SOME h19b} (t1, p19b)
++val _ = S.update_cached_proof thy {id = "other19b", hash = SOME h19b, rewrites = false} (t1, p19b)
+ val n19b = length (frames ())
+ val (fut19b, st19b) = Solver.all_auto (opts {read = true, write = false} (SOME "K19b")) ctxt g19b
+ val (_, txt19b) = Future.join fut19b
+@@ -337,7 +337,7 @@ val _ = assert (Thm.no_prems st19b) "test19b closed"
+ val _ = assert (length (frames ()) = n19b) "test19b no frame"
+ 
+ (*19c: all_auto's hit by id, handed back as it stands*)
+-val _ = S.update_cached_proof thy {id = "K19c", hash = NONE} (t1, p19b)
++val _ = S.update_cached_proof thy {id = "K19c", hash = NONE, rewrites = false} (t1, p19b)
+ val n19c = length (frames ())
+ val (fut19c, st19c) = Solver.all_auto (opts {read = true, write = true} (SOME "K19c")) ctxt g19b
+ val _ = assert (snd (Future.join fut19c) = p19b) "test19c verbatim"
+@@ -345,4 +345,65 @@ val _ = assert (Thm.no_prems st19c) "test19c closed"
+ val _ = assert (length (frames ()) = n19c) "test19c no frame"
+ \<close>
+ 
++section \<open>The collision marks: test 20\<close>
++
++ML \<open>
++(*warnings printed while f runs, in order; the hook is process-global, so this
++  is for a single-threaded stretch of a test*)
++fun capture_warnings f =
++  let val got = Unsynchronized.ref ([] : string list)
++      val r = Unsynchronized.setmp Private_Output.warning_fn (fn outs => got := implode outs :: ! got) f ()
++   in (r, rev (! got)) end
++fun collision_warnings ws = filter (String.isPrefix "Proof store: ") ws
++(*the marks are a debugging aid: the store reads ML_debugger at each write, from
++  the theory it is given, so the option is set on that value alone -- in both
++  directions, since the process may have been started with it on*)
++val thy_dbg = Config.put_global ML_Options.debugger true thy
++val thy_off = Config.put_global ML_Options.debugger false thy
++
++val _ = S.invalidate_store thy
++(*20: under ML_debugger, a second, different text under an id this session wrote
++     warns, with exactly these four lines ...*)
++val (_, w20) = capture_warnings (fn () =>
++  (S.update_cached_proof thy_dbg {id = "K20", hash = NONE, rewrites = false} (t1, "pA");
++   S.update_cached_proof thy_dbg {id = "K20", hash = NONE, rewrites = false} (t1, "pB")))
++val _ = assert (collision_warnings w20 =
++                ["Proof store: two different proofs were written under one proof id in this session.\n\
++                 \  id: K20\n\
++                 \  first (100 ms): pA\n\
++                 \  now (100 ms): pB"]) "test20 a differing write under a marked id warns, in four lines"
++
++(*20b: ... unless the writer rewrites its own key by design: such writes neither
++      warn nor mark, so a later rewrites = false write of yet another text under
++      that id finds no mark and stays silent*)
++val (_, w20b) = capture_warnings (fn () =>
++  (S.update_cached_proof thy_dbg {id = "K20b", hash = NONE, rewrites = true} (t1, "pA");
++   S.update_cached_proof thy_dbg {id = "K20b", hash = NONE, rewrites = true} (t1, "pB");
++   S.update_cached_proof thy_dbg {id = "K20b", hash = NONE, rewrites = false} (t1, "pC")))
++val _ = assert (null (collision_warnings w20b)) "test20b rewrites = true neither warns nor marks"
++val _ = assert (S.get_cached_proof thy "K20b" = SOME (t1, "pC")) "test20b the last write stands"
++
++(*20c: without ML_debugger nothing is marked and nothing warns, whatever is written*)
++val (_, w20c) = capture_warnings (fn () =>
++  (S.update_cached_proof thy_off {id = "K20c", hash = NONE, rewrites = false} (t1, "pA");
++   S.update_cached_proof thy_off {id = "K20c", hash = NONE, rewrites = false} (t1, "pB");
++   S.update_cached_proof thy_dbg {id = "K20c", hash = NONE, rewrites = false} (t1, "pC")))
++val _ = assert (null (collision_warnings w20c)) "test20c no marks without ML_debugger"
++
++(*20d: the same text again, at another time, is not a collision: the digest of the
++      text is what is compared*)
++val (_, w20d) = capture_warnings (fn () =>
++  (S.update_cached_proof thy_dbg {id = "K20d", hash = NONE, rewrites = false} (t1, "pA");
++   S.update_cached_proof thy_dbg {id = "K20d", hash = NONE, rewrites = false} (t2, "pA")))
++val _ = assert (null (collision_warnings w20d)) "test20d the same text at another time is silent"
++
++(*20e: a rewriting write in between leaves the mark alone: the third write finds the
++      first one's mark, the same text, and stays silent*)
++val (_, w20e) = capture_warnings (fn () =>
++  (S.update_cached_proof thy_dbg {id = "K20e", hash = NONE, rewrites = false} (t1, "pA");
++   S.update_cached_proof thy_dbg {id = "K20e", hash = NONE, rewrites = true} (t1, "pB");
++   S.update_cached_proof thy_dbg {id = "K20e", hash = NONE, rewrites = false} (t1, "pA")))
++val _ = assert (null (collision_warnings w20e)) "test20e a rewriting write does not move the mark"
++\<close>
++
+ end
+diff --git a/library/cache_file.ML b/library/cache_file.ML
+index ea166f8..60baf47 100644
+--- a/library/cache_file.ML
++++ b/library/cache_file.ML
+@@ -210,7 +210,12 @@ val report_cache_is_outdated : bool (*whether warn*) -> theory -> unit
+   file is untouched).*)
+ val get_cached_proof : theory -> proof_id -> proof_cache option
+ val get_cached_proof_by_hash : theory -> Hasher.digest -> proof_cache option
+-val update_cached_proof : theory -> {id: proof_id, hash: Hasher.digest option} -> proof_cache -> unit
++(*rewrites = true: the writer rewrites its own key by design (a guard-cache
++  entry, whose verdict and delta change as decisions are made); a differing
++  earlier text under that id is then an update, not a collision, and the write
++  leaves no collision mark.  Marks are computed only under ML_debugger (see
++  `written` below).*)
++val update_cached_proof : theory -> {id: proof_id, hash: Hasher.digest option, rewrites: bool} -> proof_cache -> unit
+ val invalidate_proof_cache : bool (*whether warn*) -> proof_id -> theory -> unit
+ val invalidate_proof_cache_by_hash : Hasher.digest -> theory -> unit
+ 
+@@ -667,19 +672,25 @@ fun compact_store thy =
+    tombstone -> rewrite), so a mark kept in `proofs` would erase its own
+    evidence and the collision count would be a constant zero.  Hence
+    store_invalidate_proof, force_reload and invalidate_store all leave it
+-   alone; close_store drops it, and that is precisely the session boundary. *)
+-type written = (string * string * int) Symtab.table
+-  (*key -> SHA1 of the proof text, its leading characters, standard-machine wall
+-    ms (display only: collision detection compares the SHA1)*)
++   alone; close_store drops it whenever the theory is begun again in this
++   process (a re-executed header, a changed import, a reload, a batch load)
++   and at theory end.  A PIDE evaluation cancelled mid-theory and resumed
++   does not begin the theory again, so one stale mark can survive there and
++   cost at most one spurious warning.  A write that leaves the live record
++   byte-identical installs nothing, and marks nothing either.
++   A writer that rewrites its own key by design (rewrites = true) is neither
++   checked against this table nor marked in it.  The whole mechanism is a
++   debugging aid for the key mint and runs only under ML_debugger, read at
++   each write: a normal build computes no digest and keeps no marks. *)
++type written = (Hasher.digest * string * int) Symtab.table
++  (*key -> the digest of the proof text, its leading characters, standard-machine
++    wall ms (display only: collision detection compares the digest)*)
+ 
+ val proof_head_len = 120
+ fun proof_mark (t : times, text) =
+-  let val syms = Symbol.explode text
+-   in (SHA1.rep (SHA1.digest text),
+-       if length syms <= proof_head_len then text
+-       else String.concat (take proof_head_len syms) ^ " ...",
+-       Time.toMilliseconds (#wall t))
+-  end
++  (Hasher.string text,
++   Symbol.beginning proof_head_len (Symbol.explode text),
++   Time.toMilliseconds (#wall t))
+ 
+ fun written_of tab name =
+   case Symtab.lookup tab name of SOME (_, _, w) => w | NONE => Symtab.empty
+@@ -770,16 +781,12 @@ fun get_cached_proof thy id =
+ fun get_cached_proof_by_hash thy h = Hasher.Tab.lookup (#by_hash (get_store thy)) h
+ 
+ fun collision_message id (_, old_head, old_ms) (_, new_head, new_ms) =
+-  "Proof store: this session has written two DIFFERENT proofs under one key.\n\
+-  \  key: " ^ id ^ "\n\
++  "Proof store: two different proofs were written under one proof id in this session.\n\
++  \  id: " ^ id ^ "\n\
+   \  first (" ^ string_of_int old_ms ^ " ms): " ^ old_head ^ "\n\
+-  \  now replaced by (" ^ string_of_int new_ms ^ " ms): " ^ new_head ^ "\n\
+-  \Two proof obligations share one proof id.  The first proof is gone, and \
+-  \whichever of the two obligations next meets the survivor will fail to replay \
+-  \it -- with the AoA gate shut, that is a failed build.  \
+-  \See PROOF_ID_COLLISION_FIX_PLAN.md."
++  \  now (" ^ string_of_int new_ms ^ " ms): " ^ new_head
+ 
+-(*This guard cannot stop a key collision, only make the build that produces one
++(*This guard cannot stop a key collision, only make the write that produces one
+   say so on the spot, instead of leaving it to surface days later in another
+   theory as an unexplained replay failure.  It sits at the single point every
+   writer goes through, so it also sees the writers that a Post_App probe hook
+@@ -794,10 +801,14 @@ fun collision_message id (_, old_head, old_ms) (_, new_head, new_ms) =
+   record passes it on unchanged.  Normalising here instead would double-divide
+   the measuring callers, which (per the time-semantics rule) do it themselves
+   before handing the record over.*)
+-fun update_cached_proof thy {id, hash} s =
++fun update_cached_proof thy {id, hash, rewrites} s =
+  (migrate_legacy thy;                                        (*D44: a write can be the first touch*)
+   let val name = Context.theory_name {long=true} thy
+-      val mark = proof_mark s
++      (*the collision marks are a debugging aid: computed, kept and compared
++        only under ML_debugger -- its value at the time of this write -- and
++        never for a writer that rewrites its own key*)
++      val mark = if rewrites orelse not (Config.get_global thy ML_Options.debugger) then NONE
++                 else SOME (proof_mark s)
+       val r = {hash = hash, time = #1 s, proof = #2 s} : proof_record
+       (*The message is built inside the critical section but emitted outside it:
+         output synchronises on its own, and this section already serialises the
+@@ -811,15 +822,14 @@ fun update_cached_proof thy {id, hash} s =
+               val live_and_identical = Symtab.lookup (#proofs c) id = SOME r
+            in if live_and_identical
+               then ((false, NONE), tab')
+-              else let val msg = case Symtab.lookup w id
+-                                   of SOME old =>
+-                                        if #1 old = #1 mark then NONE
+-                                        else SOME (collision_message id old mark)
+-                                    | NONE => NONE
++              else let val msg = case (mark, Symtab.lookup w id)
++                                   of (SOME m, SOME old) =>
++                                        if #1 old = #1 m then NONE
++                                        else SOME (collision_message id old m)
++                                    | _ => NONE
++                       val w' = case mark of SOME m => Symtab.update (id, m) w | NONE => w
+                     in ((true, msg),
+-                        Symtab.update
+-                          (name, (store_update_proof (id, r) c, true,
+-                                  Symtab.update (id, mark) w)) tab')
++                        Symtab.update (name, (store_update_proof (id, r) c, true, w')) tab')
+                    end
+           end)
+       val _ = case msg of SOME m => warning m | NONE => ()
+@@ -905,6 +915,13 @@ val _ = Theory.setup (Theory.at_end (fn thy => (
+     end
+   ; NONE)))
+ 
++(* When a theory is begun again in this process, drop whatever its earlier
++   evaluation left in memory -- its store table and its collision marks -- so
++   that they do not pass for this evaluation's; the store reloads from the file
++   on first use.  (A PIDE evaluation cancelled mid-theory and resumed does not
++   begin the theory again: see `written`.) *)
++val _ = Theory.setup (Theory.at_begin (fn thy => (close_store thy; NONE)))
++
+ (* Guard the factor: timeout_scale is a user-settable real, and 0 (or a
+    negative) would blow up or negate every stored time.  Both scalings are
+    built from this one factor so they are inverses by construction; stock
+@@ -928,7 +945,7 @@ fun update_cache_by_hash hash prf' (ctxt, sequent') =
+           "Find proof (" ^ hash ^ ", " ^ string_of_times (fst prf') ^ "): " ^
+            (if snd prf' = "" then "classical automation" else "\n" ^ snd prf')
+        ) ; *)
+-       update_cached_proof (Proof_Context.theory_of ctxt) {id = Hasher.hex hash, hash = SOME hash} prf' ;
++       update_cached_proof (Proof_Context.theory_of ctxt) {id = Hasher.hex hash, hash = SOME hash, rewrites = false} prf' ;
+        (snd prf', sequent')) end
+ 
+ type proof = string
+diff --git a/library/sledgehammer_solver.ML b/library/sledgehammer_solver.ML
+index 3be77fe..8e92223 100644
+--- a/library/sledgehammer_solver.ML
++++ b/library/sledgehammer_solver.ML
+@@ -1986,7 +1986,7 @@ fun replay_store k record {do_read, id, hash} (ctxt, sequent) =
+ fun record_store {do_write, id, hash} ctxt (time, prf) =
+   if do_write andalso not (Config.get ctxt hasty_mode)
+   then Phi_Proof_Store.update_cached_proof (Proof_Context.theory_of ctxt)
+-         {id = id, hash = SOME hash} (time, prf)
++         {id = id, hash = SOME hash, rewrites = false} (time, prf)
+   else ()
+ 
+ in
+diff --git a/Agent/agent_server.ML b/Agent/agent_server.ML
+index 813af5a..c62682f 100644
+--- a/Agent/agent_server.ML
++++ b/Agent/agent_server.ML
+@@ -1961,7 +1961,7 @@ fun run_AoA {driver, minilang_cfg, budget, invocation_id,
+                                  Exn.Res (_, _, replay_time, prf_text) =>
+                                    let val thy = Proof_Context.theory_of ctxt
+                                        val std = Phi_Proof_Store.standard_time replay_time
+-                                    in Phi_Proof_Store.update_cached_proof thy {id = key, hash = SOME hash} (std, prf_text)
++                                    in Phi_Proof_Store.update_cached_proof thy {id = key, hash = SOME hash, rewrites = false} (std, prf_text)
+                                      ; Proof_Store_AoA.l1_write (key, std, prf_text)
+                                    end
+                                | Exn.Exn _ => () (*no proof came out: nothing to write*)))
+@@ -2184,7 +2184,7 @@ fun hammer_or_AoA {fact_override, proof_id, hammer_timeout, async_mode,
+                                  Exn.Res (time, prf_text) =>
+                                    let val thy = Proof_Context.theory_of ctxt
+                                        val std = Phi_Proof_Store.standard_time time
+-                                    in Phi_Proof_Store.update_cached_proof thy {id = key, hash = hash} (std, prf_text)
++                                    in Phi_Proof_Store.update_cached_proof thy {id = key, hash = hash, rewrites = false} (std, prf_text)
+                                      ; Proof_Store_AoA.l1_write (key, std, prf_text)
+                                    end
+                                | Exn.Exn _ => () (*no proof came out: nothing to write*)))
+diff --git a/Agent/proof_store_AoA.ML b/Agent/proof_store_AoA.ML
+index 4b77065..25cd76f 100644
+--- a/Agent/proof_store_AoA.ML
++++ b/Agent/proof_store_AoA.ML
+@@ -140,7 +140,7 @@ fun store_hit_replay {key, hash, write_store} (ctxt, sequent) =
+          hit-then-tombstone): write the row as-is -- same times, same text. *)
+       fun write_l2 (std_time, prf_text, _) =
+         if write_store
+-        then Phi_Proof_Store.update_cached_proof thy {id = key, hash = hash} (std_time, prf_text)
++        then Phi_Proof_Store.update_cached_proof thy {id = key, hash = hash, rewrites = false} (std_time, prf_text)
+         else ()
+       fun try_l1 failed =
+         case l1_lookup key of
+diff --git a/Test/Test_Proof_Store_Hash_Hit.thy b/Test/Test_Proof_Store_Hash_Hit.thy
+index d3c1a92..cc6b865 100644
+--- a/Test/Test_Proof_Store_Hash_Hit.thy
++++ b/Test/Test_Proof_Store_Hash_Hit.thy
+@@ -50,7 +50,7 @@ val ctxt = \<^context>
+ (*20: a hit by hash is promoted under the caller's key when write_store is on*)
+ val g20 = goal_of ctxt "(x::nat) + 0 = x"
+ val h20 = Hasher.all_goals (ctxt, g20)
+-val _ = S.update_cached_proof thy {id = "TPSHH.id1", hash = SOME h20} (t1, "(simp)[1]")
++val _ = S.update_cached_proof thy {id = "TPSHH.id1", hash = SOME h20, rewrites = false} (t1, "(simp)[1]")
+ val r20 = hit "TPSHH.id2" (SOME h20) {write = true} (ctxt, g20)
+ val _ = assert (Option.map #2 r20 = SOME "(simp)[1]") "test20 hit"
+ val _ = assert (map #hash (puts_of "TPSHH.id2") = [SOME h20]) "test20 promoted"
+@@ -62,7 +62,7 @@ val _ = assert (length (frames ()) = n20) "test20 no frame without write_store"
+ (*20b: a hit by id is handed back as it stands: nothing written.  The preset
+       has no hash while the call has one, so a stray promotion write would
+       differ from it and could not be short-circuited.*)
+-val _ = S.update_cached_proof thy {id = "TPSHH.K20b", hash = NONE} (t1, "(simp)[1]")
++val _ = S.update_cached_proof thy {id = "TPSHH.K20b", hash = NONE, rewrites = false} (t1, "(simp)[1]")
+ val n20b = length (frames ())
+ val r20b = hit "TPSHH.K20b" (SOME h20) {write = true} (ctxt, g20)
+ val _ = assert (Option.map #2 r20b = SOME "(simp)[1]") "test20b hit"
+@@ -79,7 +79,7 @@ val g21b = goal_of ctxt "rev (rev (xs::nat list)) = xs"
+ val p21 = "(rule rev_rev_ident)[1]"
+ val h21a = Hasher.all_goals (ctxt, g21a)
+ val h21b = Hasher.all_goals (ctxt, g21b)
+-val _ = S.update_cached_proof thy {id = "TPSHH.K1", hash = SOME h21b} (t1, p21)
++val _ = S.update_cached_proof thy {id = "TPSHH.K1", hash = SOME h21b, rewrites = false} (t1, p21)
+ val r21a = hit "TPSHH.K1" (SOME h21a) {write = true} (ctxt, g21a)
+ val _ = assert (is_none r21a) "test21 first call misses"
+ val _ = assert (tombs_of "TPSHH.K1" = 1) "test21 tombstone"
+@@ -94,10 +94,11 @@ val ctxt = \<^context>
+ (*22: the skip rule must not fire on a DIFFERENT record*)
+ val g22 = goal_of ctxt "(y::nat) * 1 = y"
+ val h22 = Hasher.all_goals (ctxt, g22)
+-val _ = S.update_cached_proof thy {id = "TPSHH.K22", hash = NONE} (t1, "(fail)[1]")
+-val _ = S.update_cached_proof thy {id = "TPSHH.id_good", hash = SOME h22} (t1, "(simp)[1]")
+-(*the promotion rewrites K22 with another text: the collision guard warns, as it should --
+-  the one collision this file provokes on purpose; every other block has ids of its own*)
++val _ = S.update_cached_proof thy {id = "TPSHH.K22", hash = NONE, rewrites = false} (t1, "(fail)[1]")
++val _ = S.update_cached_proof thy {id = "TPSHH.id_good", hash = SOME h22, rewrites = false} (t1, "(simp)[1]")
++(*the promotion rewrites K22 with another text (the collision marks, under ML_debugger,
++  would say so) -- the one collision this file provokes on purpose; every other block
++  has ids of its own*)
+ val r22 = hit "TPSHH.K22" (SOME h22) {write = true} (ctxt, g22)
+ val _ = assert (Option.map #2 r22 = SOME "(simp)[1]") "test22 verbatim"
+ val _ = assert (tombs_of "TPSHH.K22" = 1 andalso map #hash (puts_of "TPSHH.K22") = [NONE, SOME h22]) "test22 frames"
+@@ -116,7 +117,7 @@ val _ = \<^try>\<open>ignore (Phi_Sledgehammer_Solver.eval_prf_str kws 1 (S.repl
+                  catch Phi_Sledgehammer_Solver.Auto_Fail _ => ()\<close>
+ val per_replay = !replays
+ val _ = assert (per_replay > 0) "test22b count_fail is reached"
+-val _ = S.update_cached_proof thy {id = "TPSHH.K22b", hash = SOME h22b} (t1, "(count_fail)[1]")
++val _ = S.update_cached_proof thy {id = "TPSHH.K22b", hash = SOME h22b, rewrites = false} (t1, "(count_fail)[1]")
+ val _ = replays := 0
+ val r22b = hit "TPSHH.K22b" (SOME h22b) {write = true} (ctxt, g22b)
+ val _ = assert (is_none r22b) "test22b miss"
+@@ -130,7 +131,7 @@ val ctxt = \<^context>
+ (*23: a hash hit that fails to replay writes nothing and forgets the hash only*)
+ val g23 = goal_of ctxt "rev (rev (ys::nat list)) = ys"
+ val h23 = Hasher.all_goals (ctxt, g23)
+-val _ = S.update_cached_proof thy {id = "TPSHH.id23a", hash = SOME h23} (t1, "(fail)[1]")
++val _ = S.update_cached_proof thy {id = "TPSHH.id23a", hash = SOME h23, rewrites = false} (t1, "(fail)[1]")
+ val n23 = length (frames ())
+ val _ = assert (length (puts_of "TPSHH.id23a") = 1) "test23 preset"
+ val r23 = hit "TPSHH.id23b" (SOME h23) {write = true} (ctxt, g23)
+@@ -147,7 +148,7 @@ val ctxt = \<^context>
+      verbatim instead of a searched one*)
+ val g24 = goal_of ctxt "(u::nat) + 0 = u"
+ val h24 = Hasher.all_goals (ctxt, g24)
+-val _ = S.update_cached_proof thy {id = "TPSHH.id24", hash = SOME h24} (t1, "(simp)[1]")
++val _ = S.update_cached_proof thy {id = "TPSHH.id24", hash = SOME h24, rewrites = false} (t1, "(simp)[1]")
+ val (fut24, st24) =
+   MiniLang_Agent_AoA.hammer_or_AoA
+     {fact_override = Sledgehammer_Fact.no_fact_override, proof_id = SOME "TPSHH.K24",
+diff --git a/Phi_Logic_Programming_Reasoner/library/guard_cache.ML b/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
+index 6579aea3..180b6edb 100644
+--- a/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
++++ b/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
+@@ -135,7 +135,7 @@ fun lookup_entry thy d =
+     NONE => NONE
+   | SOME (_, payload) => decode_entry payload
+ fun write_entry thy d entry =
+-  Phi_Proof_Store.update_cached_proof thy {id = key_of d, hash = NONE}
++  Phi_Proof_Store.update_cached_proof thy {id = key_of d, hash = NONE, rewrites = true}
+     (Phi_Proof_Store.zero_times, encode_entry entry)
+ 
+ structure Guard_Simp_SS = Simpset (

@@ -1232,8 +1232,8 @@ the judge may — a nested call is an ordinary call against the store.
   different state, hence a different key; the drafter's contrary example
   was wrong) — and that the alarm could not tell from a rewrite either.
   The store also drops a theory's marks whenever the theory is begun again
-  in the process (a re-executed header, a changed import, a reload, a batch
-  load), not only at its end [author 2026-09-13; §36]; a PIDE evaluation
+  in the process (a re-executed header, a changed import, a reload), not
+  only at its end [author 2026-09-13; §36]; a PIDE evaluation
   cancelled mid-theory and resumed does not begin the theory again, so one
   stale mark can survive there and cost at most one spurious warning
   [review 2026-09-13; the author: old and new PIDE versions of one theory
