@@ -870,7 +870,7 @@ keeps `prove_or_refute`, the factory, the refuters, the judge ref and
   is "no entry".  Gated by `\<phi>guard_cache` (read once per call from
   `ctxt0`).
 - **Writing**: at the points §5 names, `update_cached_proof thy {id = key
-  d, hash = NONE} (Phi_Proof_Store.zero_times, encode entry)`
+  d, hash = NONE, rewrites = true} (Phi_Proof_Store.zero_times, encode entry)`
   (`cache_file.ML:169`, `:275`) — the whole entry, last write wins; gated
   by the same reading of the switch.  There is no deletion and no
   tombstone: an entry is only ever overwritten [descriptive].
@@ -1209,8 +1209,8 @@ the judge may — a nested call is an ordinary call against the store.
 - **Two entry points**, no new ones [author 2026-09-03 13:19]: read =
   `Phi_Proof_Store.get_cached_proof thy key : proof_cache option`, the entry
   being its string half; write = `Phi_Proof_Store.update_cached_proof thy
-  {id = key, hash = NONE} (Phi_Proof_Store.zero_times, value)` (the times half
-  unused).  `invalidate_proof_cache` is not used: nothing is deleted.  The
+  {id = key, hash = NONE, rewrites = true} (Phi_Proof_Store.zero_times, value)`
+  (the times half unused).  `invalidate_proof_cache` is not used: nothing is deleted.  The
   key is `"PLPRGUARD" ^ Hasher.compact d`, an id no proof obligation
   produces.  The store's locking, migration, compaction and `at_end` are the
   proof store's, untouched.
@@ -1218,10 +1218,9 @@ the judge may — a nested call is an ordinary call against the store.
   marks, per session, what it wrote under each key (`written`, the
   `Hasher.string` digest of the text — a `Word64`, SHA1 until 2026-09-13
   [author: "建议用已有的 hash 机制去算而不是用 SHA1, 会更快. 而且只要计算出一个
-  Word64, 存储更经济"]) and warns "Proof store: this session has written two DIFFERENT
-  proofs under one key" when a second, different write lands under a key
-  this session already wrote — built to expose two obligations sharing one
-  proof id.  A guard entry is rewritten under its own key by design (the
+  Word64, 存储更经济"]) and warns when a second, different write lands under
+  a key this session already wrote — built to expose two obligations sharing
+  one proof id.  A guard entry is rewritten under its own key by design (the
   drop write and a later write in one call; Unknown → Proved; a judge's
   delta), so `write_entry` says so: `update_cached_proof`'s key record
   carries `rewrites = true`, and such a write is neither checked against
@@ -1232,9 +1231,13 @@ the judge may — a nested call is an ordinary call against the store.
   author, 2026-09-13: a second statement meeting the same guard has a
   different state, hence a different key; the drafter's contrary example
   was wrong) — and that the alarm could not tell from a rewrite either.
-  The store also drops a theory's marks at theory BEGIN, not only at its
-  end, so an evaluation cancelled in PIDE leaves no marks for the next
-  [author 2026-09-13; §36].  The whole mechanism is a debugging aid for the
+  The store also drops a theory's marks whenever the theory is begun again
+  in the process (a re-executed header, a changed import, a reload, a batch
+  load), not only at its end [author 2026-09-13; §36]; a PIDE evaluation
+  cancelled mid-theory and resumed does not begin the theory again, so one
+  stale mark can survive there and cost at most one spurious warning
+  [review 2026-09-13; the author: old and new PIDE versions of one theory
+  are to be ignored].  The whole mechanism is a debugging aid for the
   key mint and runs only under `ML_debugger`, read at each write — a normal
   build computes no digest and keeps no marks [author 2026-09-13 "这个撞键警
   告建议仅在 ML_debugger 设置为 true 时激活"; "注意是运行时的 ML_debugger 取值而
