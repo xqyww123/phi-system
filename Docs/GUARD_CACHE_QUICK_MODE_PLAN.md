@@ -1214,20 +1214,25 @@ the judge may — a nested call is an ordinary call against the store.
   key is `"PLPRGUARD" ^ Hasher.compact d`, an id no proof obligation
   produces.  The store's locking, migration, compaction and `at_end` are the
   proof store's, untouched.
-- **OPEN — the proof store's key-collision alarm.**  The store marks, per
-  session, what it wrote under each key (`written`, the SHA1 of the text) and
-  warns "Proof store: this session has written two DIFFERENT proofs under one
-  key" when a second, different write lands under a key this session already
-  wrote — built to expose two obligations sharing one proof id.  A guard entry
-  is legitimately rewritten in one session (Unknown → Proved, Refuted →
-  Proved, a judge's lemmas), so with the entries in the proof store this alarm
-  fires on them unless the store is told.  Choices put to the author on
-  2026-09-12: (a) the write carries one explicit bit that this key may be
-  rewritten (a field added to `update_cached_proof`'s record argument; its
-  four external callers name it); (b) the store exempts ids with the
-  `PLPRGUARD` prefix (no interface change; `auto_sledgehammer` then knows a
-  PLPR prefix).  Undecided; until then the alarm fires on rewrites and the
-  corpus runs count them.
+- **The proof store's key-collision alarm and guard entries.**  The store
+  marks, per session, what it wrote under each key (`written`, the SHA1 of
+  the text) and warns "Proof store: this session has written two DIFFERENT
+  proofs under one key" when a second, different write lands under a key
+  this session already wrote — built to expose two obligations sharing one
+  proof id.  A guard entry is rewritten under its own key by design (the
+  drop write and a later write in one call; Unknown → Proved; a judge's
+  delta), so `write_entry` says so: `update_cached_proof`'s key record
+  carries `rewrites = true`, and such a write is neither checked against
+  the marks nor marked; every proof-obligation writer passes `rewrites =
+  false` and keeps the alarm [author 2026-09-13 "好的, 赞同, 赞同 rewrites";
+  §36 ruling 9].  With the whole-state digest a key repeats within one
+  linear run only through a hash collision of the 64-bit digest (the
+  author, 2026-09-13: a second statement meeting the same guard has a
+  different state, hence a different key; the drafter's contrary example
+  was wrong) — and that the alarm could not tell from a rewrite either.
+  The store also drops a theory's marks at theory BEGIN, not only at its
+  end, so an evaluation cancelled in PIDE leaves no marks for the next
+  [author 2026-09-13; §36].
 - **Entry value**: `{delta = {added : (term * proof_cache * tier) list,
   deleted : term list}, verdict}` packed as the triple (added, deleted,
   verdict) with the mlmsgpack packers through a `BytesIO` outstream and
@@ -2975,9 +2980,10 @@ process (146 `Refuted` and 5 `Unknown` hits read from the proof stores,
 
 **Review** (an Opus panel: four interrogators, more fresh defenders, a
 judge): accepted on condition.  Two items are the author's: the proof
-store's key-collision alarm (§8, OPEN) — it fires on every legitimate
-rewrite of a guard entry, e.g. `Unknown` → `Proved` under one key; and
-which of the new `*.proof-store` files to track.  Rejected, with reasons in
+store's key-collision alarm (§8; ruled 2026-09-13, §36 ruling 9) — it
+fired on every legitimate rewrite of a guard entry, e.g. `Unknown` →
+`Proved` under one key; and which of the new `*.proof-store` files to
+track (ruled: the test theories' are not).  Rejected, with reasons in
 `ai-artifacts/STEP4_REDO_REVIEW_2026-09-12.md`: a digest-vs-text alarm,
 content-key accumulation, `Hasher.hex` for the key, an FNV soundness note,
 a single end-of-call write, "Unknown freezes R-nitpick", a `cpu_bounded_seq`
@@ -3039,6 +3045,23 @@ replay is paid on every call regardless) and redesigned the entry:
    thread-CPU limb; both limbs are first floored to the classic bound, so
    the cap is at least 3.8 s).  Ruled: "P3 维持现状。… 2×wall + 3s 已经很高了"
    — the status quo.
+9. The proof store's key-collision alarm on guard entries (§8).  The
+   author first corrected the drafter's picture: "整个推理是线性无环的, 为什
+   么第二条语句会再命中 S? 第二条语句哪怕是再遇到相同的 guard condition 也应
+   该具有不同的 key 啊!" — right: with the whole-state digest the only
+   repeated key inside one evaluation is a deliberate rewrite of a guard's
+   own entry (the drop write then a verdict write in one call; a test
+   theory's injected entry then the decision) or a 64-bit hash collision.
+   Then: "对于我们知道要改变判决的时候, 可以显示地 suppress 那一刻的防撞探针
+   吗?" → the write says it rewrites its own key: `update_cached_proof
+   thy {id, hash, rewrites}`, `rewrites = true` from `write_entry` only —
+   "好的, 赞同, 赞同 rewrites".  And the marks are dropped at theory begin as
+   well as at theory end ("同一次改 cache_file.ML 时是否顺手把 written 表在
+   Theory.at_begin 也清掉" — "好的"), restoring the author's 2026-09-12
+   objection that a process-global `Synchronized.var` survives a
+   re-evaluation in jEdit.  `auto_sledgehammer` (`cache_file.ML`,
+   `sledgehammer_solver.ML`, its test theory), `Isa-Mini` (three writers
+   and its test theory) and `guard_cache.ML` changed together.
 
 **What changed** (`guard_cache.ML`, `reasoners.ML`, the two test theories;
 plan: the status lines, §1 lemma/entry, the judge, the lemma list, the

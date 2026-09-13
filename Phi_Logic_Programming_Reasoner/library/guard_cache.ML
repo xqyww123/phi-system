@@ -135,7 +135,7 @@ fun lookup_entry thy d =
     NONE => NONE
   | SOME (_, payload) => decode_entry payload
 fun write_entry thy d entry =
-  Phi_Proof_Store.update_cached_proof thy {id = key_of d, hash = NONE}
+  Phi_Proof_Store.update_cached_proof thy {id = key_of d, hash = NONE, rewrites = true}
     (Phi_Proof_Store.zero_times, encode_entry entry)
 
 structure Guard_Simp_SS = Simpset (

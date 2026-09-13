@@ -107,7 +107,13 @@ no behavioural defect; the author ruled plain Pattern.equiv (no binder handling)
 without a contract change; D1-D9 applied (keep alias, RR/equiv/delete-before-add probes, prose fixes);
 everything clean again; the TEMPORARY declare reverted; committing.  P5 ruled: the two test theories'
 stores are neither tracked nor ignored.
-PENDING: (2) the collision alarm (fires on Unknown→Proved rewrites; undecided); (4) the
+The collision alarm: ruled 2026-09-13 (§36 ruling 9) — `update_cached_proof`'s key record gains
+`rewrites : bool`; the guard cache writes `rewrites = true` (neither checked nor marked); the marks
+are dropped at Theory.at_begin as well as at_end; changed in auto_sledgehammer, Isa-Mini and
+phi-system together, Phi_System_Base rebuilt by the author, everything clean.  Still open on the
+alarm: whether it has any true positive left after the unified key mint (if not, delete), its
+never-approved wording, and its lack of tests.
+PENDING: (4) the
 word "battery" was the drafter's coinage; scrubbed from the test theories and the plan on the author's nod; (5) revert the TEMPORARY declare in PLPR.thy, commit, bump.
 The items B1–B10 below remain open except B1 (the author: acceptable, ignore) and B2's
 canonical form (withdrawn by this redesign).
