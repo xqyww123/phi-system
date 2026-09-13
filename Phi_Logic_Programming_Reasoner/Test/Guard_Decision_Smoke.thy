@@ -2,10 +2,11 @@ theory Guard_Decision_Smoke
   imports "Phi_Logic_Programming_Reasoner.PLPR"
 begin
 
-(* Probe battery for one prove_or_refute call (library/reasoners.ML): every path
+(* Probes of one prove_or_refute call (library/reasoners.ML): every path
    of Docs/GUARD_CACHE_QUICK_MODE_PLAN.md section 5 -- hits of each verdict,
-   lemma enabling, a looping lemma cut off by its budget, the judge replacing
-   this entry's lemmas, both warnings, both errors -- driven through the guard
+   lemma enabling, a looping lemma cut off by its budget, an entry's deletion,
+   the judge's delta replacing this entry's, both warnings, both errors --
+   driven through the guard
    factory with entries injected into the store and a test judge installed into
    the ref.  Not registered in any ROOT: evaluate on demand (e.g. via
    Isabelle-MCP under session Phi_System_Base).
@@ -77,24 +78,33 @@ fun digest_of can_inst ctxt st =
 fun entry_of ctxt d = Phi_Guard_Cache.lookup_entry (Proof_Context.theory_of ctxt) d
 
 fun show_entry NONE = "no entry"
-  | show_entry (SOME {lemmas, verdict}) =
+  | show_entry (SOME {delta = {added, deleted}, verdict}) =
       (case verdict of Phi_Guard_Cache.Proved => "Proved"
                      | Phi_Guard_Cache.Refuted => "Refuted"
                      | Phi_Guard_Cache.Unknown => "Unknown") ^
-      " with " ^ string_of_int (length lemmas) ^ " lemma(s)"
+      " with " ^ string_of_int (length added) ^ " lemma(s)" ^
+      (if null deleted then "" else ", " ^ string_of_int (length deleted) ^ " deletion(s)")
+
+fun adds lemmas : Phi_Guard_Cache.delta = {added = lemmas, deleted = []}
 
 fun show_lemmas ctxt = @{make_string} (map (apfst Thm.prop_of) (Phi_Guard_Cache.get_lemmas ctxt))
 
 (*the judge's argument contract (plan section 1, section 5 step 6), checked on every
   call of a test judge: `ctxt` and `outer_ctxt` carry the lemma list as it was before
-  this entry's lemmas were added -- the probe context's, statement for statement --
-  `can_inst` is the probe's, and the goal state has subgoals*)
-fun contract name ctxt can_inst j (arg : Phi_Reasoners.judge_arg) =
+  this entry's delta was applied -- the probe context's, statement for statement --
+  `delta` is the injected entry's (every probe's entry replays whole), `can_inst` is
+  the probe's, and the goal state has subgoals*)
+fun contract name ctxt can_inst entry j (arg : Phi_Reasoners.judge_arg) =
   let fun props c = map (Thm.prop_of o fst) (Phi_Guard_Cache.get_lemmas c)
       fun same c = eq_list (op aconv) (props c, props ctxt)
+      val {added, deleted} = (case entry of SOME {delta, ...} => delta | NONE => Phi_Guard_Cache.empty_delta)
       fun check what ok = if ok then () else error (name ^ ": the judge's argument breaks its contract: " ^ what)
    in check "ctxt's lemma list is not the probe context's" (same (#ctxt arg));
       check "outer_ctxt's lemma list is not the probe context's" (same (#outer_ctxt arg));
+      check "delta's added lemmas are not the entry's"
+            (eq_list (fn ((s, (_, m), t), (s', (_, m'), t')) => s aconv s' andalso m = m' andalso t = t')
+                     (#added (#delta arg), added));
+      check "delta's deletions are not the entry's" (eq_list (op aconv) (#deleted (#delta arg), deleted));
       check "can_inst is not the probe's" (#can_inst arg = can_inst);
       check "the goal state has no subgoal" (Thm.nprems_of (#thm arg) > 0);
       j arg
@@ -109,7 +119,7 @@ fun run_guard {can_inst, entry, judge} ctxt name t =
       val d = digest_of can_inst ctxt st
       val _ = (case entry of NONE => ()
                | SOME e => Phi_Guard_Cache.write_entry (Proof_Context.theory_of ctxt) d e)
-      val _ = Phi_Reasoners.judge := Option.map (contract name ctxt can_inst) judge
+      val _ = Phi_Reasoners.judge := Option.map (contract name ctxt can_inst entry) judge
       val res = Exn.capture_body (fn () => Timing.timing (fn () =>
                   Phi_Reasoners.guard_condition_judge {can_inst = can_inst} (ctxt, st) |> Seq.pull) ())
       val _ = Phi_Reasoners.judge := NONE
@@ -164,10 +174,12 @@ fun test_error (opts as {can_inst, entry = _, judge = _}) ctxt name prefix prop_
 
 val plain = {can_inst = false, entry = NONE, judge = NONE}
 val schematic = {can_inst = true, entry = NONE, judge = NONE}
-fun with_entry lemmas verdict = {can_inst = false, entry = SOME {lemmas = lemmas, verdict = verdict}, judge = NONE}
+fun with_delta delta verdict = {can_inst = false, entry = SOME {delta = delta, verdict = verdict}, judge = NONE}
+fun with_entry lemmas verdict = with_delta (adds lemmas) verdict
 fun with_judge j = {can_inst = false, entry = NONE, judge = SOME j}
-fun with_entry_and_judge lemmas verdict j =
-  {can_inst = false, entry = SOME {lemmas = lemmas, verdict = verdict}, judge = SOME j}
+fun with_delta_and_judge delta verdict j =
+  {can_inst = false, entry = SOME {delta = delta, verdict = verdict}, judge = SOME j}
+fun with_entry_and_judge lemmas verdict j = with_delta_and_judge (adds lemmas) verdict j
 
 fun expect path store = {path = path, store = store}
 
@@ -252,6 +264,15 @@ definition LOOP :: "nat \<Rightarrow> nat" where "LOOP n = n"
 definition PP :: "nat \<Rightarrow> bool" where "PP n = True"
 lemma PP_I[intro!]: "PP (LOOP (LOOP (LOOP (LOOP x))))" unfolding PP_def by simp
 
+(* QQ, RR: a deletion observed in the provers' context.  QQ n is provable by
+   QQ_I once RR n is, and RR n only through the lemma `RR n = True`, whose
+   left-hand side first appears in the subgoal the classical search creates:
+   the "G.simpcut" pass, which runs on the list BEFORE the delta, never meets
+   it, and only P-auto, on the list after the delta, can use it. *)
+definition RR :: "nat \<Rightarrow> bool" where "RR n = True"
+definition QQ :: "nat \<Rightarrow> bool" where "QQ n = True"
+lemma QQ_I[intro!]: "RR n \<Longrightarrow> QQ n" unfolding QQ_def by simp
+
 ML \<open>(*chain length, tuned by measurement: CHAIN's intro! search is superlinear
   and must finish well inside the 400 ms P-auto budget with a margin for a
   loaded machine -- the bound is thread CPU, which contention still inflates
@@ -275,8 +296,15 @@ fun uncertifiable ctxt = (Syntax.read_term ctxt "LOOP 0", (times, "simp"), Phi_G
 
 (*a run context that already carries a lemma of an earlier guard: CHAIN [] at
   budget 30, the budget of Rarely*)
-fun seeded ctxt = Phi_Guard_Cache.add_lemma ctxt (@{thm CHAIN_nil}, 30) ctxt
-val chain_nil = Thm.prop_of @{thm CHAIN_nil}\<close>
+fun seeded ctxt = Phi_Guard_Cache.add_lemma (@{thm CHAIN_nil}, 30) ctxt
+val chain_nil = Thm.prop_of @{thm CHAIN_nil}
+(*the looping lemma and the RR lemma as theorems, for seeding them directly; Goal.prove
+  exports, so their propositions carry ?n where the statements bind n*)
+fun looping_thm ctxt =
+  Goal.prove ctxt [] [] (#1 (looping ctxt)) (fn {context, ...} => simp_tac (context addsimps @{thms LOOP_def}) 1)
+fun rr_thm ctxt =
+  Goal.prove ctxt [] [] (Syntax.read_prop ctxt "\<And>n. RR n = True")
+    (fn {context, ...} => simp_tac (context addsimps @{thms RR_def}) 1)\<close>
 
 section \<open>The lemma budget on its own\<close>
 
@@ -284,9 +312,7 @@ section \<open>The lemma budget on its own\<close>
   LOOP 0 exactly three times and then stops matching*)
 ML \<open>
 let val ctxt = \<^context>
-    val (stmt, _, _) = looping ctxt
-    val th = Goal.prove ctxt [] [] stmt (fn {context, ...} => simp_tac (context addsimps @{thms LOOP_def}) 1)
-    val ctxt' = Phi_Guard_Cache.add_lemma ctxt (th, 3) ctxt |> Phi_Guard_Cache.enhance_with_lemmas
+    val ctxt' = Phi_Guard_Cache.add_lemma (looping_thm ctxt, 3) ctxt |> Phi_Guard_Cache.enhance_with_lemmas
     val rhs = Thm.rhs_of (Simplifier.rewrite ctxt' \<^cterm>\<open>LOOP 0\<close>)
     val expected = \<^cterm>\<open>LOOP (LOOP (LOOP (LOOP 0)))\<close>
  in if Thm.term_of rhs aconv Thm.term_of expected then writeln "budget: three rewrites, then cut off"
@@ -349,10 +375,11 @@ ML \<open>test (with_entry [] Phi_Guard_Cache.Proved) \<^context>
   (expect ("refuted", "proved", "R-conv", "-") "Refuted with 0 lemma(s)")
   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
 
-(*the loud guard warning only -- not the undecided-guard warning (plan section 5 step 4)*)
-ML \<open>test (with_entry [] Phi_Guard_Cache.Proved) \<^context>
+(*the loud guard warning only -- not the undecided-guard warning (plan section 5 step 4);
+  the delta stays through the Unknown write*)
+ML \<open>test (with_delta {added = [useless_other \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
   "Proved hit that nobody decides, no judge: the loud guard warning, Unknown written"
-  (expect ("unknown", "proved", "-", "-") "Unknown with 0 lemma(s)")
+  (expect ("unknown", "proved", "-", "-") "Unknown with 1 lemma(s), 1 deletion(s)")
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
 section \<open>Lemmas\<close>
@@ -395,24 +422,137 @@ ML \<open>test (with_entry [useless \<^context>, unreplayable \<^context>] Phi_G
   (expect ("refuted", "refuted", "-", "-") "Refuted with 1 lemma(s)")
   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
 
-(*a lemma that replays but does not suffice: it stays in the entry through a refutation*)
-ML \<open>test (with_entry [useless \<^context>] Phi_Guard_Cache.Proved) \<^context>
-  "Proved hit with an insufficient lemma: R-conv refutes, the lemma stays"
-  (expect ("refuted", "proved", "R-conv", "-") "Refuted with 1 lemma(s)")
+(*a lemma that replays but does not suffice: it stays in the entry through a refutation,
+  and so does the entry's deletion*)
+ML \<open>test (with_delta {added = [useless \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
+  "Proved hit with an insufficient lemma: R-conv refutes, the delta stays"
+  (expect ("refuted", "proved", "R-conv", "-") "Refuted with 1 lemma(s), 1 deletion(s)")
   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
+
+section \<open>An entry's deletion\<close>
+
+(*the entry's delta deletes an earlier guard's lemma by its proposition: the run
+  context carries CHAIN [] (seeded), the Unknown entry deletes it and adds the
+  looping lemma; the returned list holds the looping lemma alone*)
+ML \<open>
+let val ctxt = seeded \<^context>
+    val r = decide (with_delta {added = [looping ctxt], deleted = [chain_nil]} Phi_Guard_Cache.Unknown) ctxt
+      "Unknown hit whose delta deletes the seeded lemma: gone from the returned context, Proved written"
+      (expect ("proved", "unknown", "-", "-") "Proved with 1 lemma(s), 1 deletion(s)")
+      (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
+ in case r of
+      SOME (ctxt1, _) =>
+        (case Phi_Guard_Cache.get_lemmas ctxt1 of
+           [(_, 3)] => writeln "the seeded lemma is deleted, the entry's lemma alone remains"
+         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
+    | NONE => error "no state returned"
+end\<close>
+
+(*a deletion naming no lemma of the list deletes nothing: the seeded lemma survives
+  at its budget -- the probe that catches over-deletion*)
+ML \<open>
+let val ctxt = seeded \<^context>
+    val r = decide (with_delta {added = [], deleted = [#1 (useless_other ctxt)]} Phi_Guard_Cache.Unknown) ctxt
+      "Unknown hit whose delta deletes a lemma the context does not carry: nothing deleted, Proved written"
+      (expect ("proved", "unknown", "-", "-") "Proved with 0 lemma(s), 1 deletion(s)")
+      (read false ctxt ("FALLS " ^ elim_chain ^ " \<Longrightarrow> \<condition> (SPIN " ^ fresh () ^ ")"))
+ in case r of
+      SOME (ctxt1, _) =>
+        (case Phi_Guard_Cache.get_lemmas ctxt1 of
+           [(th, 30)] =>
+             if Thm.prop_of th aconv chain_nil then writeln "the seeded lemma survives at budget 30"
+             else error ("the returned context carries " ^ show_lemmas ctxt1)
+         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
+    | NONE => error "no state returned"
+end\<close>
+
+(*a deletion reaches the provers' context.  Not with the looping lemma: it rewrites
+  the guard term itself, so the "G.simpcut" pass -- on the list BEFORE the delta --
+  applies it first and the goal reaches prove_or_refute already rewritten.  RR's lemma
+  is met only by P-auto (QQ, RR above): seeded, an empty delta proves the guard through
+  it; the deletion leaves nobody to decide.  A deletion names the proposition as the
+  list holds it, here `RR ?n = True`*)
+ML \<open>
+let val th = rr_thm \<^context>
+    val ctxt = Phi_Guard_Cache.add_lemma (th, 3) \<^context>
+    val _ = test (with_entry [] Phi_Guard_Cache.Unknown) ctxt
+      "the seeded RR lemma, Unknown hit with an empty delta: P-auto proves through it, Proved written"
+      (expect ("proved", "unknown", "-", "-") "Proved with 0 lemma(s)")
+      ("\<condition> (QQ " ^ fresh () ^ ")")
+ in test (with_delta {added = [], deleted = [Thm.prop_of th]} Phi_Guard_Cache.Unknown) ctxt
+      "the seeded RR lemma, Unknown hit whose delta deletes it: nobody decides"
+      (expect ("unknown", "unknown", "-", "-") "Unknown with 0 lemma(s), 1 deletion(s)")
+      ("\<condition> (QQ " ^ fresh () ^ ")")
+end\<close>
+
+(*the identity is Pattern.equiv: a deletion naming the seeded lemma under other
+  schematic names removes it; under aconv it would survive*)
+ML \<open>
+let val ctxt = Phi_Guard_Cache.add_lemma (looping_thm \<^context>, 3) \<^context>
+    val r = decide (with_delta {added = [], deleted = [read true ctxt "LOOP ?m = LOOP (LOOP ?m)"]} Phi_Guard_Cache.Unknown) ctxt
+      "Unknown hit whose delta names the seeded lemma under other schematic names: deleted"
+      (expect ("proved", "unknown", "-", "-") "Proved with 0 lemma(s), 1 deletion(s)")
+      (read false ctxt ("FALLS " ^ elim_chain ^ " \<Longrightarrow> \<condition> (SPIN " ^ fresh () ^ ")"))
+ in case r of
+      SOME (ctxt1, _) =>
+        (case Phi_Guard_Cache.get_lemmas ctxt1 of
+           [] => writeln "the seeded lemma is deleted under renamed schematic variables"
+         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
+    | NONE => error "no state returned"
+end\<close>
+
+(*a delta deletes before it adds: deleting and adding the seeded lemma in one delta
+  leaves exactly one copy at the delta's budget*)
+ML \<open>
+let val ctxt = seeded \<^context>
+    val r = decide (with_delta {added = [useless_once ctxt], deleted = [chain_nil]} Phi_Guard_Cache.Unknown) ctxt
+      "Unknown hit whose delta deletes and adds the seeded lemma: one copy, at the delta's budget"
+      (expect ("proved", "unknown", "-", "-") "Proved with 1 lemma(s), 1 deletion(s)")
+      (read false ctxt ("FALLS " ^ elim_chain ^ " \<Longrightarrow> \<condition> (SPIN " ^ fresh () ^ ")"))
+ in case r of
+      SOME (ctxt1, _) =>
+        (case Phi_Guard_Cache.get_lemmas ctxt1 of
+           [(th, 3)] =>
+             if Thm.prop_of th aconv chain_nil then writeln "deleted, then added: one copy at budget 3"
+             else error ("the returned context carries " ^ show_lemmas ctxt1)
+         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
+    | NONE => error "no state returned"
+end\<close>
+
+section \<open>The one append rule\<close>
+
+(*a replayed entry rebuilds the list the recording call returned: a proposition already
+  in the list takes the delta's budget (the one rule of step 1 and step 6)*)
+ML \<open>
+let val ctxt = seeded \<^context>
+    val r = decide (with_entry [useless_once ctxt] Phi_Guard_Cache.Unknown) ctxt
+      "Unknown hit adding the seeded lemma at Only_Once: its budget becomes 3"
+      (expect ("proved", "unknown", "-", "-") "Proved with 1 lemma(s)")
+      (read false ctxt ("FALLS " ^ elim_chain ^ " \<Longrightarrow> \<condition> (SPIN " ^ fresh () ^ ")"))
+ in case r of
+      SOME (ctxt1, _) =>
+        (case Phi_Guard_Cache.get_lemmas ctxt1 of
+           [(th, 3)] =>
+             if Thm.prop_of th aconv chain_nil then writeln "the seeded lemma now at the entry's budget 3"
+             else error ("the returned context carries " ^ show_lemmas ctxt1)
+         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
+    | NONE => error "no state returned"
+end\<close>
 
 section \<open>The judge\<close>
 
-(*Provable REPLACES this entry's lemmas and no other: the run context carries an
-  earlier guard's lemma (seeded), the Unknown entry carries `useless_other`; no
-  refuter runs, the judge is consulted on the context WITHOUT `useless_other` (the
-  contract check in `run_guard`), and the returned list is the seeded lemma followed
-  by the judge's -- `useless_other` gone, the seeded one kept at its own budget*)
+(*Provable REPLACES this entry's delta and no other: the run context carries an
+  earlier guard's lemma (seeded), the Unknown entry adds `useless_other` and deletes
+  the seeded lemma; no refuter runs, the judge is consulted on the context as it was
+  BEFORE the delta -- the seeded lemma there, `useless_other` not -- and with the
+  entry's delta (the contract check in `run_guard`); its delta, applied to that
+  context, gives the seeded lemma at its own budget followed by the judge's --
+  `useless_other` gone, the entry's deletion gone*)
 ML \<open>
 let val ctxt = seeded \<^context>
-    val r = decide (with_entry_and_judge [useless_other ctxt] Phi_Guard_Cache.Unknown
-                      (fn _ => Phi_Reasoners.Provable [looping ctxt])) ctxt
-      "Unknown hit with a lemma, the judge answers Provable: this entry's lemma replaced, the earlier one kept"
+    val r = decide (with_delta_and_judge {added = [useless_other ctxt], deleted = [chain_nil]} Phi_Guard_Cache.Unknown
+                      (fn _ => Phi_Reasoners.Provable (adds [looping ctxt]))) ctxt
+      "Unknown hit with a delta, the judge answers Provable: the delta replaced whole, the earlier lemma kept"
       (expect ("proved", "unknown", "-", "Provable") "Proved with 1 lemma(s)")
       (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
  in case r of
@@ -425,10 +565,26 @@ let val ctxt = seeded \<^context>
     | NONE => error "no state returned"
 end\<close>
 
+(*the judge deletes an earlier guard's lemma by its proposition; the deletion is
+  written with the entry*)
+ML \<open>
+let val ctxt = seeded \<^context>
+    val r = decide (with_judge (fn _ => Phi_Reasoners.Provable {added = [looping ctxt], deleted = [chain_nil]})) ctxt
+      "no entry, the judge answers Provable deleting the seeded lemma: gone, the deletion written"
+      (expect ("proved", "none", "-", "Provable") "Proved with 1 lemma(s), 1 deletion(s)")
+      (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
+ in case r of
+      SOME (ctxt1, _) =>
+        (case Phi_Guard_Cache.get_lemmas ctxt1 of
+           [(_, 3)] => writeln "the seeded lemma is deleted, the judge's lemma alone remains"
+         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
+    | NONE => error "no state returned"
+end\<close>
+
 (*a judge lemma of a proposition already in the list takes the judge's budget*)
 ML \<open>
 let val ctxt = seeded \<^context>
-    val r = decide (with_judge (fn _ => Phi_Reasoners.Provable [useless_once ctxt, looping ctxt])) ctxt
+    val r = decide (with_judge (fn _ => Phi_Reasoners.Provable (adds [useless_once ctxt, looping ctxt]))) ctxt
       "the judge re-proposes the seeded lemma at Only_Once: its budget is updated"
       (expect ("proved", "none", "-", "Provable") "Proved with 2 lemma(s)")
       (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
@@ -442,10 +598,10 @@ let val ctxt = seeded \<^context>
     | NONE => error "no state returned"
 end\<close>
 
-(*a Proved hit the entry's lemma cannot carry: the judge's list replaces the entry's,
+(*a Proved hit the entry's lemma cannot carry: the judge's delta replaces the entry's,
   P-auto proves, the entry is rewritten -- and no loud warning (plan section 5 step 6)*)
 ML \<open>test (with_entry_and_judge [useless \<^context>] Phi_Guard_Cache.Proved
-            (fn _ => Phi_Reasoners.Provable [looping \<^context>])) \<^context>
+            (fn _ => Phi_Reasoners.Provable (adds [looping \<^context>]))) \<^context>
   "Proved hit, refuters fail, the judge answers Provable: the entry's lemma is replaced, no warning"
   (expect ("proved", "proved", "-", "Provable") "Proved with 1 lemma(s)")
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
@@ -455,9 +611,10 @@ ML \<open>test (with_judge (K Phi_Reasoners.Unprovable)) \<^context>
   (expect ("refuted", "none", "-", "Unprovable") "Refuted with 0 lemma(s)")
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
-ML \<open>test (with_entry_and_judge [] Phi_Guard_Cache.Unknown (K Phi_Reasoners.Unprovable)) \<^context>
-  "Unknown hit with a judge: no refuter runs, the judge decides"
-  (expect ("refuted", "unknown", "-", "Unprovable") "Refuted with 0 lemma(s)")
+ML \<open>test (with_delta_and_judge {added = [useless_other \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Unknown
+            (K Phi_Reasoners.Unprovable)) \<^context>
+  "Unknown hit with a judge: no refuter runs, the judge decides; the delta stays"
+  (expect ("refuted", "unknown", "-", "Unprovable") "Refuted with 1 lemma(s), 1 deletion(s)")
   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
 
 ML \<open>test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.Unprovable)) \<^context>
@@ -466,13 +623,13 @@ ML \<open>test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
 (*the judge's lemma may not fail: the error names the judge*)
-ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable [unreplayable \<^context>])) \<^context>
+ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [unreplayable \<^context>]))) \<^context>
   "the judge proposes a lemma that fails to replay: error"
   "The judge is broken: its lemma fails to replay"
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
 (*a Provable after which P-auto still fails: the other error*)
-ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable [useless \<^context>])) \<^context>
+ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [useless \<^context>]))) \<^context>
   "the judge answers Provable with a lemma that does not suffice: error"
   "The judge is broken: P-auto cannot prove"
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>

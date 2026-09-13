@@ -1,11 +1,12 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 24 (2026-09-09) — **IN IMPLEMENTATION**: the preparatory
-phase (§10 step P) is done and accepted, step 0's anchor re-verification
-is done (§26; fifteen anchors corrected, none missing), step 1 is done
-(§27), reviewed and ACCEPTED after one round of fixes (§28, §29), step 2
-is done (§30) and awaits its code review and the author's acceptance;
-step 3 is next.
+Status: rev 25 (2026-09-13) — **IN IMPLEMENTATION**: the preparatory
+phase, steps 0–2 (§26–§32), step 3's first half (§34) and step 4 (§35,
+redone on the author's design) are done; the entry became a delta and
+the canonical form was withdrawn (§36); step 4's close-out (the
+collision alarm, the store files to track) and step 5 remain.  The
+revision history below (rev 18–24) narrates the canonical form as it
+stood then; it no longer exists.
 Rev 22 was **READY** by the nineteenth review (rev 21:
 two one-sentence fixes, no blocker, no major; §25), applied there.  Rev
 21 folded in the eighteenth review (rev 20: NOT_READY,
@@ -118,8 +119,7 @@ symbol, never by offset.  All were re-verified at implementation start,
 `Performant_Isabelle_ML.thy`) re-anchored after their change.
 
 READY after the nineteenth review (§25); "开工" given 2026-09-09; the
-preparatory phase (§10 step P) is done and accepted; step 1 is done (§27),
-reviewed and accepted (§28, §29); step 2 is next.
+status line at the top of this document is the current one.
 
 ---
 
@@ -141,8 +141,8 @@ document.
   factory, then the run's state: the run's ctxt `ctxt0` and the goal state)
   [author 2026-09-04 04:19 "我们要把 prove_or_refute 的类型改成 context_state
   -> context_state, 我们要改 context, 且要一路改下去一直到 gen_reason' 的返回"].
-  The ctxt it returns is `ctxt0` with this guard's lemmas in the lemma list,
-  and nothing else changed.  Its verdict is decided on the spot, by P-auto,
+  The ctxt it returns is `ctxt0` with this guard's delta applied to the lemma
+  list, and nothing else changed.  Its verdict is decided on the spot, by P-auto,
   on every call [author 2026-09-08 05:53 "一切裁决都是取决于 P-auto 的"].
   [descriptive]
 - **the goal state**: the thm `prove_or_refute` receives — the PLPR sequent
@@ -255,8 +255,8 @@ document.
   raising `Hooks.Success` with a tactic of its own used to REPLACE the
   body; now its state is used like the fold's result and the body runs.
   No registration does that today [drafter; §10].  Invariant: the state
-  leaving a guard reasoner is `ctxt0` plus this guard's lemmas, and only
-  the solving function may replace the ctxt.
+  leaving a guard reasoner is `ctxt0` with this guard's delta applied, and
+  only the solving function may replace the ctxt.
   Three instances (§3): **`guard_condition_judge`** = the factory applied
   to `prove_or_refute`, `{can_inst : bool} -> context_state ->
   context_state Seq.seq`, registered on the state by the in-run
@@ -281,14 +281,26 @@ document.
   2026-09-03 09:44]; for obligations: `fastforce` in a
   `Guard_Simp_SS`-enhanced ctxt, no bound by default [author 2026-09-03
   11:15; 12:53].
-- **lemma**, **tier**, **entry**, **verdict**: what the store holds for one
-  guard —
+- **lemma**, **tier**, **delta**, **entry**, **verdict**: what the store holds
+  for one guard —
   ```
   datatype tier = Only_Once | Rarely | Normal | Frequent   (* 3 / 30 / 300 / 1000 applications *)
   type lemma = term * Phi_Proof_Store.proof_cache * tier   (* statement, (replay times, method text), budget *)
+  type delta = {added : lemma list, deleted : term list}   (* what the guard does to the lemma list *)
   datatype verdict = Proved | Refuted | Unknown
-  type entry = {lemmas : lemma list, verdict : verdict}
+  type entry = {delta : delta, verdict : verdict}
   ```
+  A guard's entry is a DELTA to the lemma list of the context the guard is
+  met in — the lemmas it adds and the statements it deletes: every lemma of
+  the list whose proposition is `Pattern.equiv` to a deleted statement
+  leaves, whichever guard added it, then its lemmas go in by the one append
+  rule (§1 the lemma list) — applied on every call (§5 step 1); the judge's
+  answer replaces the delta whole (§5 step 6) [author 2026-09-12 "我建议我们
+  修改一下设计, 每个 guard condition 的 judge lemmas 实际上是一个 pair: 新增的
+  lemmas, 与要删除的 lemmas (term list). 增量的去做"; "当然是当前 context 的
+  lemma list 里的所有 aconv 的, 包括别的 guard 带进来的"; "每个 condition 的
+  slot 永远是相对于之前的 ctxt 的增量. judge 的输出永远是对 the condition's
+  slot 的完全替换"; "删除是持久的, 添加也是持久的"; §36].
   `Phi_Proof_Store.proof_cache = Phi_Proof_Store.times * string` with
   `times = {thread_cpu : Time.time, wall : Time.time}` (`cache_file.ML:168`,
   `:176` in the signature; `:274`, `:285` in the body): two independent
@@ -303,11 +315,11 @@ document.
   judge 几个选项: Only_Once, 很少 (30 次以内), 一般 (300 以内), 频繁 (1000)";
   08:20 "Only_Once 给 3"].  A guard with NO entry that P-auto proves gets
   none written [author 06:27 "1. 不用写"]; a guard whose entry is
-  `Refuted` or `Unknown` and that P-auto then proves gets `{lemmas,
-  Proved}` (§5 step 3), so a `Proved` entry with an empty lemma list is
+  `Refuted` or `Unknown` and that P-auto then proves gets `{delta,
+  Proved}` (§5 step 3), so a `Proved` entry with an empty delta is
   reachable (§7).  `Refuted` is the constructor's name again; `Unprovable`
   names only the judge's answer [supersedes 2026-09-04 03:23].  `verdict`,
-  `tier`, `lemma`, `entry` are declared in `guard_cache.ML` (§4);
+  `tier`, `lemma`, `delta`, `entry` are declared in `guard_cache.ML` (§4);
   `judgement` in `reasoners.ML` beside the judge.
 - **guard digest**: the `Hasher` digest (`Word64.word`) of the WHOLE goal
   state and of the context's assumptions: one `Hasher.terms` over
@@ -378,10 +390,11 @@ document.
   digest (144 under the former subgoals-only key), and among the 162
   decisions that hit the store no key repeats within one run; the digest
   costs 77 us per decision (5 us before), 0.12 % of the guard time.
-- **the store**: one table per theory, guard digest → entry, kept in
-  `<thy>.guard-cache` through the proof store's functor instance
-  `Phi_Guard_Store` (§8); read at the start of a `prove_or_refute` call,
-  written at the points §5 names, never validated.  Key: `"PLPRGUARD" ^
+- **the store**: the theory's proof store, `<thy>.proof-store` of
+  `auto_sledgehammer` (`Phi_Proof_Store`), in which a guard's entry is one
+  record under a key no proof obligation uses (§8); read at the start of a
+  `prove_or_refute` call, written at the points §5 names, never validated.
+  Key: `"PLPRGUARD" ^
   Hasher.compact digest` [author 2026-09-03 02:18; `compact` kept over
   `hex`: 2026-09-07 13:09 "我坚持用 compact"; `Hasher.compact`
   (`Hasher.ML:74`, `:113`) is the 8-byte big-endian rendering, not text,
@@ -389,9 +402,8 @@ document.
   last-write-wins, and two runs deciding the same guard write the same
   thing in the common case.  `\<phi>guard_cache` off = no entry is read
   and no entry is written; every call decides as if it had none [author
-  2026-09-02 10:41; 2026-09-03 12:52].  The store's own `Theory.at_end`
-  still loads and compacts an existing `<thy>.guard-cache`, since the
-  switch gates nothing inside the store (§8).
+  2026-09-02 10:41; 2026-09-03 12:52]; the switch gates nothing inside the
+  proof store itself (§8).
 
 The five protocol stages that follow — P-auto, R-conv, R-nitpick, the
 judge, the two warnings — describe what one call does AFTER it has read
@@ -431,26 +443,35 @@ its entry and enabled the entry's lemmas (§5).
   03:04].
   ```
   type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context,
-                    can_inst : bool, thm : thm}      (* thm = the goal state *)
-  datatype judgement = Provable of lemma list | Unprovable
+                    can_inst : bool, thm : thm,      (* thm = the goal state *)
+                    delta : delta}                   (* this entry's delta, as step 1 left it *)
+  datatype judgement = Provable of delta | Unprovable
   ```
   [author 2026-09-04 03:11–03:14 (`thm` in); `Provable` reduced to lemmas:
   2026-09-08 06:14 "赞同" (no `proof`, no returned state — P-auto proves the
   guard with the lemmas, on the spot, so the recording run and every
-  later run behave alike)].  `judge_arg.ctxt` is the guard-side ctxt as
-  it was BEFORE this entry's lemmas were added (§5 step 1's `ctxt`, whose
-  lemma list holds the lemmas of earlier guards and statements),
-  `outer_ctxt` is `ctxt0`.  The judge receives none of this entry's
-  lemmas — `judge_arg` has no lemmas field and its ctxt does not carry
-  them; its list REPLACES this entry's lemmas and no other: a bad lemma
-  disappears by the judge not proposing it again, an earlier guard's
-  lemma stays, and a lemma the judge re-proposes takes the judge's budget
-  [author 08:34 "LLM judge 那里, 是无视 the prove_or_refute point 上已有的的
-  lemmas. 得到的 lemmas 是直接替换, 而不是继承已有的 lemmas, 以允许把坏的 lemmas
-  移除掉" — "已有的 lemmas" = this entry's, as the author confirmed on
-  2026-09-09 ("是你之前写计划的时候误解了我了"; the judge's ctxt "的确是不带本
-  entry 的 lemmas 的", "还是带了之前的 lemmas 的"; a collision "更新 the
-  budget")].  Its obligations, a contract with no run-time check beyond what
+  later run behave alike); `Provable` of a delta, and the entry's delta
+  passed beside the ctxt: 2026-09-12 "传入 judge 的应该是两个参数, guard_ctxt
+  和 delta"].  `judge_arg.ctxt` is the guard-side ctxt as
+  it was BEFORE this entry's delta was applied (§5 step 1's `ctxt`, whose
+  lemma list holds the lemmas of earlier guards and statements — the
+  theorems the judge may name for deletion, by their propositions),
+  `outer_ctxt` is `ctxt0`, `delta` this entry's delta with step 1's
+  replay failures dropped and its times converted to this machine's clock
+  (`Phi_Proof_Store.machine_time`), the clock the judge's own RAW times
+  are on — so a lemma handed back as received is measured, not scaled
+  twice.  Its answer REPLACES this entry's delta whole,
+  relative to that same list: a lemma of the old delta the judge wants
+  kept it states again, a bad one disappears by the judge not stating it,
+  an earlier guard's lemma stays unless the judge deletes it, and a lemma
+  the judge adds whose proposition is already in the list takes the
+  judge's budget [author 08:34 "LLM judge 那里, 是无视 the prove_or_refute
+  point 上已有的的 lemmas. 得到的 lemmas 是直接替换, 而不是继承已有的 lemmas,
+  以允许把坏的 lemmas 移除掉" — "已有的 lemmas" = this entry's, as the author
+  confirmed on 2026-09-09 ("是你之前写计划的时候误解了我了"; the judge's ctxt
+  "的确是不带本 entry 的 lemmas 的", "还是带了之前的 lemmas 的"; a collision
+  "更新 the budget"); 2026-09-12 "judge 的输出永远是对 the condition's slot
+  的完全替换"].  Its obligations, a contract with no run-time check beyond what
   §5 does anyway: each lemma is a closed statement of type `prop`
   (`Trueprop`-wrapped for a HOL proposition), certifiable by `Thm.cterm_of
   ctxt0` and provable by its own method text in ANY `ctxt0` that can
@@ -505,10 +526,20 @@ its entry and enabled the entry's lemmas (§5).
   theorem its replay produced, with its tier's budget — initially empty
   [author 2026-09-08 07:44 "我建议新建一个 … 专门去存储 the proposed lemmas";
   07:48 "只要 a Proof Data storing a list of thms 就够了"].  Written by §5
-  step 1's append (and step 6's replacement) inside a call, and by the
-  guard-cache export hook, which replaces the whole outer list at every
-  run and block boundary; read by `enhance_with_lemmas` and by the hook
-  itself.  It travels with the ctxt and
+  step 1 (the entry's delta applied: deletions, then appends) and step 6
+  (the judge's delta applied) inside a call, and by the guard-cache
+  export hook, which replaces the whole outer list at every run and
+  block boundary; read by `enhance_with_lemmas`, by the hook itself and
+  by the judge.  A theorem's identity in the list — for a deletion and
+  for the append's duplicate check — is its proposition, compared by
+  `Pattern.equiv` (equal up to renaming of schematic variables) [author
+  2026-09-12 "删除去重等可以直接看 the lemmas 的 prop 吗？反正这些 lemmas as
+  thms 也会发给 the judge"; "the judge 始终是在这一刻删除那个 thm 对吗？一切重放
+  都是确定性的对吗？"; 2026-09-13 "用 Pattern.equiv 去做相同性比较"].  An
+  append whose proposition is already there gives that theorem the budget
+  of the delta being applied — the one rule for an entry's delta and for
+  the judge's, so a replayed entry rebuilds the list the recording call
+  returned [author 2026-09-13 "SEM-2 (a)"].  It travels with the ctxt and
   is what the guard-cache export hook carries.  Its consumers are
   "G.simpcut", `p_auto_body` and R-conv — each through
   `enhance_with_lemmas`, and nothing else.
@@ -636,88 +667,30 @@ its entry and enabled the entry's lemmas (§5).
   returns `Seq.empty` contributes no successor state (an ML reasoner's
   sequence IS its set of successor states, `reasoner.ML:688`), so its
   `ctxt1` and the lemmas it replayed are abandoned with that branch.  The
-  list grows by §5 step 1's append, loses this entry's lemmas where §5
-  step 6 replaces them with the judge's (an earlier guard's stay),
-  and loses at a run or block boundary the theorems `export_aux_lemma`
-  refuses; it never repeats a statement: §5 step 1's append stores every
-  theorem in **the canonical form** — `Raw_Simplifier.norm_hhf_protect
-  ctxt0`, then `Thm.generalize` of every type variable of the proposition
-  that occurs in none of the theorem's hyps (`thm.ML:1807-1824`, index
-  `Thm.maxidx_of th + 1`), then `Drule.zero_var_indexes`: hhf-normal,
-  outer parameters generalised to schematic variables, every type
-  variable not pinned by a hyp generalised to a schematic type variable,
-  indices renumbered [drafter, §10] — and skips one whose canonical
-  proposition is already in the list
-  (`Thm.eq_thm_prop`; the entry already there keeps its budget).
-  Identity is the canonical proposition, and the type generalisation
-  depends on the REPLAY's hyps, not on the statement: a replay whose
-  hyps pin a type variable of the statement keeps it, one whose hyps do
-  not generalises it, so one statement can occupy more than one entry —
-  at most one per subset of its hyp-pinnable type variables, each a
-  fixed point of the boundary on its own.  Per canonical proposition: a
-  guard met twice contributes its lemmas once, `enhance_with_lemmas`
-  gives it exactly one budget variable, and its allowance per consumer
-  run is the tier of the entry that first put it into the list — a
-  statement two entries propose at different tiers runs at the first
-  one's budget.  The canonical form is what makes that check
-  survive the boundary: `Proof_Context.export` is `map (Assumption.export_
-  …) #> Variable.export inner outer` (`proof_context.ML:920-924`), and it
-  transforms EVERY theorem it carries, with no precondition, in two ways
-  — (i) `Assumption.export_` hhf-normalises and `Variable.gen_all`s on
-  both sides (`assumption.ML:153-156` `norm_hhf_protect inner #>
-  export_thm #> norm_hhf_protect outer`; `raw_simplifier.ML:1556-1563`,
-  whose `gen_all` runs even when the rewriting is skipped;
-  `variable.ML:510-514`, the index taken from the ctxt's `maxidx`), so a
-  lemma stated with an outer `⋀` would otherwise come back as `f ?x.i ≡ g
-  ?x.i`, `aconv`-distinct from its next replay `⋀x. f x ≡ g x`; and (ii)
-  `Variable.export` generalises every type variable the outer ctxt has
-  not declared and no still-fixed variable pins (`variable.ML:515-529`
-  `gen_fixesT`; `:565-572`, the index again from the `maxidx`), so a
-  lemma carrying such a type variable `'a` would come back as `L[?'a.i]`,
-  distinct from its next replay `L['a]` — and, the hook overwriting with
-  no equality check, the list would gain a further entry, a further
-  `\<r>BUDGET` variable and a further copy of the same rewrite rule at
-  EVERY boundary, without bound.  The canonical form is a fixed point of
-  both: `norm_hhf_protect` on a hhf-normal theorem with no outer
-  parameter is the identity (`is_norm_hhf` skips the rewriting,
-  `gen_all` finds nothing); and the type generalisation OVER-generalises
-  on purpose — it does not ask which ctxt declares a type variable,
-  because declaration grows inward (`variable.ML:216-224`, every declarer
-  only adds names; `is_declared` `:185`) and the boundary's
-  `Variable.export` generalises what the OUTER ctxt does not declare
-  (`:516-518` `declared_outer = is_declared outer`), a set no test
-  against `ctxt0` can reproduce — so after the canonical form the
-  proposition's only type variables are those occurring in a hyp, and a
-  schematic type variable is untouched by any later `Thm.generalize`.  A
-  hyp of a replayed lemma is an assumption of an enclosing frame, whose
-  ctxt declares its type variables, so the boundary never generalises
-  them either (it could not: `thm.ML:1823-1824` raises on a type variable
-  free in a hyp) — the exported copy IS the next call's replay.  For
-  `enhance_with_lemmas` the canonical form yields the rule set an
-  Isar-proved lemma of the same statement would give: HOL's `mksimps`
-  begins with the same `Variable.gen_all` (`simpdata.ML:118`) but never
-  rewrites with `Drule.norm_hhf_eqs`, so for a statement that is not
-  already hhf-normal (`A ⟹ (⋀x. B x)`) the canonical form yields the
-  rules — one here, where the raw replay yields none — that Isar's own
-  export (`assumption.ML:153-156`) would have produced.  A theorem's
-  identity for that check, and for §5 step 6's replacement, is its
-  canonical proposition NOW: `export_aux_lemma` drops a theorem that
-  mentions a variable fixed inside (`context_export.ML:62-66`, a
-  term-level `Free` test), but `Proof_Context.export` may still change a
-  kept theorem's proposition in one case the canonical form does not
-  absorb — a phi block frame turns a theorem whose hyps hold the block's
-  `Premise` assumption into `C ⟹ th` (`Phi_Working_Mode.ML:226-232`) —
-  and such a carried copy is a different, weaker rule with its own budget
-  that can coexist with the plain `L` the next call replays.  The bound:
-  the exported `C ⟹ L` is the identity at later boundaries only for the
-  frames that export crossed (`block_export` discharges one frame's
-  assumptions per export, `Phi_Working_Mode.ML:226-233`;
-  `Proof_Context.export` crosses every frame between inner and outer at
-  once, `assumption.ML:150-156`), and the plain `L` the next call
-  re-appends after the overwrite can itself come back as `C₂ ⟹ L` at the
-  next block whose `Premise` its hyps hold — so the list carries one
-  weaker copy per such crossing beside the plain replay; in that case
-  nothing is lost and nothing is double-counted.
+  list changes by §5 step 1 (this entry's deletions, then its appends),
+  by §5 step 6 (the judge's delta) and at a run or block boundary by the
+  theorems `export_aux_lemma` refuses.  A theorem is stored as its replay
+  produced it — no normalisation — and §5 step 1's append gives one whose
+  proposition is already in the list (`Pattern.equiv`) the delta's budget
+  instead of appending it (§1 the lemma list).  `Proof_Context.export` may change a
+  carried theorem's proposition — `Assumption.export_` discharges the
+  assumptions of the frames it crosses (a phi block frame turns a theorem
+  whose hyps hold the block's `Premise` assumption into `C ⟹ th`,
+  `Phi_Working_Mode.ML:226-232`) and hhf-normalises, so a statement's
+  outer `⋀n` becomes `?n` (`assumption.ML:153-156`; the replay itself keeps
+  the binder), and `Variable.export` generalises the
+  type variables the outer ctxt has not declared (`variable.ML:515-529`);
+  a plain replay of the same lemma at a later call then sits in the list
+  beside its exported copy, each with its own budget variable and its own
+  rules.  Accepted: replay is deterministic, so at one call site every
+  hit sees the same list; the copies cost budget headroom and simplifier
+  time, never soundness [author 2026-09-12 "这个去重仅仅是为了性能优化, 为了
+  重用是吗? 其实不做这个去重, 就老老实实全都丢掉, 然后全都去证明新的 lemmas 也
+  没有问题, 对吗?" — the drafter's answer: yes, the only effects are a
+  budget per copy and one conditional rule per copy; "终于可以删除
+  canonical_form 这傻玩意儿了"].  The canonical form of revs 18–20 (§22–
+  §24) — `norm_hhf_protect`, type generalisation, `Drule.zero_var_indexes`
+  before storing — is withdrawn (§36).
 - **the undecided-guard warning**: the message printed over a guard's
   subgoals when neither a proof nor a refutation was found and no judge is
   installed — today's text at `reasoners.ML:1408-1419`, factored into one
@@ -806,40 +779,16 @@ caller uses — no run-time "is there a cache" test anywhere:
 IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:1984/1987)
   gen_reason' (reasoner.ML:906) — UNCHANGED
     … reasoning …  (state = (ctxt, thm); the ctxt flows from call to call)
-      guard_condition_judge = gen_guard_condition_solver prove_or_refute
-        the factory (reasoners.ML:1625-1635): quick_cut; under head_only: pre;
-                     HEADGOAL case_split; digest d of Thm.cprems_of (the split guard,
-                     nothing inserted); ALLGOALS (insert aux); then auto_tac:
-                     "G.simpcut" (enhances internally: Guard_Simp_SS, then the lemmas)
-                     under \<phi>guard_classic_prover_timeout — TIMEOUT = state unchanged; then
-        prove_or_refute can_inst ctxt d (ctxt0, thm):
-          0  entry := store lookup d                → NONE | SOME {lemmas, verdict}
-          1  enable entry's lemmas: replay each in ctxt0 → thm; failed → drop it (store write), warn;
-             lemma list of ctxt0 → ctxt1 (returned); of ctxt → ctxt_g (the provers' base);
-             a statement already in the list is not appended again
-          2  P-auto on ctxt_g   (p_auto_body enhances internally: fresh budgets)
-          3  P-auto proved:
-               NONE, or verdict = Proved         → return (ctxt1, solved); nothing written
-               verdict = Refuted | Unknown       → store write {lemmas, Proved}, silent; return (ctxt1, solved)
-          4  P-auto failed, by the entry:
-               Refuted                           → Seq.empty, silent
-               Unknown                           → judge installed → step 6; else the undecided-guard warning; Seq.empty
-               NONE                              → R-conv refutes → write {[], Refuted}, silent
-                                                   else R-nitpick refutes → write {[], Refuted}, silent
-                                                   else judge installed → step 6
-                                                   else the undecided-guard warning; write {[], Unknown}; Seq.empty
-               Proved (lemmas did not suffice)   → R-conv refutes → write {lemmas, Refuted}; LOUD warning; Seq.empty
-                                                   else R-nitpick refutes → likewise
-                                                   else judge installed → step 6
-                                                   else write {lemmas, Unknown}; LOUD warning; Seq.empty
-          6  the judge, j {ctxt = ctxt (no lemma of this entry), outer_ctxt = ctxt0, can_inst, thm}:
-               Provable new  → this entry's lemmas replaced by `new` on the lists of ctxt, ctxt0
-                                (a failure → error; a re-proposed statement takes the judge's budget);
-                                P-auto again on ctxt_g' (fresh time budget, fresh lemma budgets);
-                                proved → write {new, Proved}; return (ctxt1', solved)   (no warning)
-                                failed → error "the judge is broken"
-               Unprovable    → write {lemmas, Refuted}; if the entry said Proved → LOUD warning;
-                                Seq.empty
+      guard_condition_judge = gen_guard_condition_solver guard_digest prove_or_refute
+        the factory (§1): quick_cut; under head_only: pre; HEADGOAL case_split;
+                     digest d of the whole goal state and the context's assumptions
+                     (§1 guard digest); ALLGOALS (insert aux); then the "G.simpcut"
+                     pass (enhances internally: Guard_Simp_SS, then the lemmas) under
+                     5 s of thread CPU — TIMEOUT = warned, state unchanged; then
+        prove_or_refute can_inst ctxt d (ctxt0, thm): steps 0–6 of §5 — the entry
+             read, its delta applied (ctxt1 returned, ctxt_g the provers' base),
+             P-auto, the refuters, the judge, the writes.  §5 is the one
+             description; nothing is repeated here.
     the run's resulting ctxt leaves gen_reason' with the thm (stateful PLPR);
     at the run boundary the guard-cache export hook carries the lemma list
 
@@ -873,8 +822,8 @@ OBLIGATIONS SOLVED ON THE SPOT   (defer_premise, PLPR.thy:1975/1976, when
 
 Removed: the `Race.race` call, the three racer wrappers, the in-race
 `protocol` var, `\<phi>guard_race_timeout`, the 35 ms gate, and every
-asynchronous piece.  Reused: `Hasher`, the proof store (as a functor
-instance, §8), `eval_prf_str`, `Simpset` (for `Guard_Simp_SS`),
+asynchronous piece.  Reused: `Hasher`, the proof store (§8),
+`eval_prf_str`, `Simpset` (for `Guard_Simp_SS`),
 `PLPR_Context_Export` (the hook), `Simplifier.make_simproc`,
 `Raw_Simplifier.mksimps` and `addsimps` (the lemma budget), `Strhashtab` of
 `Performant_Isabelle_ML`, the R-conv/R-nitpick bodies (screens verbatim),
@@ -905,10 +854,10 @@ Everything new lives in a new `library/guard_cache.ML`, loaded by
 before `reasoners.ML` (`:1960`), its only consumer [placement: drafter,
 twelfth review — before `reasoner.ML` the name `Phi_Reasoner` is still
 `reasoner_decl.ML`'s forward structure, without `info_pretty` and
-`\<phi>trace_reasoning`]: the types of §1 (`tier`, `lemma`, `verdict`,
-`entry`), `Guard_Simp_SS` with its attribute, `Guard_Lemmas`,
+`\<phi>trace_reasoning`]: the types of §1 (`tier`, `lemma`, `delta`,
+`verdict`, `entry`), `Guard_Simp_SS` with its attribute, `Guard_Lemmas`,
 `enhance_with_lemmas` with its simproc, the guard-cache export hook,
-`\<phi>guard_cache`, `Phi_Guard_Store` and the entry codec.  `Guard_Budget`
+`\<phi>guard_cache`, the two store functions and the entry codec.  `Guard_Budget`
 is a `definition` in `PLPR.thy` before that `ML_file`, hidden at the end
 of `PLPR.thy`.  Everything the file needs is in scope there: `Hasher`, the
 proof store, `Phi_Sledgehammer_Solver`, `RPC_Pretty` and `Strhashtab`
@@ -976,8 +925,8 @@ solver), `d` the guard digest and `thm` the goal state.
 
 0. **Lookup.**  If `\<phi>guard_cache` is false, `entry := NONE`; else
    `entry := decode (get_cached_proof thy (key d))`.
-1. **Enable the entry's lemmas.**  For each `(stmt, (t, script), tier)` of
-   the entry, in order: `Thm.cterm_of ctxt0 stmt` ("fails to certify" =
+1. **Apply the entry's delta.**  For each `(stmt, (t, script), tier)` of
+   the entry's `added`, in order: `Thm.cterm_of ctxt0 stmt` ("fails to certify" =
    `TYPE`, `TERM` or `THM` — the last from `Thm.trivial` on a non-`prop` —
    caught with one explicit `handle`, the interrupt family untouched);
    `Thm.trivial` of the cterm as the goal; `eval_prf_str` of `script` with
@@ -999,19 +948,16 @@ solver), `d` the guard digest and `thm` the goal state.
    lemma's statement and which of the two failures occurred — the theory
    changed under it, or the method text broke the contract of §1 and
    cites a fact this `ctxt0` does not have [author 2026-09-08 06:16 "除非
-   a lemma 重放失败, 此时就已经移除并报警"; the gate: drafter].  The
-   surviving theorems, each with
-   `budget tier`, are appended to the lemma list of `ctxt0`, giving
-   `ctxt1` — the ctxt the call returns — and of `ctxt`, giving `ctxt_g`,
-   the ctxt every prover of this call starts from; each is stored in the
-   canonical form (§1 the export hook: `norm_hhf_protect ctxt0`, then
-   `Thm.generalize` of the type variables no hyp pins, then
-   `Drule.zero_var_indexes`), and one whose canonical
-   proposition is already in the list (`Thm.eq_thm_prop`) is not appended
-   again and the entry already there keeps its budget, so the list holds
-   at most one entry per canonical proposition (a statement whose
-   replays pin different type variables of it can hold more than one, §1
-   the export hook).  (`ctxt_g`, not `ctxt1`, because the
+   a lemma 重放失败, 此时就已经移除并报警"; the gate: drafter].  Then, on
+   the lemma list of `ctxt0` — giving `ctxt1`, the ctxt the call returns
+   — and on that of `ctxt` — giving `ctxt_g`, the ctxt every prover of
+   this call starts from: first every theorem whose proposition is
+   `Pattern.equiv` to a statement of the entry's `deleted` is removed,
+   whichever guard added it; then the surviving theorems, each with
+   `budget tier`, are appended as their replay produced them, one whose
+   proposition is already in the list taking this delta's budget instead
+   — the one rule of step 1 and step 6 (§1 the lemma list, the export
+   hook) [author 2026-09-12; 2026-09-13; §36].  (`ctxt_g`, not `ctxt1`, because the
    guard-side ctxt is where the verdict is earned: `p_auto_search_tac
    ctxt` (`reasoners.ML:1393-1394`) runs under
    `Guess_Instantiate.add_guess_inst_looper` (`:1604`) over
@@ -1025,7 +971,7 @@ solver), `d` the guard digest and `thm` the goal state.
    `Thread_CPU.apply` as `Timeout.apply`);
    `elapsed` is not recorded — nothing stores P-auto's time any more.
 3. **P-auto proved** (`solved`): `entry = NONE` or `verdict = Proved` →
-   nothing written; `verdict = Refuted | Unknown` → write `{lemmas, Proved}`
+   nothing written; `verdict = Refuted | Unknown` → write `{delta, Proved}`
    silently [author 05:53 "当 cached 记录的是 Refuted 但实际 P-auto 跑成功了,
    那么直接静默更新 the store 为 Proved"].  Return `Seq.single (ctxt1,
    solved)`.
@@ -1036,10 +982,10 @@ solver), `d` the guard digest and `thm` the goal state.
      undecided-guard warning, return `Seq.empty`, nothing written [author
      05:53; 06:10 "5. 好"].
    - `NONE` → R-conv (on `ctxt_g`; its body enhances itself, fresh
-     budgets) refutes → write `{[], Refuted}`, return `Seq.empty` silently; else
-     R-nitpick refutes → likewise; else a judge is installed → step 6; else
-     print the undecided-guard warning, write `{[], Unknown}`, return
-     `Seq.empty`.
+     budgets) refutes → write `{empty delta, Refuted}`, return `Seq.empty`
+     silently; else R-nitpick refutes → likewise; else a judge is
+     installed → step 6; else print the undecided-guard warning, write
+     `{empty delta, Unknown}`, return `Seq.empty`.
    - `Proved` — the lemmas did not suffice → R-conv; else R-nitpick; else
      a judge is installed → step 6 [author 06:10 "补充一点 … 如果 R-conv,
      R-nitpick 都失败了, 还要跑 LLM judge, 然后响亮报警"; "6. 要的"].  The
@@ -1047,30 +993,32 @@ solver), `d` the guard digest and `thm` the goal state.
      call that started from a `Proved` entry ends `Refuted` (a refuter
      here, or the judge's `Unprovable` in step 6) or `Unknown` (nobody, no
      judge), print it with the refuters' and the judge's results, write
-     `{lemmas, Refuted | Unknown}` — the lemmas stay [author 06:16 "lemmas
+     `{delta, Refuted | Unknown}` — the delta stays [author 06:16 "lemmas
      始终是不丢的"] — and return `Seq.empty`; when step 6 ends `Proved`, no
      warning [author 08:45].
 5. **Writes** are those named above and in step 6, each the whole entry
    under `key d`.
-6. **The judge**: `j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst, thm}` —
-   `ctxt` the guard-side ctxt as it was before step 1 added this entry's
-   lemmas (§1 the judge).
-   - `Provable new` → each lemma's times are normalised with
+6. **The judge**: `j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst, thm,
+   delta}` — `ctxt` the guard-side ctxt as it was before step 1 applied
+   this entry's delta, `delta` this entry's delta as step 1 left it, on
+   this machine's clock (§1 the judge).
+   - `Provable new` → the times of `new`'s `added` are normalised with
      `Phi_Proof_Store.standard_time` first (§1 the judge); then THIS
-     ENTRY's lemmas are REPLACED by `new`: each of `new` is enabled as in
-     step 1 (the replay floor and `replay_limits` on the normalised times,
-     the canonical form) onto the lemma lists of the moment before step 1
-     — `ctxt0` giving `ctxt1'`, `ctxt` giving `ctxt_g'` — so this entry's
-     survivors of step 1 are gone, an earlier guard's lemma stays, and a
-     statement of `new` already present takes the judge's budget
-     (`update_lemma`; §1 the judge, author 2026-09-09), but with a
-     failure being an `error` naming the judge (§1); then P-auto again,
-     on the rebuilt `ctxt_g'`, with a fresh time budget and —
-     `p_auto_body` enhancing again — fresh lemma budgets.  Proved → write `{new, Proved}` with the normalised times as
+     ENTRY's delta is REPLACED by `new`, applied as in step 1 (the replay
+     floor and `replay_limits` on the normalised times) onto the lemma
+     lists of the moment before step 1 — `ctxt0` giving `ctxt1'`, `ctxt`
+     giving `ctxt_g'`: `new`'s deletions first, then its lemmas, a
+     statement already present taking the judge's budget (the one rule of
+     step 1; §1 the judge, author 2026-09-09) — so this entry's survivors of step
+     1 are gone unless `new` states them again, an earlier guard's lemma
+     stays unless `new` deletes it; a replay failure is an `error` naming
+     the judge (§1); then P-auto again, on the rebuilt `ctxt_g'`, with a
+     fresh time budget and — `p_auto_body` enhancing again — fresh lemma
+     budgets.  Proved → write `{new, Proved}` with the normalised times as
      they are, return `Seq.single (ctxt1', solved)` — and no loud warning,
      whatever the entry said [author 08:45].  Failed → `error` "the judge
      is broken" [author 08:45].
-   - `Unprovable` → write `{lemmas, Refuted}` (the lemmas stay); if the
+   - `Unprovable` → write `{delta, Refuted}` (the delta stays); if the
      entry said `Proved`, print the loud guard warning (step 4); return
      `Seq.empty` — the judge decided [author 2026-09-04 03:04; 06:10 "4.
      对"].
@@ -1157,18 +1105,13 @@ the judge may — a nested call is an ordinary call against the store.
   entries, each paying its own first decision.  Never a wrong verdict,
   only a miss; normalised against neither [author 2026-09-08 12:57;
   15:12].
-- **A carried lemma may come back weaker.**  A lemma that crosses a phi
+- **A carried lemma may come back changed.**  A lemma that crosses a phi
   block boundary with the block's `Premise` assumption among its hyps
-  returns as `C ⟹ L` (§1 the export hook) and stays in the list beside
-  the plain `L` the next call replays: two rules, two budgets, the
-  conditional one discharging `C` before it rewrites; one such copy per
-  block crossing whose `Premise` the replay's hyps hold (§1 the export
-  hook).  (The export's other transformation, type generalisation, is
-  absorbed by the canonical form's over-generalisation and makes no
-  copy at a boundary; the one other route by which a statement holds
-  more than one entry is two replays pinning different type variables of
-  it through their hyps — §1 the export hook — bounded by those type
-  variables, not by boundaries.)
+  returns as `C ⟹ L`, one carrying a type variable the outer ctxt has
+  not declared returns with it schematic (§1 the export hook); either
+  stays in the list beside the plain `L` the next call replays: two
+  rules, two budgets, the conditional one discharging `C` before it
+  rewrites.  Accepted (§1 the export hook, §36).
 - **Lemmas replayed on every call.**  Each call of a guard with lemmas
   pays their replay (`eval_prf_str`, one per lemma) before P-auto; the
   export hook carries the theorems to later calls along the branch the
@@ -1178,9 +1121,19 @@ the judge may — a nested call is an ordinary call against the store.
   lemma costs its budget of rewrites in every consumer run of every guard
   call downstream of the one that enabled it — the rest of the run, the
   following statements of the block, and the two degenerate factory
-  instances through their shared "G.simpcut" pass — until any judge
-  answers `Provable` at any guard, which replaces the whole list (§5 step
-  6), or its own entry is replaced.  A
+  instances through their shared "G.simpcut" pass — until a guard's
+  delta deletes it (any guard's: the judge names it by its proposition
+  AS THE LIST HOLDS IT, read off `get_lemmas` of the judge's ctxt — the
+  replay keeps a `⋀n. …` statement as written, a run or block boundary's
+  export generalises the binder to `… ?n …`, and the two shapes are not
+  `Pattern.equiv` [author 2026-09-13: no special handling, `Pattern.equiv`
+  as it is]; §5 step 6) or its own entry's delta no longer adds it.  The
+  deleting call's own "G.simpcut" pass still pays a lemma that rewrites the
+  guard term itself: it runs before `prove_or_refute`, on the list before
+  the delta (measured 2026-09-13 with the looping lemma: the goal reaches
+  `prove_or_refute` already rewritten); a lemma met only in a subgoal the
+  classical search creates is used by P-auto alone, on the list after the
+  delta (`Test/Guard_Decision_Smoke.thy`, `RR`).  A
   growth rule (`g x = g (g
   x)`) that is cut off after `budget` applications leaves the term it
   grew; P-auto then works on that term and usually fails or runs to its
@@ -1274,10 +1227,12 @@ the judge may — a nested call is an ordinary call against the store.
   `PLPRGUARD` prefix (no interface change; `auto_sledgehammer` then knows a
   PLPR prefix).  Undecided; until then the alarm fires on rewrites and the
   corpus runs count them.
-- **Entry value**: `{lemmas : (term * proof_cache * tier) list, verdict}`
-  packed with the mlmsgpack packers through a `BytesIO` outstream and
+- **Entry value**: `{delta = {added : (term * proof_cache * tier) list,
+  deleted : term list}, verdict}` packed as the triple (added, deleted,
+  verdict) with the mlmsgpack packers through a `BytesIO` outstream and
   taken as a string (`encode_record`'s shape, `cache_file.ML:104-111`)
-  [author 2026-09-03 05:42; the shape 2026-09-08 06:16, 08:20, 08:37].  A
+  [author 2026-09-03 05:42; the shape 2026-09-08 06:16, 08:20, 08:37; the
+  delta 2026-09-12].  A
   `proof_cache`'s `times` as `packPair (packInt, packInt)` of
   `Phi_Proof_Store.ms_of_times t` and back through `times_of_ms` (`:172-173`,
   `:279-281`) — the store's own one-slot convention, `(cpu_ms, wall_ms)`
@@ -1330,8 +1285,8 @@ Phase 1 lands: the `eval_prf_str` tracing line behind a verbosity gate
 consumers (§1); the lemma list, `enhance_with_lemmas` with the lemma
 budget, `Guard_Budget`, and the guard-cache export hook; the
 `Nitpick_Refute_SS` rename; the judge ref (default `NONE`) and its types;
-the whole lemma path (lemmas in the entry, enabling, the budget, the
-export, replacement by a judge) exercised by §10 step (2)'s injected
+the whole lemma path (the entry's delta, enabling, the budget, the
+export, the judge's delta) exercised by §10 step (2)'s injected
 entries and a test judge — phase 1 has no producer of lemmas, and
 everything must be ready before the LLM judge [author 2026-09-07 13:15 "在
 做 LLM judge 前一切都要就绪"].  Phase 1 makes exactly TWO behaviour-changing
@@ -1403,9 +1358,7 @@ the body (§1); the digest step as an optional factory parameter, passed
 by `guard_condition_judge` only (§1); the "G.simpcut" timeout yielding
 the state unchanged (§1); the provers run from `ctxt_g`, the guard-side
 ctxt plus the lemmas (§5 step 1); the lemma replay in `ctxt0` with
-nothing enhanced (§5 step 1); the canonical form of the lemma list —
-`norm_hhf_protect ctxt0`, `Thm.generalize` of the type variables no hyp
-pins, `Drule.zero_var_indexes` — and the append skipping a statement already
+nothing enhanced (§5 step 1); the append skipping a proposition already
 present (§1, §5 step 1); the dropped-lemma warning's gate
 (`warning`, unconditional — §5 step 1); `enhance_with_lemmas` extracting
 rules with `mksimps` first, rotating the budget premise last, and adding
@@ -1539,9 +1492,9 @@ P. **The preparatory phase** — DONE 2026-09-09 and accepted by the author
    test-injected lemmas at each tier to confirm the tier numbers on the
    budget's own unit (one consumer run), not only on the 2026-09-08
    per-invocation sample.
-4. Persistence: the store functor and `Phi_Guard_Store`, the gitignore
-   entries, the entry codec (over `RPC_Pretty_Bytes` from step P), the
-   read at step 0 and the writes of §5 replacing the table of step 2.
+4. Persistence: entries as records of the theory's proof store (§8), the
+   entry codec (over `RPC_Pretty_Bytes` from step P), the read at step 0
+   and the writes of §5 replacing the table of step 2.
    (The gate of rev 11–13 — proceed only if record keys repeat across
    runs — is deleted: the key is the guard's own digest and repeats by
    construction [author 2026-09-08 07:38 "赞同删掉"].)  The
@@ -2612,7 +2565,7 @@ What was done, against §10 step 2 (phi-system files only; no heap rebuilt):
    false` ignoring an injected entry; the can_inst branches, the schematic type
    variable, `nitpick_params` pollution immunity.
 8. **Evidence**: `PLPR.thy` clean under Isabelle-MCP on `Phi_System_Base` (no
-   new ML warnings); the battery clean; `PhiTest_Arithmetic.thy` clean with
+   new ML warnings); the test theory clean; `PhiTest_Arithmetic.thy` clean with
    `\<phi>log_guard_decision` on: 355 decisions — 199 proved with no entry,
    120 `Refuted` hits, 23 refuted by R-nitpick, 6 `Unknown` hits, 1 undecided,
    and the §7 flips of a shared entry: 2 `Unknown` and 1 `Refuted` promoted to
@@ -2691,7 +2644,7 @@ discussion with the author uncovered:
    object; the stale race/racer/ledger/hang-net/gate sentences in
    `reasoners.ML` (four), `guard_refute.ML` (three) and `processor.ML`
    (one) rewritten or removed.
-7. The battery: the cache-off probe injects `Unknown`, the verdict its call
+7. The test theory: the cache-off probe injects `Unknown`, the verdict its call
    cannot reach; a `Refuted`-hit probe with one replayable and one
    unreplayable lemma pins step 1's drop write as the store's final state;
    `BADT` lost its elim rule so the schematic-type-variable probe reaches
@@ -2709,7 +2662,7 @@ discussion with the author uncovered:
    statement at `Only_Once` and asserts its budget became 3.  Projection now
    `(verdict, hit, refuter, judge)`.
 8. Rejected with the judge (the drafter agrees): asserting warning text in
-   the battery (needs the process-global `warning_fn`; the asserted tuple
+   the test theory (needs the process-global `warning_fn`; the asserted tuple
    already determines each warning's firing condition); the canonical form
    computed once per target context (pure, and the remedy re-opens the door
    §28 item 3 closed); a comment on R-nitpick's un-enhanced context (lemmas
@@ -2718,7 +2671,7 @@ discussion with the author uncovered:
    second factory run (checked by name on every probe); `subgoals`
    unasserted (a measurement of the bounded pass).
 Verification after the fixes: PLPR.thy clean (no new ML warning); the
-battery clean; `PhiTest_Arithmetic.thy` clean on a COLD table (the table
+test theory clean; `PhiTest_Arithmetic.thy` clean on a COLD table (the table
 lives in `guard_cache.ML` and a reload of it empties the table — §30's
 "cold" second load had in fact inherited the entries of the theories
 the cancelled first load had passed): 366 decisions — 202 proved with no
@@ -2756,7 +2709,7 @@ opinions deleted.  Applied:
    the running subgoal".
 5. "knife" (a coined word for a bound) removed from `guard_refute.ML`'s two
    rewritten comments; §4's "`ctxt_g` itself, which the judge receives" corrected
-   to `ctxt`; the four contract labels in one grammar; the battery's two engines
+   to `ctxt`; the four contract labels in one grammar; the test theory's two engines
    share one `run_guard` seam, so the judge ref is installed and restored in
    exactly one place.
 6. Deleted with the judge: `pair ctxt0` bound once (a re-filing of the nitpick
@@ -2767,7 +2720,7 @@ opinions deleted.  Applied:
    claimed `expect` shadowing (none exists).
 The author's answers (2026-09-10): `timed1_tac` confirmed dead (its
 definition is its only occurrence in the repository) and deleted; the
-battery renamed **`Test/Guard_Decision_Smoke.thy`** (§10 step 2's
+test theory renamed **`Test/Guard_Decision_Smoke.thy`** (§10 step 2's
 `Guard_Race_Smoke.thy` is this file); the probe categories `p_auto_probe`
 and `nitpick_probe` stay deleted, and with them the last piece of the race
 era's scaffolding, `guard_refute.ML`'s TEMPORARY `refuter_probe` category
@@ -2776,7 +2729,7 @@ function is now the preprocessing and the one Nitpick call.  Not touched:
 `\<phi>log_guess_inst = true` in `PLPR.thy` and the `guess_inst` category
 (`guess_instantiate.ML`), another subsystem's instrumentation, left for the
 author to rule on.  One measurement worth recording: with the corpus
-imports reloading alongside the battery, the `CHAIN`-of-1000 probe once
+imports reloading alongside the test theory, the `CHAIN`-of-1000 probe once
 missed the 400 ms bound although it proves in ~220 ms on a quiet machine —
 thread CPU excludes waiting but not the slowdown contention inflicts on
 the work itself; the construct is now 700 elements, well inside the bound.
@@ -2794,7 +2747,7 @@ NOT a bound miss: P-auto returned empty at once, cause unknown (the drafter's
 one hypothesis: an in-flight cancellation of a PIDE re-evaluation converted
 to `TIMEOUT` by `accounted_timeout.ML`'s shadow and read as "failed").
 Verification after these fixes: PLPR.thy clean (the same four pre-existing ML
-warnings, `timed1_tac` among them; three after its deletion); the battery clean; `PhiTest_Arithmetic.thy`
+warnings, `timed1_tac` among them; three after its deletion); the test theory clean; `PhiTest_Arithmetic.thy`
 clean on a warm table (355 decisions, 145 `Refuted` hits, no first
 refutation, 22.1 s of guard time; one loud guard warning on a §7 flip); the
 TEMPORARY diagnostic declare reverted and PLPR.thy re-evaluated clean.
@@ -2984,64 +2937,167 @@ next to `PhiSem_Int_ArbiPrec` cannot open the branch of an `if` on a
 pre-existing phi-system matter outside this plan, avoided by importing what
 `PhiTest_Arithmetic` imports.
 
-## 35. Step 4 done (2026-09-12) — the persistent store; reviewed, pending acceptance
+## 35. Step 4 done (2026-09-12) — the persistent store, redone on the author's design
 
-**What was done** (§8, §10 step 4).  `cache_file.ML`: the proof store's body
-is `functor Proof_Store (Kind : STORE_KIND) : PHI_PROOF_STORE` over
-`{ext, migrates, marks_writes, describe, switch}`; `Phi_Proof_Store` is its
-instance `{ext = "proof-store", migrates = true, marks_writes = true,
-describe = ("Proof cache", "cached proofs"), switch = enable_proof_store}`
-at the end of the file — name, signature, file format, messages and every
-caller unchanged, with the two deliberate changes of §8: the dead `bool` of
-the `openning_stores` triple is gone (`(store * written)`), and
-`compact_store` compacts nothing when the store file does not exist (the
-test sits inside `compact_store`, before the writability probe and the
-lock file's `createf`, so BOTH `Theory.at_end` branches — the immediate
-one and the one deferred behind async tasks — leave no `<thy>.<ext>.lock`
-behind a theory that never wrote; the re-check under the lock stays, for
-`invalidate_store` racing in between).  `migrate_legacy` binds the append
-lock only in the branch that migrates.  `guard_cache.ML`: `signature
-PHI_GUARD_STORE` (the two entry points and `store_path`) and `structure
-Phi_Guard_Store : PHI_GUARD_STORE = Proof_Store (…)` with `{ext =
-"guard-cache", migrates = false, marks_writes = false, describe = ("Guard
-cache", "cached guard advice"), switch = \<phi>guard_cache}`; the entry
-codec over `MessagePackBytesIO` — a lemma's statement through
-`RPC_Pretty_Bytes.pack_raw_term`, its times as the `(cpu_ms, wall_ms)`
-pair, tier and verdict as int tags, no format version, `decode_entry` a
-catch-all `\<^try>` answering `NONE`; `lookup_entry`/`write_entry` over
-`get_cached_proof`/`update_cached_proof thy {id = "PLPRGUARD" ^
-Hasher.compact d, hash = NONE} (zero_times, payload)`; the in-memory table
-of step 2 deleted.  `.gitignore`: `*.guard-cache`, `*.guard-cache.lock`,
-`*.guard-cache.tmp*`.  `Test/Guard_Decision_Smoke.thy`: `fresh` is a
-wall-clock run tag plus the process serial, since the store now outlives
+**What was done** (§8, §10 step 4).  `guard_cache.ML`: a guard's entry is
+one record of the theory's proof store, `<thy>.proof-store`, written and
+read through `Phi_Proof_Store.update_cached_proof thy {id = "PLPRGUARD" ^
+Hasher.compact d, hash = NONE} (zero_times, payload)` and
+`get_cached_proof thy key`; the entry codec over `MessagePackBytesIO` — a
+statement through `RPC_Pretty_Bytes.pack_raw_term`, a lemma's times as
+the `(cpu_ms, wall_ms)` pair, tier and verdict as int tags, no format
+version, `decode_entry` a catch-all `\<^try>` answering `NONE`; the
+in-memory table of step 2 deleted.  Nothing in `auto_sledgehammer`
+changes; nothing is gitignored: the entries live in the tracked
+`*.proof-store` files beside the proofs [author 2026-09-12 "1. 好"].
+`Test/Guard_Decision_Smoke.thy` and `Test/Guard_Export_Smoke.thy`: `fresh`
+is a wall-clock run tag plus the process serial, since the store outlives
 the process (a repeated numeral would meet an earlier run's entry).
 
-**Verification** (`Phi_System_Base` rebuilt twice on the author's approval
-of 2026-09-12 — `cache_file.ML` is compiled into that heap from source —
-43 s and 46 s; Isabelle-MCP relaunched on it): PLPR.thy clean; the battery
-clean in two fresh processes without deleting its `.guard-cache` between
-them; `Test/Guard_Export_Smoke.thy` clean; the corpus clean three times —
-cold in one process (355 decisions, every one a miss, 122 s of guard
-time, seven `<thy>.guard-cache` files written, `Phi_Types` 5 KB), then in
-a NEW process (146 `Refuted` and 5 `Unknown` hits read from disk, 21 s),
-then again after the review fixes (the same, and no `.proof-store.lock` or
-`.guard-cache.lock` newer than the fix anywhere in the tree).
+**CORRECTION of the record.**  The first implementation of this step
+(auto_sledgehammer `316f143`, phi-system `1cc4e95e`) made the proof
+store's body a functor and wrote guard entries through a second instance
+into a gitignored `<thy>.guard-cache`; that shape came from a review round
+(seventh review U6) and was filed under author citations that answered
+narrower questions (§8).  The author rejected it on 2026-09-12 ("纯粹是胡
+闹…必须撤回这些"); auto_sledgehammer `5ac4877` reverted `cache_file.ML`
+byte for byte to `1360b21`, and the review of that implementation is
+void.  The `guard_decision` record, the digest, the test theories' `fresh` and
+the corpus figures below are unaffected by the store's shape.
 
-**Review** (an Opus panel: four interrogators, one fresh defender per
-finding, a judge; 13 agents): ACCEPTED once two drafter fixes were applied
-— the `at_end` gate moved into `compact_store` (the first draft gated only
-the immediate branch), and the battery's `fresh` (above).  Rejected: the
-`marks_writes` branch "duplicating" the update (a branch-shape preference);
-the "fast path, no lock" comment (the append-lock guard is not the lock the
-module means); "no purge path for an entry written by an older codec" (§8
-rules it: an undecodable entry is no entry, and the Refuted/Unknown arms
-overwrite it on the next decision); the write mark computed before the
-`marks_writes` test (pre-existing line; moving it would put a SHA1 inside the
-`openning_stores` critical section).  Notes: the migrate_legacy binding
-(applied, optional); `*.guard-cache` is ignored in phi-system only, where
-every PLPR-importing theory lives today.  AUTHOR_DECISION, open: `val
-store_path` in `PHI_GUARD_STORE` has no caller and §8 rules "two entry
-points, no new ones" — (a) drop it, or (b) expose it through
-`PHI_GUARD_CACHE` so the battery can delete its own store file at entry
-and its "no entry" probes hold by construction; the judge and the drafter
-recommend (a).
+**Verification** (`Phi_System_Base` rebuilt on the author's approval of
+2026-09-12): PLPR.thy clean; both test theories clean; the corpus clean cold in
+one process (355 decisions, every one a miss, 129 s of guard time, entries
+written into the tracked proof stores of seven theories) and in a NEW
+process (146 `Refuted` and 5 `Unknown` hits read from the proof stores,
+21 s).
+
+**Review** (an Opus panel: four interrogators, more fresh defenders, a
+judge): accepted on condition.  Two items are the author's: the proof
+store's key-collision alarm (§8, OPEN) — it fires on every legitimate
+rewrite of a guard entry, e.g. `Unknown` → `Proved` under one key; and
+which of the new `*.proof-store` files to track.  Rejected, with reasons in
+`ai-artifacts/STEP4_REDO_REVIEW_2026-09-12.md`: a digest-vs-text alarm,
+content-key accumulation, `Hasher.hex` for the key, an FNV soundness note,
+a single end-of-call write, "Unknown freezes R-nitpick", a `cpu_bounded_seq`
+rewrite.
+
+## 36. The delta redesign (2026-09-12) — an entry is a delta; the canonical form withdrawn
+
+**Rulings**, in the author's words, in the order given.  The occasion was
+the provenance audit's finding that the canonical form (§22–§24) had been
+shaped by three review rounds with no ruling; asked what it was and why it
+existed, the author found the problem it solved not worth a mechanism
+("这个去重仅仅是为了性能优化, 为了重用是吗? 其实不做这个去重, 就老老实实全都丢掉,
+然后全都去证明新的 lemmas 也没有问题, 对吗?" — the drafter confirmed: the copies
+cost a budget each and one conditional rule each, never soundness, and
+replay is paid on every call regardless) and redesigned the entry:
+
+1. "我建议我们修改一下设计, 每个 guard condition 的 judge lemmas 实际上是一个
+   pair: 新增的 lemmas, 与要删除的 lemmas (term list). 增量的去做" — and the
+   reason the old "replace" existed is weaker now: "我当时说替换掉坏的 lemmas
+   是担心坏的 lemmas 太多, 但现在每个 lemma 是有 bound number of applications,
+   所以我感觉问题应该不会很大".
+2. What a deletion targets: "当然是当前 context 的 lemma list 里的所有 aconv
+   的, 包括别的 guard 带进来的".
+3. "每个 condition 的 slot 永远是相对于之前的 ctxt 的增量.  judge 的输出永远是对
+   the condition's slot 的完全替换" (the slot = the entry); "删除是持久的, 添加
+   也是持久的".
+4. The judge's input, resolving the drafter's objection that "judge sees the
+   list after the delta" and "the judge's answer replaces the delta" cannot
+   both hold: "传入 judge 的应该是两个参数, guard_ctxt 和 delta".
+5. "终于可以删除 canonical_form 这傻玩意儿了".
+6. Identity for deletion and for the append's duplicate check: the drafter
+   first proposed the judge's statement kept beside the theorem, since
+   export changes a theorem's proposition; the author: "删除去重等可以直接看
+   the lemmas 的 prop 吗? 反正这些 lemmas as thms 也会发给 the judge 对吗" and
+   "the judge 始终是在这一刻删除那个 thm 对吗? 一切重放都是确定性的对吗? 那为什么
+   会变呢?" — right: at one call site every hit sees the same list, so the
+   proposition, compared by `aconv`, is the identity (§1 the lemma list);
+   the residual case (one digest reached from two sites whose boundary
+   histories differ) only makes a deletion not fire there.
+   Beforehand the author asked whether the statement could be exported in
+   step with the theorem ("我们可以把 the stmt 也导出吗? 导出后理想情况下应该是
+   同步的, 对吗?"); an Opus agent measured it (`ai-artifacts/Export_Sync_Probe.thy`,
+   14 cases under `Main`): no — `Assumption.export_term` is the identity for
+   every export rule in the tree, `Variable.gen_all` exists for theorems
+   only, and the type-variable index and set differ between the two paths;
+   the two agree only when the boundary is a no-op on the theorem.
+7. From the code review of this redesign (2026-09-13, below): the append's
+   collision rule.  Step 1 kept the existing budget (the drafter's
+   assumption of 2026-09-09 11:35, never ruled) while step 6 took the
+   judge's, so an entry written by step 6 did not rebuild, on replay, the
+   list the recording call returned.  Ruled: "SEM-2 (a), 用 Pattern.equiv 去
+   做相同性比较" — ONE rule, the delta being applied wins, and the identity
+   is `Pattern.equiv` (equal up to renaming of schematic variables), for
+   the append's check and for a deletion alike.  `update_lemma` is gone.
+8. Also from that review: a replay that overruns its recorded time budget
+   is dropped from the entry like a broken lemma (the wall limb of
+   `replay_limits`, 2·wall + 3 s, is wall clock — `Thread_CPU.apply`
+   enforces it with `Timeout.apply`, scaled by `timeout_scale` like the
+   thread-CPU limb; both limbs are first floored to the classic bound, so
+   the cap is at least 3.8 s).  Ruled: "P3 维持现状。… 2×wall + 3s 已经很高了"
+   — the status quo.
+
+**What changed** (`guard_cache.ML`, `reasoners.ML`, the two test theories;
+plan: the status lines, §1 lemma/entry, the judge, the lemma list, the
+export hook, §3 — its pipeline block collapsed to a pointer at §5, the one
+description, §4 — the file manifest gains `delta`, §5 steps 1, 3, 4, 6,
+§7, §8, §9, §10).  `type delta = {added : lemma list, deleted : term list}`,
+`type entry = {delta : delta, verdict : verdict}`, `empty_delta`;
+`delete_lemmas : term list -> Proof.context -> Proof.context`;
+`add_lemma` takes the theorem and its budget only (no `ctxt0`: nothing is
+normalised) and is the one append rule (ruling 7; `update_lemma` gone);
+`canonical_form` deleted.  The codec packs
+the triple (added, deleted, verdict); an entry of the previous shape does
+not decode and is no entry (§8), so the corpus's first run after the change
+is cold.  `judge_arg` gains `delta`; `judgement = Provable of delta |
+Unprovable`.  `prove_or_refute`: `apply_delta` puts a delta — deletions,
+then replayed lemmas — onto `ctxt0` and `ctxt` (step 1 with the entry's,
+step 6 with the judge's, both from the lists of the moment before step 1)
+and returns the delta it applied, which is what every write stores; the
+delta handed to the judge has its times converted to this machine's
+clock (§1 the judge).  `Test/Guard_Decision_Smoke.thy`: the judge
+contract also checks `delta`; probes added — an entry deleting the seeded
+lemma of an earlier guard, a deletion naming nothing (the seeded lemma
+survives: the over-deletion check), a replayed
+entry giving the seeded lemma its budget, an entry with a deletion under
+a judge (the judge's delta replaces it whole), the judge deleting the
+seeded lemma (the deletion written), a deletion carried through a
+refutation.  `Test/Guard_Export_Smoke.thy`:
+the judge answers a delta; `fresh` as in the other test theory (the review's
+open item).
+
+**Verification** (Isabelle-MCP on the `Phi_System_Base` heap of 2026-09-12):
+PLPR.thy clean; both test theories clean; the corpus (`PhiTest_Arithmetic.thy`
+and its imports) clean in the same process, cold — 355 decisions, 261
+digests, every one a miss (the old entries do not decode), 204 proved, 146
+refuted (142 R-nitpick, 4 R-conv), 5 unknown, 136 s of guard time — the
+distribution of §35.  Then, the heap rebuilt by the author (it had gone
+stale under other sessions' changes), the warm run in a NEW process: the
+corpus clean, 355 decisions, 146 `Refuted` and 5 `Unknown` hits read from
+the proof stores, 20.6 s of guard time.  The proof store's key-collision
+alarm fired on the test theories' legitimate `Unknown` → `Proved` rewrites
+(§35, OPEN).
+
+**Review** (2026-09-13, two rounds, each a workflow of Opus interrogators,
+three fresh defenders per finding and a judge; the reports in
+`ai-artifacts/DELTA_REDESIGN_REVIEW_2026-09-13.md` and
+`…_REREVIEW_2026-09-13.md`).  Round one, 96 agents, 30 findings:
+ACCEPTED_ON_CONDITION — the author ruled SEM-2 (ruling 7) and P3 (ruling
+8); the drafter applied SEM-1 (the clock conversion), the identity fix,
+the documentation residue, the over-deletion probe and the others listed
+above.  Round two, 65 agents, 20 findings: ACCEPTED_ON_CONDITION, no
+defect in executable behaviour; the author ruled that the identity stays
+plain `Pattern.equiv` — no handling of outer binders ("别这么专门处理") — and
+that the judge contract does not constrain `deleted` beyond `same_prop`
+being total (an ill-formed statement is the proposition of no theorem);
+the drafter corrected its own false sentence about the replay (it keeps a
+`⋀n.` binder; the boundary export generalises it), collapsed the five
+identical writes into `keep`, and added the `RR` probe (a deletion
+observed in the provers' context), the `Pattern.equiv`-vs-`aconv` probe
+and the delete-before-add probe.  Rejected findings, with the rebuttals,
+in the two reports.  P5 ruled: the two test theories' `.proof-store` files
+are not tracked and not ignored.  After the round-two fixes: PLPR.thy,
+both test theories and the corpus clean again (355 decisions, 146
+`Refuted` and 5 `Unknown` hits).

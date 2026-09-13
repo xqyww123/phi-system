@@ -173,11 +173,12 @@ signature PHI_REASONERS = sig
   (*the judge of the guard cache (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, sections 1 and
     5): one optional function in a process-global ref, default NONE, consulted by
     prove_or_refute after the refuters; thm is the goal state, ctxt the guard-side
-    context carrying the lemma list as it was BEFORE this entry's lemmas were added,
-    outer_ctxt the run's context.  Provable carries the lemmas that REPLACE this
-    entry's, with RAW measured times.*)
-  type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm}
-  datatype judgement = Provable of Phi_Guard_Cache.lemma list | Unprovable
+    context carrying the lemma list as it was BEFORE this entry's delta was applied,
+    outer_ctxt the run's context, delta this entry's delta.  Provable carries the
+    delta that REPLACES this entry's, its lemmas with RAW measured times.*)
+  type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm,
+                    delta : Phi_Guard_Cache.delta}
+  datatype judgement = Provable of Phi_Guard_Cache.delta | Unprovable
   val judge : (judge_arg -> judgement) option Unsynchronized.ref
 
   val log_guard_decision : bool Config.T
@@ -1305,15 +1306,20 @@ fun r_nitpick ctxt goals =
 (*ONE optional function in a process-global ref (plan section 1), default NONE,
   installed by ML code (phase 2: the LLM judge).  Consulted by prove_or_refute
   where section 5 says, on the run's own thread, concurrently across runs, with
-  the guard-side context as it was before this entry's lemmas were added -- the
-  lemmas of earlier guards are in it.  Its lemmas REPLACE this entry's; each
-  must be a closed statement of type prop, certifiable by Thm.cterm_of
-  outer_ctxt and provable by its own method text citing theory-level facts
-  only, with RAW measured times, which prove_or_refute normalises on receipt.
-  A run re-entered inside the judge enables its own lemmas on top of ctxt's
-  (nesting is not designed for).*)
-type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm}
-datatype judgement = Provable of Phi_Guard_Cache.lemma list | Unprovable
+  the guard-side context as it was before this entry's delta was applied -- the
+  lemmas of earlier guards are in it, and the judge may delete any of them by
+  its proposition, read off Phi_Guard_Cache.get_lemmas ctxt (a lemma stated with
+  an outer \<And> is held so until a run or block boundary generalises it) -- and
+  with this entry's delta.  Its delta REPLACES this
+  entry's, relative to that same context; each added lemma must be a closed
+  statement of type prop, certifiable by Thm.cterm_of outer_ctxt and provable
+  by its own method text citing theory-level facts only, with RAW measured
+  times on this machine's clock -- the clock the delta it receives is on too;
+  prove_or_refute converts both ways.  A run re-entered inside the judge
+  enables its own lemmas on top of ctxt's (nesting is not designed for).*)
+type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm,
+                  delta : Phi_Guard_Cache.delta}
+datatype judgement = Provable of Phi_Guard_Cache.delta | Unprovable
 val judge : (judge_arg -> judgement) option Unsynchronized.ref = Unsynchronized.ref NONE
 
 
@@ -1371,6 +1377,11 @@ fun failure_text Fails_To_Certify = "fails to certify (its statement is not a we
   | failure_text Fails_To_Replay =
       "fails to replay (its method text cites a fact this context does not have, or overruns its recorded time)"
 
+(*the times of a delta's lemmas through f*)
+fun map_times f ({added, deleted} : Phi_Guard_Cache.delta) : Phi_Guard_Cache.delta =
+  {added = map (fn (stmt, (times, script), tier) => (stmt, (f times, script), tier)) added,
+   deleted = deleted}
+
 fun replay_lemma ctxt0 ((stmt, (times, script), _) : Phi_Guard_Cache.lemma) =
   let val floor = guard_classic_prover_bound ctxt0
       val limits = Phi_Proof_Store.replay_limits
@@ -1392,7 +1403,7 @@ fun dropped_lemma_warning ctxt0 stmt failure =
 
 (*One prove_or_refute call (plan sections 5 and 6): can_inst, the guard-side context,
   the guard digest, then the run's state -- the run's context ctxt0 and the goal
-  state.  The context it returns is ctxt0 plus this guard's lemmas.*)
+  state.  The context it returns is ctxt0 with this guard's delta applied.*)
 fun prove_or_refute can_inst ctxt d (ctxt0, th) =
   let val timer = Timing.start ()
       val goals = Thm.cprems_of th
@@ -1400,30 +1411,36 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
       val use_store = Config.get ctxt0 Phi_Guard_Cache.guard_cache
       val entry = if use_store then Phi_Guard_Cache.lookup_entry thy d else NONE
       val entry_verdict = Option.map #verdict entry
-      fun write lemmas verdict =
-        if use_store then Phi_Guard_Cache.write_entry thy d {lemmas = lemmas, verdict = verdict} else ()
+      fun write delta verdict =
+        if use_store then Phi_Guard_Cache.write_entry thy d {delta = delta, verdict = verdict} else ()
       fun budget_of ((_, _, tier) : Phi_Guard_Cache.lemma) = Phi_Guard_Cache.budget_of_tier ctxt0 tier
-      (*the replayed lemmas into the lemma lists of the call's two base contexts --
-        ctxt0 (returned) and ctxt (the provers'): step 1 and step 6 both start from
-        these, never from each other's result*)
-      fun add_lemmas add replayed =
-        let fun into c = fold (fn (lemma, th) => add ctxt0 (th, budget_of lemma)) replayed c
-         in (into ctxt0, into ctxt) end
+      (*a delta -- its deletions, then its replayed lemmas -- onto the lemma lists of
+        the call's two base contexts, ctxt0 (returned) and ctxt (the provers'): step 1
+        and step 6 both start from these, never from each other's result.  Returns
+        the delta it applied, which is what the store gets.*)
+      fun apply_delta deleted replayed =
+        let fun into c = c |> Phi_Guard_Cache.delete_lemmas deleted
+                           |> fold (fn (lemma, th) => Phi_Guard_Cache.add_lemma (th, budget_of lemma)) replayed
+         in ({added = map fst replayed, deleted = deleted} : Phi_Guard_Cache.delta, into ctxt0, into ctxt) end
 
       (*step 1: the entry's lemmas replayed in ctxt0, in order; a failure drops the
-        lemma from the entry; the survivors go into the lemma list of ctxt0 (ctxt1,
-        returned) and of ctxt (ctxt_g, where every prover of this call starts)*)
-      val replays = map (fn lemma => (lemma, replay_lemma ctxt0 lemma)) (these (Option.map #lemmas entry))
+        lemma from the entry; the delta with the survivors goes onto the lemma list of
+        ctxt0 (ctxt1, returned) and of ctxt (ctxt_g, where every prover of this call
+        starts)*)
+      val {added = stored, deleted} =
+            case entry of SOME {delta, ...} => delta | NONE => Phi_Guard_Cache.empty_delta
+      val replays = map (fn lemma => (lemma, replay_lemma ctxt0 lemma)) stored
       val replayed = map_filter (fn (lemma, Replayed th) => SOME (lemma, th) | _ => NONE) replays
-      val lemmas = map fst replayed
       val _ = List.app (fn (_, Replayed _) => ()
                          | ((stmt, _, _), Failed failure) => dropped_lemma_warning ctxt0 stmt failure) replays
+      val (delta, ctxt1, ctxt_g) = apply_delta deleted replayed
+      (*every write but the judge's stores the entry as step 1 left it*)
+      fun keep verdict = write delta verdict
       (*a dropped lemma rewrites the entry: the survivors, its verdict unchanged*)
       val _ = case entry of
-                SOME {lemmas = stored, verdict} =>
-                  if length lemmas < length stored then write lemmas verdict else ()
+                SOME {verdict, ...} =>
+                  if length replayed < length stored then keep verdict else ()
               | NONE => ()
-      val (ctxt1, ctxt_g) = add_lemmas Phi_Guard_Cache.add_lemma replayed
 
       (*step 2: P-auto, under the classic bound of thread CPU; p_auto_body enhances
         the context itself, so every P-auto run has fresh lemma budgets*)
@@ -1431,35 +1448,38 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
         Option.map #1 (Seq.pull (cpu_bounded_tac (guard_classic_prover_bound ctxt0) (p_auto_body ctxt') th))
 
       (*step 6: the judge, on the guard-side context as it was BEFORE this entry's
-        lemmas were added; its lemmas, times normalised on receipt, REPLACE this
-        entry's: they are added to the lists of that moment (ctxt, ctxt0), an earlier
-        guard's lemma staying and one the judge re-proposes taking the judge's budget;
-        a lemma that fails, or a P-auto that still fails, is the judge's error*)
+        delta was applied, and this entry's delta; its delta REPLACES this entry's: it
+        is applied to the lists of that moment (ctxt, ctxt0); a lemma that fails, or
+        a P-auto that still fails, is the judge's error.  Times cross the judge on
+        this machine's clock in both directions: the delta handed over is converted
+        from the store's standard-machine times, the answer's RAW times are
+        normalised on receipt -- so a lemma handed back as received is measured, not
+        scaled twice.*)
       fun consult j =
-        case j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst = can_inst, thm = th} of
-          Provable new =>
-            let val new = map (fn (stmt, (times, script), tier) =>
-                                 (stmt, (Phi_Proof_Store.standard_time times, script), tier)) new
+        case j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst = can_inst, thm = th,
+                delta = map_times Phi_Proof_Store.machine_time delta} of
+          Provable answer =>
+            let val {added = new, deleted = deleted'} = map_times Phi_Proof_Store.standard_time answer
                 val replayed' = map (fn lemma as (stmt, _, _) =>
                       case replay_lemma ctxt0 lemma of
                         Replayed th => (lemma, th)
                       | Failed failure => error (Pretty.string_of (Pretty.block [
                             Pretty.str ("The judge is broken: its lemma " ^ failure_text failure ^ ":"),
                             Pretty.brk 1, Syntax.pretty_term ctxt0 stmt]))) new
-                val (ctxt1', ctxt_g') = add_lemmas Phi_Guard_Cache.update_lemma replayed'
+                val (delta', ctxt1', ctxt_g') = apply_delta deleted' replayed'
              in case p_auto ctxt_g' of
                   SOME solved =>
-                    (write new Phi_Guard_Cache.Proved;
+                    (write delta' Phi_Guard_Cache.Proved;
                      {verdict = Phi_Guard_Cache.Proved, refuter = NONE, judge = SOME "Provable",
                       result = Seq.single (ctxt1', solved)})
                 | NONE => error "The judge is broken: P-auto cannot prove the guard with the lemmas it proposed."
             end
         | Unprovable =>
-            (write lemmas Phi_Guard_Cache.Refuted;
+            (keep Phi_Guard_Cache.Refuted;
              {verdict = Phi_Guard_Cache.Refuted, refuter = NONE, judge = SOME "Unprovable", result = Seq.empty})
 
       fun refuted_by name =
-        (write lemmas Phi_Guard_Cache.Refuted;
+        (keep Phi_Guard_Cache.Refuted;
          {verdict = Phi_Guard_Cache.Refuted, refuter = SOME name, judge = NONE, result = Seq.empty})
 
       (*no refuter refuted: the judge if installed, else Unknown; an entry already
@@ -1468,7 +1488,7 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
         case ! judge of
           SOME j => consult j
         | NONE =>
-            (if entry_verdict = SOME Phi_Guard_Cache.Unknown then () else write lemmas Phi_Guard_Cache.Unknown;
+            (if entry_verdict = SOME Phi_Guard_Cache.Unknown then () else keep Phi_Guard_Cache.Unknown;
              {verdict = Phi_Guard_Cache.Unknown, refuter = NONE, judge = NONE, result = Seq.empty})
 
       (*steps 2 to 4*)
@@ -1476,7 +1496,7 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
         case p_auto ctxt_g of
           SOME solved =>
             (if entry_verdict = SOME Phi_Guard_Cache.Proved orelse is_none entry then ()
-             else write lemmas Phi_Guard_Cache.Proved;
+             else keep Phi_Guard_Cache.Proved;
              {verdict = Phi_Guard_Cache.Proved, refuter = NONE, judge = NONE, result = Seq.single (ctxt1, solved)})
         | NONE =>
             (case entry_verdict of
@@ -1544,7 +1564,7 @@ fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
   guess_inst's looper and solver enter the guard machinery here and only here: the
   "G.simpcut" pass, the is_F shortcut, and everything `solve` simplifies through the
   guard-side context guard_ctxt -- prove_or_refute's ctxt, from which it derives its
-  ctxt_g by adding the entry's lemmas (plan section 5 step 1).*)
+  ctxt_g by applying the entry's delta (plan section 5 step 1).*)
 fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
   let fun is_false (Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ Const(\<^const_name>\<open>False\<close>, _))
             = is_guard_mode mode

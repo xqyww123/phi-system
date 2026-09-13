@@ -21,8 +21,9 @@ begin
    its consultations per family; a second consultation for a family is the failure: the
    lemma did not arrive.  GX is enabled at the top level of the block and must reach the
    next statement; GY is enabled inside a nested block and must reach the enclosing block.
-   Guards get fresh arguments (a process serial) because the in-memory store has no
-   deletion and outlives a re-evaluation of this theory. *)
+   Guards get fresh arguments (a wall-clock run tag plus a process serial) because the
+   store is this theory's proof store, Guard_Export_Smoke.proof-store, with no deletion,
+   outliving a re-evaluation of this theory and the process. *)
 
 definition GX :: \<open>nat \<Rightarrow> bool\<close> where \<open>GX n = True\<close>
 definition GY :: \<open>nat \<Rightarrow> bool\<close> where \<open>GY n = True\<close>
@@ -54,7 +55,7 @@ fun judge (arg : Phi_Reasoners.judge_arg) =
   | SOME fam =>
       let val n = count fam + 1
           val _ = consulted := Symtab.update (fam, n) (!consulted)
-       in if n = 1 then Phi_Reasoners.Provable [lemma_of (#outer_ctxt arg) fam]
+       in if n = 1 then Phi_Reasoners.Provable {added = [lemma_of (#outer_ctxt arg) fam], deleted = []}
           else error ("export smoke: the judge was consulted a " ^ string_of_int n ^
                       "th time for " ^ fam ^ ": the lemma did not reach this guard")
       end
@@ -62,7 +63,9 @@ fun judge (arg : Phi_Reasoners.judge_arg) =
 (*the trigger's arming: the family whose guard the next run decides*)
 val armed = Unsynchronized.ref (NONE : string option)
 fun arm fam = armed := SOME fam
-fun guard_prop ctxt fam = Syntax.read_prop ctxt ("\<condition> " ^ fam ^ " " ^ string_of_int (serial ()))
+val run_tag = Time.toNanoseconds (Time.now ())
+fun fresh () = string_of_int (run_tag + serial ())
+fun guard_prop ctxt fam = Syntax.read_prop ctxt ("\<condition> " ^ fam ^ " " ^ fresh ())
 
 fun has_lemma fam ctxt =
   exists (fn (th, _) => family_of (Thm.prop_of th) = SOME fam) (Phi_Guard_Cache.get_lemmas ctxt)
@@ -109,7 +112,7 @@ ML \<open>
 let val ctxt = \<^context>
     val _ = Export_Smoke.reset ()
     val goal = Thm.trivial (Thm.cterm_of ctxt (Syntax.read_prop ctxt
-                 ("GX2 " ^ string_of_int (serial ()) ^ " " ^ string_of_int (serial ()))))
+                 ("GX2 " ^ Export_Smoke.fresh () ^ " " ^ Export_Smoke.fresh ())))
  in case Phi_Reasoner.reason NONE NONE (ctxt, goal) of
       NONE => error "same run: the reasoning failed"
     | SOME (ctxt', th) =>

@@ -1,0 +1,674 @@
+diff --git a/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy b/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy
+index 01b16ed6..e1fcb40b 100644
+--- a/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy
++++ b/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy
+@@ -4,8 +4,9 @@ begin
+ 
+ (* Probe battery for one prove_or_refute call (library/reasoners.ML): every path
+    of Docs/GUARD_CACHE_QUICK_MODE_PLAN.md section 5 -- hits of each verdict,
+-   lemma enabling, a looping lemma cut off by its budget, the judge replacing
+-   this entry's lemmas, both warnings, both errors -- driven through the guard
++   lemma enabling, a looping lemma cut off by its budget, an entry's deletion,
++   the judge's delta replacing this entry's, both warnings, both errors --
++   driven through the guard
+    factory with entries injected into the store and a test judge installed into
+    the ref.  Not registered in any ROOT: evaluate on demand (e.g. via
+    Isabelle-MCP under session Phi_System_Base).
+@@ -77,24 +78,32 @@ fun digest_of can_inst ctxt st =
+ fun entry_of ctxt d = Phi_Guard_Cache.lookup_entry (Proof_Context.theory_of ctxt) d
+ 
+ fun show_entry NONE = "no entry"
+-  | show_entry (SOME {lemmas, verdict}) =
++  | show_entry (SOME {delta = {added, deleted}, verdict}) =
+       (case verdict of Phi_Guard_Cache.Proved => "Proved"
+                      | Phi_Guard_Cache.Refuted => "Refuted"
+                      | Phi_Guard_Cache.Unknown => "Unknown") ^
+-      " with " ^ string_of_int (length lemmas) ^ " lemma(s)"
++      " with " ^ string_of_int (length added) ^ " lemma(s)" ^
++      (if null deleted then "" else ", " ^ string_of_int (length deleted) ^ " deletion(s)")
++
++fun adds lemmas : Phi_Guard_Cache.delta = {added = lemmas, deleted = []}
+ 
+ fun show_lemmas ctxt = @{make_string} (map (apfst Thm.prop_of) (Phi_Guard_Cache.get_lemmas ctxt))
+ 
+ (*the judge's argument contract (plan section 1, section 5 step 6), checked on every
+   call of a test judge: `ctxt` and `outer_ctxt` carry the lemma list as it was before
+-  this entry's lemmas were added -- the probe context's, statement for statement --
+-  `can_inst` is the probe's, and the goal state has subgoals*)
+-fun contract name ctxt can_inst j (arg : Phi_Reasoners.judge_arg) =
++  this entry's delta was applied -- the probe context's, statement for statement --
++  `delta` is the injected entry's (every probe's entry replays whole), `can_inst` is
++  the probe's, and the goal state has subgoals*)
++fun contract name ctxt can_inst entry j (arg : Phi_Reasoners.judge_arg) =
+   let fun props c = map (Thm.prop_of o fst) (Phi_Guard_Cache.get_lemmas c)
+       fun same c = eq_list (op aconv) (props c, props ctxt)
++      val {added, deleted} = (case entry of SOME {delta, ...} => delta | NONE => Phi_Guard_Cache.empty_delta)
+       fun check what ok = if ok then () else error (name ^ ": the judge's argument breaks its contract: " ^ what)
+    in check "ctxt's lemma list is not the probe context's" (same (#ctxt arg));
+       check "outer_ctxt's lemma list is not the probe context's" (same (#outer_ctxt arg));
++      check "delta's added lemmas are not the entry's"
++            (eq_list (op aconv) (map #1 (#added (#delta arg)), map #1 added));
++      check "delta's deletions are not the entry's" (eq_list (op aconv) (#deleted (#delta arg), deleted));
+       check "can_inst is not the probe's" (#can_inst arg = can_inst);
+       check "the goal state has no subgoal" (Thm.nprems_of (#thm arg) > 0);
+       j arg
+@@ -109,7 +118,7 @@ fun run_guard {can_inst, entry, judge} ctxt name t =
+       val d = digest_of can_inst ctxt st
+       val _ = (case entry of NONE => ()
+                | SOME e => Phi_Guard_Cache.write_entry (Proof_Context.theory_of ctxt) d e)
+-      val _ = Phi_Reasoners.judge := Option.map (contract name ctxt can_inst) judge
++      val _ = Phi_Reasoners.judge := Option.map (contract name ctxt can_inst entry) judge
+       val res = Exn.capture_body (fn () => Timing.timing (fn () =>
+                   Phi_Reasoners.guard_condition_judge {can_inst = can_inst} (ctxt, st) |> Seq.pull) ())
+       val _ = Phi_Reasoners.judge := NONE
+@@ -164,10 +173,12 @@ fun test_error (opts as {can_inst, entry = _, judge = _}) ctxt name prefix prop_
+ 
+ val plain = {can_inst = false, entry = NONE, judge = NONE}
+ val schematic = {can_inst = true, entry = NONE, judge = NONE}
+-fun with_entry lemmas verdict = {can_inst = false, entry = SOME {lemmas = lemmas, verdict = verdict}, judge = NONE}
++fun with_delta delta verdict = {can_inst = false, entry = SOME {delta = delta, verdict = verdict}, judge = NONE}
++fun with_entry lemmas verdict = with_delta (adds lemmas) verdict
+ fun with_judge j = {can_inst = false, entry = NONE, judge = SOME j}
+-fun with_entry_and_judge lemmas verdict j =
+-  {can_inst = false, entry = SOME {lemmas = lemmas, verdict = verdict}, judge = SOME j}
++fun with_delta_and_judge delta verdict j =
++  {can_inst = false, entry = SOME {delta = delta, verdict = verdict}, judge = SOME j}
++fun with_entry_and_judge lemmas verdict j = with_delta_and_judge (adds lemmas) verdict j
+ 
+ fun expect path store = {path = path, store = store}
+ 
+@@ -275,8 +286,11 @@ fun uncertifiable ctxt = (Syntax.read_term ctxt "LOOP 0", (times, "simp"), Phi_G
+ 
+ (*a run context that already carries a lemma of an earlier guard: CHAIN [] at
+   budget 30, the budget of Rarely*)
+-fun seeded ctxt = Phi_Guard_Cache.add_lemma ctxt (@{thm CHAIN_nil}, 30) ctxt
+-val chain_nil = Thm.prop_of @{thm CHAIN_nil}\<close>
++fun seeded ctxt = Phi_Guard_Cache.add_lemma (@{thm CHAIN_nil}, 30) ctxt
++val chain_nil = Thm.prop_of @{thm CHAIN_nil}
++(*the looping lemma as a theorem, for seeding it directly*)
++fun looping_thm ctxt =
++  Goal.prove ctxt [] [] (#1 (looping ctxt)) (fn {context, ...} => simp_tac (context addsimps @{thms LOOP_def}) 1)\<close>
+ 
+ section \<open>The lemma budget on its own\<close>
+ 
+@@ -284,9 +298,7 @@ section \<open>The lemma budget on its own\<close>
+   LOOP 0 exactly three times and then stops matching*)
+ ML \<open>
+ let val ctxt = \<^context>
+-    val (stmt, _, _) = looping ctxt
+-    val th = Goal.prove ctxt [] [] stmt (fn {context, ...} => simp_tac (context addsimps @{thms LOOP_def}) 1)
+-    val ctxt' = Phi_Guard_Cache.add_lemma ctxt (th, 3) ctxt |> Phi_Guard_Cache.enhance_with_lemmas
++    val ctxt' = Phi_Guard_Cache.add_lemma (looping_thm ctxt, 3) ctxt |> Phi_Guard_Cache.enhance_with_lemmas
+     val rhs = Thm.rhs_of (Simplifier.rewrite ctxt' \<^cterm>\<open>LOOP 0\<close>)
+     val expected = \<^cterm>\<open>LOOP (LOOP (LOOP (LOOP 0)))\<close>
+  in if Thm.term_of rhs aconv Thm.term_of expected then writeln "budget: three rewrites, then cut off"
+@@ -395,24 +407,89 @@ ML \<open>test (with_entry [useless \<^context>, unreplayable \<^context>] Phi_G
+   (expect ("refuted", "refuted", "-", "-") "Refuted with 1 lemma(s)")
+   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
+ 
+-(*a lemma that replays but does not suffice: it stays in the entry through a refutation*)
+-ML \<open>test (with_entry [useless \<^context>] Phi_Guard_Cache.Proved) \<^context>
+-  "Proved hit with an insufficient lemma: R-conv refutes, the lemma stays"
+-  (expect ("refuted", "proved", "R-conv", "-") "Refuted with 1 lemma(s)")
++(*a lemma that replays but does not suffice: it stays in the entry through a refutation,
++  and so does the entry's deletion*)
++ML \<open>test (with_delta {added = [useless \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
++  "Proved hit with an insufficient lemma: R-conv refutes, the delta stays"
++  (expect ("refuted", "proved", "R-conv", "-") "Refuted with 1 lemma(s), 1 deletion(s)")
+   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
+ 
++section \<open>An entry's deletion\<close>
++
++(*the entry's delta deletes an earlier guard's lemma by its proposition: the run
++  context carries CHAIN [] (seeded), the Unknown entry deletes it and adds the
++  looping lemma; the returned list holds the looping lemma alone*)
++ML \<open>
++let val ctxt = seeded \<^context>
++    val r = decide (with_delta {added = [looping ctxt], deleted = [chain_nil]} Phi_Guard_Cache.Unknown) ctxt
++      "Unknown hit whose delta deletes the seeded lemma: gone from the returned context, Proved written"
++      (expect ("proved", "unknown", "-", "-") "Proved with 1 lemma(s), 1 deletion(s)")
++      (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
++ in case r of
++      SOME (ctxt1, _) =>
++        (case Phi_Guard_Cache.get_lemmas ctxt1 of
++           [(_, 3)] => writeln "the seeded lemma is deleted, the entry's lemma alone remains"
++         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
++    | NONE => error "no state returned"
++end\<close>
++
++(*a deletion naming no lemma of the list deletes nothing: the seeded lemma survives
++  at its budget -- the probe that catches over-deletion*)
++ML \<open>
++let val ctxt = seeded \<^context>
++    val r = decide (with_delta {added = [], deleted = [#1 (useless_other ctxt)]} Phi_Guard_Cache.Unknown) ctxt
++      "Unknown hit whose delta deletes a lemma the context does not carry: nothing deleted, Proved written"
++      (expect ("proved", "unknown", "-", "-") "Proved with 0 lemma(s), 1 deletion(s)")
++      (read false ctxt ("FALLS " ^ elim_chain ^ " \<Longrightarrow> \<condition> (SPIN " ^ fresh () ^ ")"))
++ in case r of
++      SOME (ctxt1, _) =>
++        (case Phi_Guard_Cache.get_lemmas ctxt1 of
++           [(th, 30)] =>
++             if Thm.prop_of th aconv chain_nil then writeln "the seeded lemma survives at budget 30"
++             else error ("the returned context carries " ^ show_lemmas ctxt1)
++         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
++    | NONE => error "no state returned"
++end\<close>
++
++(*No probe observes a deletion in the provers' context through the factory: any lemma
++  that would change P-auto's answer is a simp rule, and the "G.simpcut" pass has
++  already applied it from the list BEFORE the delta (measured with the looping lemma:
++  the goal reaches prove_or_refute rewritten, and P-auto proves it without the lemma).
++  A deletion names the theorem's proposition as the list holds it -- for a replayed
++  `\<And>n. ...` statement that is `... ?n ...`, the replay having generalised the binder.*)
++
++(*a replayed entry rebuilds the list the recording call returned: a proposition already
++  in the list takes the delta's budget (the one rule of step 1 and step 6)*)
++ML \<open>
++let val ctxt = seeded \<^context>
++    val r = decide (with_entry [useless_once ctxt] Phi_Guard_Cache.Unknown) ctxt
++      "Unknown hit adding the seeded lemma at Only_Once: its budget becomes 3"
++      (expect ("proved", "unknown", "-", "-") "Proved with 1 lemma(s)")
++      (read false ctxt ("FALLS " ^ elim_chain ^ " \<Longrightarrow> \<condition> (SPIN " ^ fresh () ^ ")"))
++ in case r of
++      SOME (ctxt1, _) =>
++        (case Phi_Guard_Cache.get_lemmas ctxt1 of
++           [(th, 3)] =>
++             if Thm.prop_of th aconv chain_nil then writeln "the seeded lemma now at the entry's budget 3"
++             else error ("the returned context carries " ^ show_lemmas ctxt1)
++         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
++    | NONE => error "no state returned"
++end\<close>
++
+ section \<open>The judge\<close>
+ 
+-(*Provable REPLACES this entry's lemmas and no other: the run context carries an
+-  earlier guard's lemma (seeded), the Unknown entry carries `useless_other`; no
+-  refuter runs, the judge is consulted on the context WITHOUT `useless_other` (the
+-  contract check in `run_guard`), and the returned list is the seeded lemma followed
+-  by the judge's -- `useless_other` gone, the seeded one kept at its own budget*)
++(*Provable REPLACES this entry's delta and no other: the run context carries an
++  earlier guard's lemma (seeded), the Unknown entry adds `useless_other` and deletes
++  the seeded lemma; no refuter runs, the judge is consulted on the context as it was
++  BEFORE the delta -- the seeded lemma there, `useless_other` not -- and with the
++  entry's delta (the contract check in `run_guard`); its delta, applied to that
++  context, gives the seeded lemma at its own budget followed by the judge's --
++  `useless_other` gone, the entry's deletion gone*)
+ ML \<open>
+ let val ctxt = seeded \<^context>
+-    val r = decide (with_entry_and_judge [useless_other ctxt] Phi_Guard_Cache.Unknown
+-                      (fn _ => Phi_Reasoners.Provable [looping ctxt])) ctxt
+-      "Unknown hit with a lemma, the judge answers Provable: this entry's lemma replaced, the earlier one kept"
++    val r = decide (with_delta_and_judge {added = [useless_other ctxt], deleted = [chain_nil]} Phi_Guard_Cache.Unknown
++                      (fn _ => Phi_Reasoners.Provable (adds [looping ctxt]))) ctxt
++      "Unknown hit with a delta, the judge answers Provable: the delta replaced whole, the earlier lemma kept"
+       (expect ("proved", "unknown", "-", "Provable") "Proved with 1 lemma(s)")
+       (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
+  in case r of
+@@ -425,10 +502,26 @@ let val ctxt = seeded \<^context>
+     | NONE => error "no state returned"
+ end\<close>
+ 
++(*the judge deletes an earlier guard's lemma by its proposition; the deletion is
++  written with the entry*)
++ML \<open>
++let val ctxt = seeded \<^context>
++    val r = decide (with_judge (fn _ => Phi_Reasoners.Provable {added = [looping ctxt], deleted = [chain_nil]})) ctxt
++      "no entry, the judge answers Provable deleting the seeded lemma: gone, the deletion written"
++      (expect ("proved", "none", "-", "Provable") "Proved with 1 lemma(s), 1 deletion(s)")
++      (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
++ in case r of
++      SOME (ctxt1, _) =>
++        (case Phi_Guard_Cache.get_lemmas ctxt1 of
++           [(_, 3)] => writeln "the seeded lemma is deleted, the judge's lemma alone remains"
++         | _ => error ("the returned context carries " ^ show_lemmas ctxt1))
++    | NONE => error "no state returned"
++end\<close>
++
+ (*a judge lemma of a proposition already in the list takes the judge's budget*)
+ ML \<open>
+ let val ctxt = seeded \<^context>
+-    val r = decide (with_judge (fn _ => Phi_Reasoners.Provable [useless_once ctxt, looping ctxt])) ctxt
++    val r = decide (with_judge (fn _ => Phi_Reasoners.Provable (adds [useless_once ctxt, looping ctxt]))) ctxt
+       "the judge re-proposes the seeded lemma at Only_Once: its budget is updated"
+       (expect ("proved", "none", "-", "Provable") "Proved with 2 lemma(s)")
+       (read false ctxt ("\<condition> (PP (LOOP " ^ fresh () ^ "))"))
+@@ -442,10 +535,10 @@ let val ctxt = seeded \<^context>
+     | NONE => error "no state returned"
+ end\<close>
+ 
+-(*a Proved hit the entry's lemma cannot carry: the judge's list replaces the entry's,
++(*a Proved hit the entry's lemma cannot carry: the judge's delta replaces the entry's,
+   P-auto proves, the entry is rewritten -- and no loud warning (plan section 5 step 6)*)
+ ML \<open>test (with_entry_and_judge [useless \<^context>] Phi_Guard_Cache.Proved
+-            (fn _ => Phi_Reasoners.Provable [looping \<^context>])) \<^context>
++            (fn _ => Phi_Reasoners.Provable (adds [looping \<^context>]))) \<^context>
+   "Proved hit, refuters fail, the judge answers Provable: the entry's lemma is replaced, no warning"
+   (expect ("proved", "proved", "-", "Provable") "Proved with 1 lemma(s)")
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+@@ -466,13 +559,13 @@ ML \<open>test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ 
+ (*the judge's lemma may not fail: the error names the judge*)
+-ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable [unreplayable \<^context>])) \<^context>
++ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [unreplayable \<^context>]))) \<^context>
+   "the judge proposes a lemma that fails to replay: error"
+   "The judge is broken: its lemma fails to replay"
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ 
+ (*a Provable after which P-auto still fails: the other error*)
+-ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable [useless \<^context>])) \<^context>
++ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [useless \<^context>]))) \<^context>
+   "the judge answers Provable with a lemma that does not suffice: error"
+   "The judge is broken: P-auto cannot prove"
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+diff --git a/Phi_Logic_Programming_Reasoner/Test/Guard_Export_Smoke.thy b/Phi_Logic_Programming_Reasoner/Test/Guard_Export_Smoke.thy
+index 3eb39c37..4a348768 100644
+--- a/Phi_Logic_Programming_Reasoner/Test/Guard_Export_Smoke.thy
++++ b/Phi_Logic_Programming_Reasoner/Test/Guard_Export_Smoke.thy
+@@ -21,8 +21,9 @@ begin
+    its consultations per family; a second consultation for a family is the failure: the
+    lemma did not arrive.  GX is enabled at the top level of the block and must reach the
+    next statement; GY is enabled inside a nested block and must reach the enclosing block.
+-   Guards get fresh arguments (a process serial) because the in-memory store has no
+-   deletion and outlives a re-evaluation of this theory. *)
++   Guards get fresh arguments (a wall-clock run tag plus a process serial) because the
++   store is this theory's proof store, Guard_Export_Smoke.proof-store, with no deletion,
++   outliving a re-evaluation of this theory and the process. *)
+ 
+ definition GX :: \<open>nat \<Rightarrow> bool\<close> where \<open>GX n = True\<close>
+ definition GY :: \<open>nat \<Rightarrow> bool\<close> where \<open>GY n = True\<close>
+@@ -54,7 +55,7 @@ fun judge (arg : Phi_Reasoners.judge_arg) =
+   | SOME fam =>
+       let val n = count fam + 1
+           val _ = consulted := Symtab.update (fam, n) (!consulted)
+-       in if n = 1 then Phi_Reasoners.Provable [lemma_of (#outer_ctxt arg) fam]
++       in if n = 1 then Phi_Reasoners.Provable {added = [lemma_of (#outer_ctxt arg) fam], deleted = []}
+           else error ("export smoke: the judge was consulted a " ^ string_of_int n ^
+                       "th time for " ^ fam ^ ": the lemma did not reach this guard")
+       end
+@@ -62,7 +63,9 @@ fun judge (arg : Phi_Reasoners.judge_arg) =
+ (*the trigger's arming: the family whose guard the next run decides*)
+ val armed = Unsynchronized.ref (NONE : string option)
+ fun arm fam = armed := SOME fam
+-fun guard_prop ctxt fam = Syntax.read_prop ctxt ("\<condition> " ^ fam ^ " " ^ string_of_int (serial ()))
++val run_tag = Time.toNanoseconds (Time.now ())
++fun fresh () = string_of_int (run_tag + serial ())
++fun guard_prop ctxt fam = Syntax.read_prop ctxt ("\<condition> " ^ fam ^ " " ^ fresh ())
+ 
+ fun has_lemma fam ctxt =
+   exists (fn (th, _) => family_of (Thm.prop_of th) = SOME fam) (Phi_Guard_Cache.get_lemmas ctxt)
+@@ -109,7 +112,7 @@ ML \<open>
+ let val ctxt = \<^context>
+     val _ = Export_Smoke.reset ()
+     val goal = Thm.trivial (Thm.cterm_of ctxt (Syntax.read_prop ctxt
+-                 ("GX2 " ^ string_of_int (serial ()) ^ " " ^ string_of_int (serial ()))))
++                 ("GX2 " ^ Export_Smoke.fresh () ^ " " ^ Export_Smoke.fresh ())))
+  in case Phi_Reasoner.reason NONE NONE (ctxt, goal) of
+       NONE => error "same run: the reasoning failed"
+     | SOME (ctxt', th) =>
+diff --git a/Phi_Logic_Programming_Reasoner/library/guard_cache.ML b/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
+index f179f891..5eb2b559 100644
+--- a/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
++++ b/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
+@@ -2,7 +2,8 @@
+     Author:     Qiyuan Xu
+ 
+ The guard cache of PLPR (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md): what the store
+-holds for one guard (an entry: the judge's lemmas with their tiers and the last
++holds for one guard (an entry: the guard's delta to the lemma list -- the lemmas
++it adds, with their tiers, and the statements it deletes -- and the last
+ verdict), the user simpset strengthening guard proving (Guard_Simp_SS), the
+ lemma list carried by the context (Guard_Lemmas), the lemma budget enforced
+ inside the simplifier (enhance_with_lemmas), the export hook carrying the
+@@ -18,8 +19,13 @@ signature PHI_GUARD_CACHE = sig
+ datatype tier = Only_Once | Rarely | Normal | Frequent
+ type lemma = term * Phi_Proof_Store.proof_cache * tier
+       (*statement, (replay times, method text), budget*)
++(*what the guard does to the lemma list of the context it is met in: every
++  theorem whose proposition is aconv to a deleted statement leaves, whichever
++  guard added it, then the added lemmas are appended (plan section 5 step 1)*)
++type delta = {added : lemma list, deleted : term list}
++val empty_delta : delta
+ datatype verdict = Proved | Refuted | Unknown
+-type entry = {lemmas : lemma list, verdict : verdict}
++type entry = {delta : delta, verdict : verdict}
+ 
+ val guard_cache : bool Config.T            (*\<phi>guard_cache: read and write the store*)
+ val guard_lemma_apply_limit : int Config.T (*\<phi>guard_lemma_apply_limit: Frequent's budget, the ceiling*)
+@@ -36,17 +42,16 @@ val write_entry : theory -> Hasher.digest -> entry -> unit
+ (*user-declared rewrite rules strengthening guard proving; attribute \<phi>guard_simp*)
+ structure Guard_Simp_SS : SIMPSET
+ 
+-(*the lemma list: each replayed judge lemma in the canonical form, with its budget*)
++(*the lemma list: each replayed judge lemma as its replay produced it, with its
++  budget; a theorem's identity here is its proposition, up to renaming of
++  schematic variables (Pattern.equiv)*)
+ val get_lemmas : Proof.context -> (thm * int) list
+-(*append a replayed theorem with its budget, in the canonical form -- hhf-normal
+-  by ctxt0, outer parameters generalised, every type variable no hyp pins
+-  generalised, indices renumbered: a fixed point of the run-boundary export, so
+-  one canonical proposition is stored once -- unless a theorem of that
+-  proposition is present, which keeps its budget*)
+-val add_lemma : Proof.context -> thm * int -> Proof.context -> Proof.context
+-(*the same, but a theorem of that proposition already present takes the given budget:
+-  the judge's lemmas (plan section 5 step 6)*)
+-val update_lemma : Proof.context -> thm * int -> Proof.context -> Proof.context
++(*remove every theorem whose proposition is one of the statements*)
++val delete_lemmas : term list -> Proof.context -> Proof.context
++(*append a replayed theorem with its budget; a theorem of that proposition
++  already present takes the budget instead -- the one rule for an entry's delta
++  and for the judge's*)
++val add_lemma : thm * int -> Proof.context -> Proof.context
+ 
+ (*the ONE way a consumer gets the lemmas into its simplifier, under the lemma
+   budget: every rewrite rule of every lemma is weakened with a last premise
+@@ -60,8 +65,10 @@ structure Phi_Guard_Cache : PHI_GUARD_CACHE = struct
+ 
+ datatype tier = Only_Once | Rarely | Normal | Frequent
+ type lemma = term * Phi_Proof_Store.proof_cache * tier
++type delta = {added : lemma list, deleted : term list}
++val empty_delta : delta = {added = [], deleted = []}
+ datatype verdict = Proved | Refuted | Unknown
+-type entry = {lemmas : lemma list, verdict : verdict}
++type entry = {delta : delta, verdict : verdict}
+ 
+ val guard_cache = Attrib.setup_config_bool \<^binding>\<open>\<phi>guard_cache\<close> (K true)
+ val guard_lemma_apply_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>guard_lemma_apply_limit\<close> (K 1000)
+@@ -76,11 +83,12 @@ fun budget_of_tier ctxt tier =
+   and the packed entry as its text.*)
+ fun key_of d = "PLPRGUARD" ^ Hasher.compact d
+ 
+-(*The entry codec (plan section 8): the entry value packed with the msgpack
+-  packers into the record's string half -- a lemma's statement through the
+-  term codec of Isabelle_RPC (a runtime symbol travels as its identifier), its
+-  times as the store's own (cpu_ms, wall_ms) pair, the tier and the verdict as
+-  int tags.  No format version: a payload that does not decode is no entry.*)
++(*The entry codec (plan section 8): the triple (added, deleted, verdict) packed
++  with the msgpack packers into the record's string half -- a statement through
++  the term codec of Isabelle_RPC (a runtime symbol travels as its identifier), a
++  lemma's times as the store's own (cpu_ms, wall_ms) pair, the tier and the
++  verdict as int tags.  No format version: a payload that does not decode is no
++  entry.*)
+ local
+   structure P = MessagePackBytesIO.Pack
+   structure U = MessagePackBytesIO.Unpack
+@@ -91,24 +99,28 @@ local
+   fun verdict_of_int 0 = Proved | verdict_of_int 1 = Refuted | verdict_of_int 2 = Unknown
+     | verdict_of_int _ = raise U.Unpack
+   val entry_packer =
+-    P.packPair (P.packList (P.packTuple3 (RPC_Pretty_Bytes.pack_raw_term,
+-                                          P.packPair (P.packPair (P.packInt, P.packInt), P.packString),
+-                                          P.packInt)),
+-                P.packInt)
++    P.packTuple3 (P.packList (P.packTuple3 (RPC_Pretty_Bytes.pack_raw_term,
++                                            P.packPair (P.packPair (P.packInt, P.packInt), P.packString),
++                                            P.packInt)),
++                  P.packList RPC_Pretty_Bytes.pack_raw_term,
++                  P.packInt)
+   val entry_unpacker =
+-    U.>> (U.unpackPair (U.unpackList (U.unpackTuple3 (RPC_Pretty_Bytes.unpack_raw_term,
+-                                                     U.unpackPair (U.unpackPair (U.unpackInt, U.unpackInt), U.unpackString),
+-                                                     U.unpackInt)),
+-                        U.unpackInt),
+-          fn (lemmas, verdict) =>
+-            {lemmas = map (fn (stmt, (ms, script), tier) =>
+-                             (stmt, (Phi_Proof_Store.times_of_ms ms, script), tier_of_int tier)) lemmas,
++    U.>> (U.unpackTuple3 (U.unpackList (U.unpackTuple3 (RPC_Pretty_Bytes.unpack_raw_term,
++                                                       U.unpackPair (U.unpackPair (U.unpackInt, U.unpackInt), U.unpackString),
++                                                       U.unpackInt)),
++                          U.unpackList RPC_Pretty_Bytes.unpack_raw_term,
++                          U.unpackInt),
++          fn (added, deleted, verdict) =>
++            {delta = {added = map (fn (stmt, (ms, script), tier) =>
++                                     (stmt, (Phi_Proof_Store.times_of_ms ms, script), tier_of_int tier)) added,
++                      deleted = deleted},
+              verdict = verdict_of_int verdict} : entry)
+ in
+-fun encode_entry ({lemmas, verdict} : entry) =
++fun encode_entry ({delta = {added, deleted}, verdict} : entry) =
+   let val outs = BytesIO.mkOutstream ()
+    in entry_packer (map (fn (stmt, (times, script), tier) =>
+-                           (stmt, (Phi_Proof_Store.ms_of_times times, script), int_of_tier tier)) lemmas,
++                           (stmt, (Phi_Proof_Store.ms_of_times times, script), int_of_tier tier)) added,
++                    deleted,
+                     int_of_verdict verdict) outs;
+       BytesIO.toString outs
+   end
+@@ -141,29 +153,19 @@ structure Guard_Lemmas = Proof_Data (
+ 
+ val get_lemmas = Guard_Lemmas.get
+ 
+-fun canonical_form ctxt0 th =
+-  let val th1 = Raw_Simplifier.norm_hhf_protect ctxt0 th
+-      val pinned = fold Term.add_tfree_names (Thm.hyps_of th1) []
+-      val tfrees = subtract (op =) pinned (Term.add_tfree_names (Thm.prop_of th1) [])
+-   in th1
+-   |> Thm.generalize (Names.make_set tfrees, Names.empty) (Thm.maxidx_of th1 + 1)
+-   |> Drule.zero_var_indexes
+-  end
++fun same_prop ctxt t (th, _) = Pattern.equiv (Proof_Context.theory_of ctxt) (t, Thm.prop_of th)
++
++fun delete_lemmas stmts ctxt =
++  Guard_Lemmas.map (filter_out (fn l => exists (fn t => same_prop ctxt t l) stmts)) ctxt
+ 
+-(*on_present decides the budget of a theorem of the same canonical proposition
+-  already in the list, given (its budget, the new one)*)
+-fun add_lemma_with on_present ctxt0 (th, budget) =
+-  let val th' = canonical_form ctxt0 th
+-      fun same (th'', _) = Thm.eq_thm_prop (th', th'')
++fun add_lemma (th, budget) ctxt =
++  let val same = same_prop ctxt (Thm.prop_of th)
+    in Guard_Lemmas.map (fn lemmas =>
+         if exists same lemmas
+-        then map (fn l as (th'', b) => if same l then (th'', on_present (b, budget)) else l) lemmas
+-        else lemmas @ [(th', budget)])
++        then map (fn l as (th', _) => if same l then (th', budget) else l) lemmas
++        else lemmas @ [(th, budget)]) ctxt
+   end
+ 
+-val add_lemma = add_lemma_with fst
+-val update_lemma = add_lemma_with snd
+-
+ (*the guard-cache export hook: at every run and block boundary the outer lemma
+   list is OVERWRITTEN with the inner one, each theorem through export_aux_lemma
+   (a theorem it refuses is dropped, the rest keep their budgets); overwriting
+diff --git a/Phi_Logic_Programming_Reasoner/library/reasoners.ML b/Phi_Logic_Programming_Reasoner/library/reasoners.ML
+index eb0c7795..75a99578 100644
+--- a/Phi_Logic_Programming_Reasoner/library/reasoners.ML
++++ b/Phi_Logic_Programming_Reasoner/library/reasoners.ML
+@@ -173,11 +173,12 @@ signature PHI_REASONERS = sig
+   (*the judge of the guard cache (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, sections 1 and
+     5): one optional function in a process-global ref, default NONE, consulted by
+     prove_or_refute after the refuters; thm is the goal state, ctxt the guard-side
+-    context carrying the lemma list as it was BEFORE this entry's lemmas were added,
+-    outer_ctxt the run's context.  Provable carries the lemmas that REPLACE this
+-    entry's, with RAW measured times.*)
+-  type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm}
+-  datatype judgement = Provable of Phi_Guard_Cache.lemma list | Unprovable
++    context carrying the lemma list as it was BEFORE this entry's delta was applied,
++    outer_ctxt the run's context, delta this entry's delta.  Provable carries the
++    delta that REPLACES this entry's, its lemmas with RAW measured times.*)
++  type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm,
++                    delta : Phi_Guard_Cache.delta}
++  datatype judgement = Provable of Phi_Guard_Cache.delta | Unprovable
+   val judge : (judge_arg -> judgement) option Unsynchronized.ref
+ 
+   val log_guard_decision : bool Config.T
+@@ -1305,15 +1306,18 @@ fun r_nitpick ctxt goals =
+ (*ONE optional function in a process-global ref (plan section 1), default NONE,
+   installed by ML code (phase 2: the LLM judge).  Consulted by prove_or_refute
+   where section 5 says, on the run's own thread, concurrently across runs, with
+-  the guard-side context as it was before this entry's lemmas were added -- the
+-  lemmas of earlier guards are in it.  Its lemmas REPLACE this entry's; each
+-  must be a closed statement of type prop, certifiable by Thm.cterm_of
+-  outer_ctxt and provable by its own method text citing theory-level facts
+-  only, with RAW measured times, which prove_or_refute normalises on receipt.
+-  A run re-entered inside the judge enables its own lemmas on top of ctxt's
+-  (nesting is not designed for).*)
+-type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm}
+-datatype judgement = Provable of Phi_Guard_Cache.lemma list | Unprovable
++  the guard-side context as it was before this entry's delta was applied -- the
++  lemmas of earlier guards are in it, and the judge may delete any of them by
++  its proposition -- and with this entry's delta.  Its delta REPLACES this
++  entry's, relative to that same context; each added lemma must be a closed
++  statement of type prop, certifiable by Thm.cterm_of outer_ctxt and provable
++  by its own method text citing theory-level facts only, with RAW measured
++  times on this machine's clock -- the clock the delta it receives is on too;
++  prove_or_refute converts both ways.  A run re-entered inside the judge
++  enables its own lemmas on top of ctxt's (nesting is not designed for).*)
++type judge_arg = {ctxt : Proof.context, outer_ctxt : Proof.context, can_inst : bool, thm : thm,
++                  delta : Phi_Guard_Cache.delta}
++datatype judgement = Provable of Phi_Guard_Cache.delta | Unprovable
+ val judge : (judge_arg -> judgement) option Unsynchronized.ref = Unsynchronized.ref NONE
+ 
+ 
+@@ -1371,6 +1375,11 @@ fun failure_text Fails_To_Certify = "fails to certify (its statement is not a we
+   | failure_text Fails_To_Replay =
+       "fails to replay (its method text cites a fact this context does not have, or overruns its recorded time)"
+ 
++(*the times of a delta's lemmas through f*)
++fun map_times f ({added, deleted} : Phi_Guard_Cache.delta) : Phi_Guard_Cache.delta =
++  {added = map (fn (stmt, (times, script), tier) => (stmt, (f times, script), tier)) added,
++   deleted = deleted}
++
+ fun replay_lemma ctxt0 ((stmt, (times, script), _) : Phi_Guard_Cache.lemma) =
+   let val floor = guard_classic_prover_bound ctxt0
+       val limits = Phi_Proof_Store.replay_limits
+@@ -1392,7 +1401,7 @@ fun dropped_lemma_warning ctxt0 stmt failure =
+ 
+ (*One prove_or_refute call (plan sections 5 and 6): can_inst, the guard-side context,
+   the guard digest, then the run's state -- the run's context ctxt0 and the goal
+-  state.  The context it returns is ctxt0 plus this guard's lemmas.*)
++  state.  The context it returns is ctxt0 with this guard's delta applied.*)
+ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+   let val timer = Timing.start ()
+       val goals = Thm.cprems_of th
+@@ -1400,30 +1409,34 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+       val use_store = Config.get ctxt0 Phi_Guard_Cache.guard_cache
+       val entry = if use_store then Phi_Guard_Cache.lookup_entry thy d else NONE
+       val entry_verdict = Option.map #verdict entry
+-      fun write lemmas verdict =
+-        if use_store then Phi_Guard_Cache.write_entry thy d {lemmas = lemmas, verdict = verdict} else ()
++      fun write delta verdict =
++        if use_store then Phi_Guard_Cache.write_entry thy d {delta = delta, verdict = verdict} else ()
+       fun budget_of ((_, _, tier) : Phi_Guard_Cache.lemma) = Phi_Guard_Cache.budget_of_tier ctxt0 tier
+-      (*the replayed lemmas into the lemma lists of the call's two base contexts --
+-        ctxt0 (returned) and ctxt (the provers'): step 1 and step 6 both start from
+-        these, never from each other's result*)
+-      fun add_lemmas add replayed =
+-        let fun into c = fold (fn (lemma, th) => add ctxt0 (th, budget_of lemma)) replayed c
+-         in (into ctxt0, into ctxt) end
++      (*a delta -- its deletions, then its replayed lemmas -- onto the lemma lists of
++        the call's two base contexts, ctxt0 (returned) and ctxt (the provers'): step 1
++        and step 6 both start from these, never from each other's result.  Returns
++        the delta it applied, which is what the store gets.*)
++      fun apply_delta deleted replayed =
++        let fun into c = c |> Phi_Guard_Cache.delete_lemmas deleted
++                           |> fold (fn (lemma, th) => Phi_Guard_Cache.add_lemma (th, budget_of lemma)) replayed
++         in ({added = map fst replayed, deleted = deleted} : Phi_Guard_Cache.delta, into ctxt0, into ctxt) end
+ 
+       (*step 1: the entry's lemmas replayed in ctxt0, in order; a failure drops the
+-        lemma from the entry; the survivors go into the lemma list of ctxt0 (ctxt1,
+-        returned) and of ctxt (ctxt_g, where every prover of this call starts)*)
+-      val replays = map (fn lemma => (lemma, replay_lemma ctxt0 lemma)) (these (Option.map #lemmas entry))
++        lemma from the entry; the delta with the survivors goes onto the lemma list of
++        ctxt0 (ctxt1, returned) and of ctxt (ctxt_g, where every prover of this call
++        starts)*)
++      val {added = stored, deleted} =
++            case entry of SOME {delta, ...} => delta | NONE => Phi_Guard_Cache.empty_delta
++      val replays = map (fn lemma => (lemma, replay_lemma ctxt0 lemma)) stored
+       val replayed = map_filter (fn (lemma, Replayed th) => SOME (lemma, th) | _ => NONE) replays
+-      val lemmas = map fst replayed
+       val _ = List.app (fn (_, Replayed _) => ()
+                          | ((stmt, _, _), Failed failure) => dropped_lemma_warning ctxt0 stmt failure) replays
++      val (delta, ctxt1, ctxt_g) = apply_delta deleted replayed
+       (*a dropped lemma rewrites the entry: the survivors, its verdict unchanged*)
+       val _ = case entry of
+-                SOME {lemmas = stored, verdict} =>
+-                  if length lemmas < length stored then write lemmas verdict else ()
++                SOME {verdict, ...} =>
++                  if length replayed < length stored then write delta verdict else ()
+               | NONE => ()
+-      val (ctxt1, ctxt_g) = add_lemmas Phi_Guard_Cache.add_lemma replayed
+ 
+       (*step 2: P-auto, under the classic bound of thread CPU; p_auto_body enhances
+         the context itself, so every P-auto run has fresh lemma budgets*)
+@@ -1431,35 +1444,39 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+         Option.map #1 (Seq.pull (cpu_bounded_tac (guard_classic_prover_bound ctxt0) (p_auto_body ctxt') th))
+ 
+       (*step 6: the judge, on the guard-side context as it was BEFORE this entry's
+-        lemmas were added; its lemmas, times normalised on receipt, REPLACE this
+-        entry's: they are added to the lists of that moment (ctxt, ctxt0), an earlier
+-        guard's lemma staying and one the judge re-proposes taking the judge's budget;
+-        a lemma that fails, or a P-auto that still fails, is the judge's error*)
++        delta was applied, and this entry's delta; its delta REPLACES this entry's: it
++        is applied to the lists of that moment (ctxt, ctxt0); a lemma that fails, or
++        a P-auto that still fails, is the judge's error.  Times cross the judge on
++        this machine's clock in both directions: the delta handed over is converted
++        from the store's standard-machine times, the answer's RAW times are
++        normalised on receipt -- so a lemma handed back as received is measured, not
++        scaled twice.*)
+       fun consult j =
+-        case j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst = can_inst, thm = th} of
+-          Provable new =>
+-            let val new = map (fn (stmt, (times, script), tier) =>
+-                                 (stmt, (Phi_Proof_Store.standard_time times, script), tier)) new
++        let val on_this_machine = map_times Phi_Proof_Store.machine_time delta
++         in case j {ctxt = ctxt, outer_ctxt = ctxt0, can_inst = can_inst, thm = th, delta = on_this_machine} of
++          Provable answer =>
++            let val {added = new, deleted = deleted'} = map_times Phi_Proof_Store.standard_time answer
+                 val replayed' = map (fn lemma as (stmt, _, _) =>
+                       case replay_lemma ctxt0 lemma of
+                         Replayed th => (lemma, th)
+                       | Failed failure => error (Pretty.string_of (Pretty.block [
+                             Pretty.str ("The judge is broken: its lemma " ^ failure_text failure ^ ":"),
+                             Pretty.brk 1, Syntax.pretty_term ctxt0 stmt]))) new
+-                val (ctxt1', ctxt_g') = add_lemmas Phi_Guard_Cache.update_lemma replayed'
++                val (delta', ctxt1', ctxt_g') = apply_delta deleted' replayed'
+              in case p_auto ctxt_g' of
+                   SOME solved =>
+-                    (write new Phi_Guard_Cache.Proved;
++                    (write delta' Phi_Guard_Cache.Proved;
+                      {verdict = Phi_Guard_Cache.Proved, refuter = NONE, judge = SOME "Provable",
+                       result = Seq.single (ctxt1', solved)})
+                 | NONE => error "The judge is broken: P-auto cannot prove the guard with the lemmas it proposed."
+             end
+         | Unprovable =>
+-            (write lemmas Phi_Guard_Cache.Refuted;
++            (write delta Phi_Guard_Cache.Refuted;
+              {verdict = Phi_Guard_Cache.Refuted, refuter = NONE, judge = SOME "Unprovable", result = Seq.empty})
++        end
+ 
+       fun refuted_by name =
+-        (write lemmas Phi_Guard_Cache.Refuted;
++        (write delta Phi_Guard_Cache.Refuted;
+          {verdict = Phi_Guard_Cache.Refuted, refuter = SOME name, judge = NONE, result = Seq.empty})
+ 
+       (*no refuter refuted: the judge if installed, else Unknown; an entry already
+@@ -1468,7 +1485,7 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+         case ! judge of
+           SOME j => consult j
+         | NONE =>
+-            (if entry_verdict = SOME Phi_Guard_Cache.Unknown then () else write lemmas Phi_Guard_Cache.Unknown;
++            (if entry_verdict = SOME Phi_Guard_Cache.Unknown then () else write delta Phi_Guard_Cache.Unknown;
+              {verdict = Phi_Guard_Cache.Unknown, refuter = NONE, judge = NONE, result = Seq.empty})
+ 
+       (*steps 2 to 4*)
+@@ -1476,7 +1493,7 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+         case p_auto ctxt_g of
+           SOME solved =>
+             (if entry_verdict = SOME Phi_Guard_Cache.Proved orelse is_none entry then ()
+-             else write lemmas Phi_Guard_Cache.Proved;
++             else write delta Phi_Guard_Cache.Proved;
+              {verdict = Phi_Guard_Cache.Proved, refuter = NONE, judge = NONE, result = Seq.single (ctxt1, solved)})
+         | NONE =>
+             (case entry_verdict of
+@@ -1544,7 +1561,7 @@ fun is_guard_mode (Const(\<^const_name>\<open>MODE_GUARD\<close>, _)) = true
+   guess_inst's looper and solver enter the guard machinery here and only here: the
+   "G.simpcut" pass, the is_F shortcut, and everything `solve` simplifies through the
+   guard-side context guard_ctxt -- prove_or_refute's ctxt, from which it derives its
+-  ctxt_g by adding the entry's lemmas (plan section 5 step 1).*)
++  ctxt_g by applying the entry's delta (plan section 5 step 1).*)
+ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
+   let fun is_false (Const(\<^const_name>\<open>Premise\<close>, _) $ mode $ Const(\<^const_name>\<open>False\<close>, _))
+             = is_guard_mode mode

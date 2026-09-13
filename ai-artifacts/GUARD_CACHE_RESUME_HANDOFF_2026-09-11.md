@@ -18,7 +18,7 @@ CORRECTION of the record; §35 still describes the withdrawn functor design and 
    `Phi_Proof_Store` directly; `.gitignore` lines removed; all `*.guard-cache*` files deleted.
    Entries land in the git-TRACKED `*.proof-store` files (42 in phi-system): intended ("1. 好").
 2. Source comments were rewritten to be for readers: no `[author …]`, dates, review labels or
-   measurement logs (reasoners.ML, guard_cache.ML, guard_refute.ML, guess_instantiate.ML, the battery).
+   measurement logs (reasoners.ML, guard_cache.ML, guard_refute.ML, guess_instantiate.ML, the test theory).
    Rule from the author: comments are short, load-bearing, never the drafter's notes.
 3. Three feedback drafts filed (digest scope; separate store file; comment style).
 4. An Opus audit of the plan's provenance found more over-claims — see "Pending the author".
@@ -33,7 +33,7 @@ plus the proof stores the corpus run wrote guard entries into (`Phi_System/Phi_T
 `Phi_Test/PhiTest_Arithmetic.proof-store`, `Phi_Semantics/PhiSem_CF_{Basic,Break,Breakable}.proof-store`,
 new `Phi_System/Resource_Template.proof-store`, new `Test/Guard_Decision_Smoke.proof-store`).
 `Phi_Semantics/PhiSem_Real_Abst.proof-store` (untracked) is another agent's — leave it.
-Verified on the reverted heap: PLPR.thy clean, battery clean, cold corpus clean (355 decisions, 129 s
+Verified on the reverted heap: PLPR.thy clean, test theory clean, cold corpus clean (355 decisions, 129 s
 of guard time, entries written).  The Phi_System_Base heap was rebuilt again (4th time today) because
 other sessions changed Isa-Mini/Semantic_Embedding; the WARM corpus run in a fresh process (expect
 146 Refuted + 5 Unknown hits read from the proof stores, ~21 s) was about to start.
@@ -81,6 +81,37 @@ reviewer's design under an author citation; source comments are for readers (sho
 no dates, no logs).  Corpus loads under Isabelle-MCP: add the TEMPORARY test-driver declare (the
 author calls AoA escalation expected behaviour; the declare keeps verification runs deterministic).
 
+## ADDENDUM 2026-09-13 — the delta redesign done; warm run pending a heap rebuild
+Safe point: phi-system `f49007c2` (step 4 on the proof store, before the redesign).
+Then, ruled and implemented (plan §36): an entry is `{delta = {added, deleted}, verdict}`;
+a deletion removes every theorem of the context's list whose proposition is aconv to a
+deleted statement (any guard's); the judge gets `guard_ctxt` (before the delta) and the
+entry's delta, answers `Provable of delta`, which replaces the entry's delta; identity is
+the proposition (`aconv`); `canonical_form` deleted.  Files: guard_cache.ML, reasoners.ML,
+both test theories (three deletion probes added; Guard_Export_Smoke `fresh` fixed), plan §1/§5/
+§7/§8/§10/§35/§36.  Verified under Isabelle-MCP: PLPR.thy, both test theories, the corpus cold
+(355 decisions, 261 digests, all misses since old entries do not decode) — all clean.
+The warm run passed after the author rebuilt the heap (146 Refuted + 5 Unknown hits, 20.6 s).
+First code review (96 agents, `ai-artifacts/DELTA_REDESIGN_REVIEW_2026-09-13.md`):
+ACCEPTED_ON_CONDITION.  The author ruled SEM-2 (a) — one collision rule, the delta's
+budget wins, identity by `Pattern.equiv` (both sites; `update_lemma` gone) — and P3 status
+quo.  Drafter fixes applied: SEM-1 (`map_times`, `machine_time` on the delta handed to
+the judge), `apply_delta` returns the delta it applied, documentation residue (plan status,
+§1, §3 pipeline collapsed to a pointer at §5), probes E4/T2/T3 + the one-rule replay probe
+(T1 unobservable through the factory: G.simpcut applies the lemma from the pre-delta list —
+noted in the test theory and §7).  Verified again: PLPR.thy, both test theories, the corpus
+— clean.  A re-review workflow was launched; its report goes to
+`ai-artifacts/DELTA_REDESIGN_REREVIEW_2026-09-13.md`.
+Re-review (65 agents, `ai-artifacts/DELTA_REDESIGN_REREVIEW_2026-09-13.md`): ACCEPTED_ON_CONDITION,
+no behavioural defect; the author ruled plain Pattern.equiv (no binder handling) and same_prop total
+without a contract change; D1-D9 applied (keep alias, RR/equiv/delete-before-add probes, prose fixes);
+everything clean again; the TEMPORARY declare reverted; committing.  P5 ruled: the two test theories'
+stores are neither tracked nor ignored.
+PENDING: (2) the collision alarm (fires on Unknown→Proved rewrites; undecided); (4) the
+word "battery" was the drafter's coinage; scrubbed from the test theories and the plan on the author's nod; (5) revert the TEMPORARY declare in PLPR.thy, commit, bump.
+The items B1–B10 below remain open except B1 (the author: acceptable, ignore) and B2's
+canonical form (withdrawn by this redesign).
+
 ## ADDENDUM 2026-09-12 late — where to resume after compaction
 Everything below is UNDECIDED; do nothing on any of it before the author rules.  The author
 asked to compact and then go through the items ONE BY ONE ("先 compact 然后逐一审议这些问题").
@@ -99,11 +130,11 @@ A. Code review (accepted on condition).  MUST_DISCUSS: (1) the proof store's col
 options (a) an explicit bit on update_cached_proof [judge recommends; name it "this id is derived
 from the goal", a fact, not a permission], (b) PLPRGUARD-prefix exemption, (c) delete [the judge
 argues against: hash = NONE records have no by-hash fallback], (d) keep+reword; (2) which new
-*.proof-store files to git add [judge: the two real theories', not the two Test batteries'; no
+*.proof-store files to git add [judge: the two real theories', not the two test theories'; no
 .gitignore change].  DRAFTER_MAY_DECIDE (held until the author says go): plan §7:1146-1148 and
 §3:811 and §17.6:1796 still carry the pre-09-11 digest ("2. 不掺" must leave the corrected
 sentence); Test/Guard_Export_Smoke.thy :24 comment and :65/:112 bare serial() → reuse the
-battery's run_tag+serial, then evaluate twice in two processes; the summary said one new store
+test theory's run_tag+serial, then evaluate twice in two processes; the summary said one new store
 file, it is three; §8 one sentence (phase 2 makes one call rewrite a key twice); conditional:
 escape the id/head in collision_message if the alarm stays and guard entries are not exempt.
 Rejected (7, with rebuttals in the file): digest-vs-text alarm; content-key accumulation;

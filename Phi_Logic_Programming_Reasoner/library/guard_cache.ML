@@ -2,7 +2,8 @@
     Author:     Qiyuan Xu
 
 The guard cache of PLPR (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md): what the store
-holds for one guard (an entry: the judge's lemmas with their tiers and the last
+holds for one guard (an entry: the guard's delta to the lemma list -- the lemmas
+it adds, with their tiers, and the statements it deletes -- and the last
 verdict), the user simpset strengthening guard proving (Guard_Simp_SS), the
 lemma list carried by the context (Guard_Lemmas), the lemma budget enforced
 inside the simplifier (enhance_with_lemmas), the export hook carrying the
@@ -18,8 +19,13 @@ signature PHI_GUARD_CACHE = sig
 datatype tier = Only_Once | Rarely | Normal | Frequent
 type lemma = term * Phi_Proof_Store.proof_cache * tier
       (*statement, (replay times, method text), budget*)
+(*what the guard does to the lemma list of the context it is met in: the deleted
+  statements' theorems leave, whichever guard added them, then the added lemmas
+  go in by add_lemma below (plan section 5 step 1)*)
+type delta = {added : lemma list, deleted : term list}
+val empty_delta : delta
 datatype verdict = Proved | Refuted | Unknown
-type entry = {lemmas : lemma list, verdict : verdict}
+type entry = {delta : delta, verdict : verdict}
 
 val guard_cache : bool Config.T            (*\<phi>guard_cache: read and write the store*)
 val guard_lemma_apply_limit : int Config.T (*\<phi>guard_lemma_apply_limit: Frequent's budget, the ceiling*)
@@ -36,17 +42,16 @@ val write_entry : theory -> Hasher.digest -> entry -> unit
 (*user-declared rewrite rules strengthening guard proving; attribute \<phi>guard_simp*)
 structure Guard_Simp_SS : SIMPSET
 
-(*the lemma list: each replayed judge lemma in the canonical form, with its budget*)
+(*the lemma list: each replayed judge lemma as its replay produced it, with its
+  budget; a theorem's identity here is its proposition, up to renaming of
+  schematic variables (Pattern.equiv)*)
 val get_lemmas : Proof.context -> (thm * int) list
-(*append a replayed theorem with its budget, in the canonical form -- hhf-normal
-  by ctxt0, outer parameters generalised, every type variable no hyp pins
-  generalised, indices renumbered: a fixed point of the run-boundary export, so
-  one canonical proposition is stored once -- unless a theorem of that
-  proposition is present, which keeps its budget*)
-val add_lemma : Proof.context -> thm * int -> Proof.context -> Proof.context
-(*the same, but a theorem of that proposition already present takes the given budget:
-  the judge's lemmas (plan section 5 step 6)*)
-val update_lemma : Proof.context -> thm * int -> Proof.context -> Proof.context
+(*remove every theorem whose proposition is one of the statements*)
+val delete_lemmas : term list -> Proof.context -> Proof.context
+(*append a replayed theorem with its budget; a theorem of that proposition
+  already present takes the budget instead -- the one rule for an entry's delta
+  and for the judge's*)
+val add_lemma : thm * int -> Proof.context -> Proof.context
 
 (*the ONE way a consumer gets the lemmas into its simplifier, under the lemma
   budget: every rewrite rule of every lemma is weakened with a last premise
@@ -60,8 +65,10 @@ structure Phi_Guard_Cache : PHI_GUARD_CACHE = struct
 
 datatype tier = Only_Once | Rarely | Normal | Frequent
 type lemma = term * Phi_Proof_Store.proof_cache * tier
+type delta = {added : lemma list, deleted : term list}
+val empty_delta : delta = {added = [], deleted = []}
 datatype verdict = Proved | Refuted | Unknown
-type entry = {lemmas : lemma list, verdict : verdict}
+type entry = {delta : delta, verdict : verdict}
 
 val guard_cache = Attrib.setup_config_bool \<^binding>\<open>\<phi>guard_cache\<close> (K true)
 val guard_lemma_apply_limit = Attrib.setup_config_int \<^binding>\<open>\<phi>guard_lemma_apply_limit\<close> (K 1000)
@@ -76,11 +83,12 @@ fun budget_of_tier ctxt tier =
   and the packed entry as its text.*)
 fun key_of d = "PLPRGUARD" ^ Hasher.compact d
 
-(*The entry codec (plan section 8): the entry value packed with the msgpack
-  packers into the record's string half -- a lemma's statement through the
-  term codec of Isabelle_RPC (a runtime symbol travels as its identifier), its
-  times as the store's own (cpu_ms, wall_ms) pair, the tier and the verdict as
-  int tags.  No format version: a payload that does not decode is no entry.*)
+(*The entry codec (plan section 8): the triple (added, deleted, verdict) packed
+  with the msgpack packers into the record's string half -- a statement through
+  the term codec of Isabelle_RPC (a runtime symbol travels as its identifier), a
+  lemma's times as the store's own (cpu_ms, wall_ms) pair, the tier and the
+  verdict as int tags.  No format version: a payload that does not decode is no
+  entry.*)
 local
   structure P = MessagePackBytesIO.Pack
   structure U = MessagePackBytesIO.Unpack
@@ -91,24 +99,28 @@ local
   fun verdict_of_int 0 = Proved | verdict_of_int 1 = Refuted | verdict_of_int 2 = Unknown
     | verdict_of_int _ = raise U.Unpack
   val entry_packer =
-    P.packPair (P.packList (P.packTuple3 (RPC_Pretty_Bytes.pack_raw_term,
-                                          P.packPair (P.packPair (P.packInt, P.packInt), P.packString),
-                                          P.packInt)),
-                P.packInt)
+    P.packTuple3 (P.packList (P.packTuple3 (RPC_Pretty_Bytes.pack_raw_term,
+                                            P.packPair (P.packPair (P.packInt, P.packInt), P.packString),
+                                            P.packInt)),
+                  P.packList RPC_Pretty_Bytes.pack_raw_term,
+                  P.packInt)
   val entry_unpacker =
-    U.>> (U.unpackPair (U.unpackList (U.unpackTuple3 (RPC_Pretty_Bytes.unpack_raw_term,
-                                                     U.unpackPair (U.unpackPair (U.unpackInt, U.unpackInt), U.unpackString),
-                                                     U.unpackInt)),
-                        U.unpackInt),
-          fn (lemmas, verdict) =>
-            {lemmas = map (fn (stmt, (ms, script), tier) =>
-                             (stmt, (Phi_Proof_Store.times_of_ms ms, script), tier_of_int tier)) lemmas,
+    U.>> (U.unpackTuple3 (U.unpackList (U.unpackTuple3 (RPC_Pretty_Bytes.unpack_raw_term,
+                                                       U.unpackPair (U.unpackPair (U.unpackInt, U.unpackInt), U.unpackString),
+                                                       U.unpackInt)),
+                          U.unpackList RPC_Pretty_Bytes.unpack_raw_term,
+                          U.unpackInt),
+          fn (added, deleted, verdict) =>
+            {delta = {added = map (fn (stmt, (ms, script), tier) =>
+                                     (stmt, (Phi_Proof_Store.times_of_ms ms, script), tier_of_int tier)) added,
+                      deleted = deleted},
              verdict = verdict_of_int verdict} : entry)
 in
-fun encode_entry ({lemmas, verdict} : entry) =
+fun encode_entry ({delta = {added, deleted}, verdict} : entry) =
   let val outs = BytesIO.mkOutstream ()
    in entry_packer (map (fn (stmt, (times, script), tier) =>
-                           (stmt, (Phi_Proof_Store.ms_of_times times, script), int_of_tier tier)) lemmas,
+                           (stmt, (Phi_Proof_Store.ms_of_times times, script), int_of_tier tier)) added,
+                    deleted,
                     int_of_verdict verdict) outs;
       BytesIO.toString outs
   end
@@ -141,28 +153,21 @@ structure Guard_Lemmas = Proof_Data (
 
 val get_lemmas = Guard_Lemmas.get
 
-fun canonical_form ctxt0 th =
-  let val th1 = Raw_Simplifier.norm_hhf_protect ctxt0 th
-      val pinned = fold Term.add_tfree_names (Thm.hyps_of th1) []
-      val tfrees = subtract (op =) pinned (Term.add_tfree_names (Thm.prop_of th1) [])
-   in th1
-   |> Thm.generalize (Names.make_set tfrees, Names.empty) (Thm.maxidx_of th1 + 1)
-   |> Drule.zero_var_indexes
-  end
+(*an ill-formed statement is the proposition of no theorem*)
+fun same_prop ctxt t (th, _) =
+  Pattern.equiv (Proof_Context.theory_of ctxt) (t, Thm.prop_of th)
+  handle TYPE _ => false | TERM _ => false
 
-(*on_present decides the budget of a theorem of the same canonical proposition
-  already in the list, given (its budget, the new one)*)
-fun add_lemma_with on_present ctxt0 (th, budget) =
-  let val th' = canonical_form ctxt0 th
-      fun same (th'', _) = Thm.eq_thm_prop (th', th'')
+fun delete_lemmas stmts ctxt =
+  Guard_Lemmas.map (filter_out (fn l => exists (fn t => same_prop ctxt t l) stmts)) ctxt
+
+fun add_lemma (th, budget) ctxt =
+  let val same = same_prop ctxt (Thm.prop_of th)
    in Guard_Lemmas.map (fn lemmas =>
         if exists same lemmas
-        then map (fn l as (th'', b) => if same l then (th'', on_present (b, budget)) else l) lemmas
-        else lemmas @ [(th', budget)])
+        then map (fn l as (th', _) => if same l then (th', budget) else l) lemmas
+        else lemmas @ [(th, budget)]) ctxt
   end
-
-val add_lemma = add_lemma_with fst
-val update_lemma = add_lemma_with snd
 
 (*the guard-cache export hook: at every run and block boundary the outer lemma
   list is OVERWRITTEN with the inner one, each theorem through export_aux_lemma
