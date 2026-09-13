@@ -1234,7 +1234,13 @@ the judge may — a nested call is an ordinary call against the store.
   was wrong) — and that the alarm could not tell from a rewrite either.
   The store also drops a theory's marks at theory BEGIN, not only at its
   end, so an evaluation cancelled in PIDE leaves no marks for the next
-  [author 2026-09-13; §36].
+  [author 2026-09-13; §36].  The whole mechanism is a debugging aid for the
+  key mint and runs only under `ML_debugger`, read at each write — a normal
+  build computes no digest and keeps no marks [author 2026-09-13 "这个撞键警
+  告建议仅在 ML_debugger 设置为 true 时激活"; "注意是运行时的 ML_debugger 取值而
+  非编译时"]; its warning is the four lines the author fixed that day ("Proof
+  store: two different proofs were written under one proof id in this
+  session." / id / first / now — "就够了, 底下的全都不用").
 - **Entry value**: `{delta = {added : (term * proof_cache * tier) list,
   deleted : term list}, verdict}` packed as the triple (added, deleted,
   verdict) with the mlmsgpack packers through a `BytesIO` outstream and
