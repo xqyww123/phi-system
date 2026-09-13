@@ -1215,8 +1215,10 @@ the judge may — a nested call is an ordinary call against the store.
   produces.  The store's locking, migration, compaction and `at_end` are the
   proof store's, untouched.
 - **The proof store's key-collision alarm and guard entries.**  The store
-  marks, per session, what it wrote under each key (`written`, the SHA1 of
-  the text) and warns "Proof store: this session has written two DIFFERENT
+  marks, per session, what it wrote under each key (`written`, the
+  `Hasher.string` digest of the text — a `Word64`, SHA1 until 2026-09-13
+  [author: "建议用已有的 hash 机制去算而不是用 SHA1, 会更快. 而且只要计算出一个
+  Word64, 存储更经济"]) and warns "Proof store: this session has written two DIFFERENT
   proofs under one key" when a second, different write lands under a key
   this session already wrote — built to expose two obligations sharing one
   proof id.  A guard entry is rewritten under its own key by design (the
