@@ -81,6 +81,39 @@ reviewer's design under an author citation; source comments are for readers (sho
 no dates, no logs).  Corpus loads under Isabelle-MCP: add the TEMPORARY test-driver declare (the
 author calls AoA escalation expected behaviour; the declare keeps verification runs deterministic).
 
+## ADDENDUM 2026-09-13 evening — where to resume after compaction (READ THIS FIRST)
+Everything is committed on the repos' current branches, nothing pushed: phi-system master
+`643f6da4`, auto_sledgehammer main `8134469`, Isa-Mini main `cfe6942`, root `f4a01a43`
+(Isa-Mini's `IsaMini/AoA/toplevel.py` and `translator` are another agent's, untouched).
+DONE today: the delta redesign (plan §36: entry = {delta = {added, deleted}, verdict};
+identity = plain `Pattern.equiv`, no binder handling; one append rule, the delta's budget
+wins; `same_prop` total; the judge gets guard_ctxt + the entry's delta on this machine's
+clock and answers `Provable of delta` which replaces the entry's; `canonical_form` gone) —
+two adversarial reviews + one light check, all fixes applied; the collision marks (plan §8,
+§36 ruling 9: `update_cached_proof {id, hash, rewrites}`, guard_cache writes rewrites = true;
+marks dropped at Theory.at_begin too; mark = {digest = Hasher.string text, head via
+Symbol.beginning, ms}; the whole mechanism only under the RUNTIME ML_debugger; the warning is
+the author's four lines; tests 20–20i) — two adversarial reviews, all fixes applied; the
+word "battery" scrubbed; the two test theories' `.proof-store` files are NOT tracked (ruled).
+Reports: ai-artifacts/DELTA_REDESIGN_REVIEW_2026-09-13.md, …_REREVIEW_…, COLLISION_MARKS_REVIEW_…,
+COLLISION_MARKS_REREVIEW_….  The Phi_System_Base heap is current (the author rebuilt it).
+STILL PENDING THE AUTHOR (go through one by one, no code change before a ruling):
+- the provenance audit's B2–B10 (see the addendum "2026-09-12 late" below; B1 ruled "ignore",
+  the canonical form and the collision marks are settled): B2's rest — the guard_decision
+  record's fields and "permanent" status, the loud guard warning's results text, the
+  dropped-lemma warning ungated, the option name \<phi>log_guess_inst, the export hook's
+  priority 200 + overwrite, the catch-all decode; B3 proof store (ruling O widened 1b05b2b,
+  goal-hash 0146687, "Find proof" trace c88ad1d); B4 phi-system 752be368 / d4cbde68 / 08-09
+  failure text; B5 Isa-Mini price table + cost line; B6 Event_Log default dir + XML boundary;
+  B7 Semantic_Embedding D19; B8 Isabelle_RPC pretty_unicode regression + map size/version;
+  B9 jEdit slice (A1–A4); B10 plan-provenance errors (A1 "2. 不掺" re-gloss, A2, A4, A9, A10).
+- earlier deferred: tier measurement (§33); `\<check> \<hypothesis> \<consistency>`; phase-2
+  points (budgeted lemma = conditional rule; Frequent = ceiling; may a judge lemma cite
+  assumptions); STEP 5 (Isa-REPL corpus acceptance).
+Rules unchanged (see "Rules" above); in addition today: call things by their names — the
+collision marks (`written`), a proof obligation, a proof id, the key mint, a test case (an
+ML block of a test theory), the two test theories by name; never "探针"/"battery".
+
 ## ADDENDUM 2026-09-13 — the delta redesign done; warm run pending a heap rebuild
 Safe point: phi-system `f49007c2` (step 4 on the proof store, before the redesign).
 Then, ruled and implemented (plan §36): an entry is `{delta = {added, deleted}, verdict}`;
