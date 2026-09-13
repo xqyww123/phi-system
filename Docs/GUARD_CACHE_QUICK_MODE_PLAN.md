@@ -1132,8 +1132,9 @@ the judge may — a nested call is an ordinary call against the store.
   guard term itself: it runs before `prove_or_refute`, on the list before
   the delta (measured 2026-09-13 with the looping lemma: the goal reaches
   `prove_or_refute` already rewritten); a lemma met only in a subgoal the
-  classical search creates is used by P-auto alone, on the list after the
-  delta (`Test/Guard_Decision_Smoke.thy`, `RR`).  A
+  classical search creates is used only by the provers on the list after
+  the delta — P-auto, and R-conv, which runs on the same `ctxt_g`
+  (`Test/Guard_Decision_Smoke.thy`, `RR`).  A
   growth rule (`g x = g (g
   x)`) that is cut off after `budget` applications leaves the term it
   grew; P-auto then works on that term and usually fails or runs to its

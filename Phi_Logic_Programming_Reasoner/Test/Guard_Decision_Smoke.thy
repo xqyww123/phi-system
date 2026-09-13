@@ -268,7 +268,8 @@ lemma PP_I[intro!]: "PP (LOOP (LOOP (LOOP (LOOP x))))" unfolding PP_def by simp
    QQ_I once RR n is, and RR n only through the lemma `RR n = True`, whose
    left-hand side first appears in the subgoal the classical search creates:
    the "G.simpcut" pass, which runs on the list BEFORE the delta, never meets
-   it, and only P-auto, on the list after the delta, can use it. *)
+   it, and only the provers on the list after the delta -- P-auto, and R-conv
+   in the same position -- can use it. *)
 definition RR :: "nat \<Rightarrow> bool" where "RR n = True"
 definition QQ :: "nat \<Rightarrow> bool" where "QQ n = True"
 lemma QQ_I[intro!]: "RR n \<Longrightarrow> QQ n" unfolding QQ_def by simp
