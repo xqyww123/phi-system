@@ -192,11 +192,18 @@ fun warnings_of f =
       rev (! got)
   end
 val loud_line = "A guard condition proved before is now refuted by the LLM judge:"
-fun assert_loud name expected ws =
-  let val n = length (filter (String.isPrefix loud_line) ws)
-   in if n = expected then writeln (name ^ ": " ^ string_of_int n ^ " loud guard warning(s), as expected")
-      else error (name ^ ": " ^ string_of_int n ^ " loud guard warning(s), expected " ^ string_of_int expected)
+(*the undecided-guard warning is trace-gated; this theory's \<phi>trace_reasoning = 3
+  keeps it on*)
+val undecided_line = "Fail to prove or falsify the following guard condition"
+fun assert_warnings name line expected ws =
+  let val n = length (filter (String.isPrefix line) ws)
+   in if n = expected then writeln (name ^ ": " ^ string_of_int n ^ " warning(s) " ^ quote line ^ ", as expected")
+      else error (name ^ ": " ^ string_of_int n ^ " warning(s) " ^ quote line ^ ", expected " ^ string_of_int expected)
   end
+fun assert_loud name expected ws =
+  (assert_warnings name loud_line expected ws; assert_warnings name undecided_line 0 ws)
+fun assert_undecided name expected ws =
+  (assert_warnings name undecided_line expected ws; assert_warnings name loud_line 0 ws)
 
 (*a numeral no call of this or any earlier run used, for a guard that must meet no
   entry: the store outlives the process, and a process serial alone could repeat
@@ -395,10 +402,11 @@ ML \<open>assert_loud "a refuter's verdict over a Proved entry" 0 (warnings_of (
 (*a Proved entry does not change the report unless the judge overturns it: this
   ending gets the undecided-guard warning, as a call without an entry does; the
   delta stays through the Unknown write*)
-ML \<open>test (with_delta {added = [useless_other \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
-  "Proved hit that nobody decides, no judge: the undecided-guard warning, Unknown written"
-  (expect ("unknown", "proved", "-", "-") "Unknown with 1 lemma(s), 1 deletion(s)")
-  ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ML \<open>assert_undecided "an Unknown ending over a Proved entry" 1 (warnings_of (fn () =>
+  test (with_delta {added = [useless_other \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
+    "Proved hit that nobody decides, no judge: the undecided-guard warning, Unknown written"
+    (expect ("unknown", "proved", "-", "-") "Unknown with 1 lemma(s), 1 deletion(s)")
+    ("\<condition> (PP (LOOP " ^ fresh () ^ "))")))\<close>
 
 section \<open>Lemmas\<close>
 

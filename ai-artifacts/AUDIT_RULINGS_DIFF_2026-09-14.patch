@@ -1,0 +1,617 @@
+# phi-system eea8c2a0 (code and test only)
+commit eea8c2a0caa225d45cdf903cc8cfaa81a651daa1
+Author: Qiyuan Xu <xqyww123@gmail.com>
+Date:   Mon Sep 14 20:27:44 2026 +0800
+
+    Guard cache: the provenance audit's rulings applied (plan rev 26, section 37)
+    
+    guard_decision and guess_inst records are written under the runtime
+    ML_debugger option; their own switches \<phi>log_guard_decision and
+    \<phi>log_guess_inst are deleted.  The loud guard warning fires only when
+    the judge overturns a Proved entry and reads "A guard condition proved
+    before is now refuted by the LLM judge:"; a refuter's verdict over a Proved
+    entry is silent and an Unknown ending gets the undecided-guard warning.
+    The replay's goal is Goal.init's, concluded at the call site.  The entry
+    decoder catches Subscript and Unpack only.  The plan's judge contract is
+    corrected: a lemma's proof may cite the contextual assumptions by name --
+    a replay rebuilds the same context; the drafter's "may re-enter PLPR"
+    reversal of the 2026-09-07 rule is withdrawn; other provenance errors
+    fixed.  Test/Guard_Decision_Smoke.thy: declare [[ML_debugger]], the three
+    probes whose ending changed, warnings_of/assert_loud on the loud warning.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+diff --git a/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy b/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy
+index 0f6aebce..bc6194a5 100644
+--- a/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy
++++ b/Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy
+@@ -28,7 +28,7 @@ begin
+    construct declarations below, turning them into frees (measured trap). *)
+ 
+ declare [[\<phi>trace_reasoning = 3]]
+-declare [[\<phi>log_guard_decision]]
++declare [[ML_debugger]]  \<comment> \<open>the guard_decision records are written under it\<close>
+ 
+ ML \<open>
+ (*locate this process's guard_decision log file; pid reuse across reboots, and
+@@ -58,7 +58,7 @@ fun decision_records () =
+          (Event_Log.read_file path))
+ 
+ (*the projection of a guard_decision record every probe asserts on (see the
+-  log_guard_decision signature comment in reasoners.ML): the verdict, the entry's
++  guard_decision comment in reasoners.ML's signature): the verdict, the entry's
+   verdict, the refuter, the judge's answer; the timing-dependent fields stay out*)
+ fun attr a ((atts, _): Properties.T * XML.body) =
+   the_default "?" (AList.lookup (op =) atts a)
+@@ -183,6 +183,21 @@ fun with_entry_and_judge lemmas verdict j = with_delta_and_judge (adds lemmas) v
+ 
+ fun expect path store = {path = path, store = store}
+ 
++(*the warnings a probe prints, markup stripped, for the probes that assert on the
++  loud guard warning*)
++fun warnings_of f =
++  let val got = Unsynchronized.ref ([] : string list)
++   in Unsynchronized.setmp Private_Output.warning_fn
++        (fn outs => got := XML.content_of (YXML.parse_body (implode outs)) :: ! got) f ();
++      rev (! got)
++  end
++val loud_line = "A guard condition proved before is now refuted by the LLM judge:"
++fun assert_loud name expected ws =
++  let val n = length (filter (String.isPrefix loud_line) ws)
++   in if n = expected then writeln (name ^ ": " ^ string_of_int n ^ " loud guard warning(s), as expected")
++      else error (name ^ ": " ^ string_of_int n ^ " loud guard warning(s), expected " ^ string_of_int expected)
++  end
++
+ (*a numeral no call of this or any earlier run used, for a guard that must meet no
+   entry: the store outlives the process, and a process serial alone could repeat
+   one an earlier process used*)
+@@ -371,15 +386,17 @@ ML \<open>test (with_entry [] Phi_Guard_Cache.Unknown) \<^context>
+   (expect ("unknown", "unknown", "-", "-") "Unknown with 0 lemma(s)")
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ 
+-ML \<open>test (with_entry [] Phi_Guard_Cache.Proved) \<^context>
+-  "Proved hit that P-auto cannot prove: R-conv refutes it, the loud guard warning, Refuted written"
+-  (expect ("refuted", "proved", "R-conv", "-") "Refuted with 0 lemma(s)")
+-  ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
++ML \<open>assert_loud "a refuter's verdict over a Proved entry" 0 (warnings_of (fn () =>
++  test (with_entry [] Phi_Guard_Cache.Proved) \<^context>
++    "Proved hit that P-auto cannot prove: R-conv refutes it silently, Refuted written"
++    (expect ("refuted", "proved", "R-conv", "-") "Refuted with 0 lemma(s)")
++    ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")))\<close>
+ 
+-(*the loud guard warning only -- not the undecided-guard warning (plan section 5 step 4);
+-  the delta stays through the Unknown write*)
++(*a Proved entry does not change the report unless the judge overturns it: this
++  ending gets the undecided-guard warning, as a call without an entry does; the
++  delta stays through the Unknown write*)
+ ML \<open>test (with_delta {added = [useless_other \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
+-  "Proved hit that nobody decides, no judge: the loud guard warning, Unknown written"
++  "Proved hit that nobody decides, no judge: the undecided-guard warning, Unknown written"
+   (expect ("unknown", "proved", "-", "-") "Unknown with 1 lemma(s), 1 deletion(s)")
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ 
+@@ -410,9 +427,9 @@ ML \<open>test (with_entry [looping \<^context>] Phi_Guard_Cache.Proved) \<^cont
+ 
+ (*two dropped lemmas -- one uncertifiable, one unreplayable -- each with the
+   dropped-lemma warning; the entry is rewritten without them, P-auto then fails,
+-  both refuters fail, the loud guard warning, Unknown written*)
++  both refuters fail, the undecided-guard warning, Unknown written*)
+ ML \<open>test (with_entry [uncertifiable \<^context>, unreplayable \<^context>] Phi_Guard_Cache.Proved) \<^context>
+-  "Proved hit whose lemmas fail to certify and to replay: both dropped, loud warning"
++  "Proved hit whose lemmas fail to certify and to replay: both dropped, Unknown written"
+   (expect ("unknown", "proved", "-", "-") "Unknown with 0 lemma(s)")
+   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ 
+@@ -618,10 +635,11 @@ ML \<open>test (with_delta_and_judge {added = [useless_other \<^context>], delet
+   (expect ("refuted", "unknown", "-", "Unprovable") "Refuted with 1 lemma(s), 1 deletion(s)")
+   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
+ 
+-ML \<open>test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.Unprovable)) \<^context>
+-  "Proved hit, refuters fail, the judge answers Unprovable: the loud guard warning"
+-  (expect ("refuted", "proved", "-", "Unprovable") "Refuted with 0 lemma(s)")
+-  ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
++ML \<open>assert_loud "the judge overturning a Proved entry" 1 (warnings_of (fn () =>
++  test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.Unprovable)) \<^context>
++    "Proved hit, refuters fail, the judge answers Unprovable: the loud guard warning"
++    (expect ("refuted", "proved", "-", "Unprovable") "Refuted with 0 lemma(s)")
++    ("\<condition> (PP (LOOP " ^ fresh () ^ "))")))\<close>
+ 
+ (*the judge's lemma may not fail: the error names the judge*)
+ ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [unreplayable \<^context>]))) \<^context>
+diff --git a/Phi_Logic_Programming_Reasoner/library/guard_cache.ML b/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
+index 180b6edb..857f81d6 100644
+--- a/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
++++ b/Phi_Logic_Programming_Reasoner/library/guard_cache.ML
+@@ -124,10 +124,11 @@ fun encode_entry ({delta = {added, deleted}, verdict} : entry) =
+                     int_of_verdict verdict) outs;
+       BytesIO.toString outs
+   end
+-(*catch-all: a truncated payload raises Subscript out of BytesIO, a foreign one
+-  Unpack; \<^try> re-raises interrupts*)
++(*a truncated payload raises Subscript out of BytesIO, a foreign one Unpack: both
++  mean no entry; anything else is a bug and propagates*)
+ fun decode_entry s =
+-  \<^try>\<open>SOME (#1 (U.doUnpack entry_unpacker (BytesIO.fromString s))) catch _ => NONE\<close>
++  \<^try>\<open>SOME (#1 (U.doUnpack entry_unpacker (BytesIO.fromString s)))
++    catch Subscript => NONE | U.Unpack => NONE\<close>
+ end
+ 
+ fun lookup_entry thy d =
+diff --git a/Phi_Logic_Programming_Reasoner/library/guess_instantiate.ML b/Phi_Logic_Programming_Reasoner/library/guess_instantiate.ML
+index 6aa9bbd2..062962cd 100644
+--- a/Phi_Logic_Programming_Reasoner/library/guess_instantiate.ML
++++ b/Phi_Logic_Programming_Reasoner/library/guess_instantiate.ML
+@@ -37,9 +37,8 @@ fun qchk_one_side ctxt bvtys tm =
+   a\<^sub>i are pairwise distinct variables bound inside the formula -- a Miller pattern,
+   and bans is exactly that list of locally bound variables.  Otherwise the
+   equation constrains ?f at isolated points and this is one solution out of many,
+-  committed silently and without backtracking.  Records both kinds; off unless
+-  \<phi>log_guess_inst is set (context-level switch, EVENT_LOG_PLAN 2.3).*)
+-val log_guess_inst = Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guess_inst\<close> (K false)
++  committed silently and without backtracking.  Records both kinds, under
++  ML_debugger.*)
+ 
+ (*term printing happens in the encoder, i.e. under Event_Log's own write
+   protection: a failing printer drops the record, never the tactic*)
+@@ -231,12 +230,12 @@ fun guess_inst ctxt bans cterm =
+ val enable_inst = Config.declare_bool ("enable_inst", \<^here>) (K true)
+ 
+ (*One record per goal this tactic actually instantiates -- see the note at
+-  log_guess_inst above.  The commitment lands on the WHOLE state, so what
++  log_category above.  The commitment lands on the WHOLE state, so what
+   decides whether a choice is harmless is where else the variable occurs: in
+   the rest of this subgoal, and in every other subgoal.  Both are recorded --
+   the count, and each other subgoal that mentions an instantiated variable.*)
+ fun probe_flush ctxt n st goal entries =
+-  if not (Config.get ctxt log_guess_inst) orelse null entries then ()
++  if not (Config.get ctxt ML_Options.debugger) orelse null entries then ()
+   else
+     let
+       val vars = map (fn (_, v, _, _) => v) entries
+diff --git a/Phi_Logic_Programming_Reasoner/library/reasoners.ML b/Phi_Logic_Programming_Reasoner/library/reasoners.ML
+index 2f345424..8d746611 100644
+--- a/Phi_Logic_Programming_Reasoner/library/reasoners.ML
++++ b/Phi_Logic_Programming_Reasoner/library/reasoners.ML
+@@ -181,11 +181,10 @@ signature PHI_REASONERS = sig
+   datatype judgement = Provable of Phi_Guard_Cache.delta | Unprovable
+   val judge : (judge_arg -> judgement) option Unsynchronized.ref
+ 
+-  val log_guard_decision : bool Config.T
+-      (*context-level switch of the guard_decision Event_Log category (default
+-        off): one record per prove_or_refute call -- verdict (proved/refuted/unknown),
+-        hit (the entry's verdict, or none), refuter (R-conv/R-nitpick/-), judge
+-        (Provable/Unprovable/-), wall-clock ms, the guard digest in hex, #subgoals*)
++  (*the guard_decision Event_Log category, written under ML_debugger: one record
++    per prove_or_refute call -- verdict (proved/refuted/unknown), hit (the entry's
++    verdict, or none), refuter (R-conv/R-nitpick/-), judge (Provable/Unprovable/-),
++    wall-clock ms, the guard digest in hex, #subgoals*)
+ 
+ end
+ 
+@@ -1325,13 +1324,9 @@ val judge : (judge_arg -> judgement) option Unsynchronized.ref = Unsynchronized.
+ 
+ (** One prove_or_refute call **)
+ 
+-val log_guard_decision =
+-      Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guard_decision\<close> (K false)
+-
+-(*the guard_decision Event_Log record, the one permanent record of the guard cache
+-  (plan section 10): the verdict, the path -- the entry's verdict (hit), which
+-  refuter, the judge's answer -- the call's wall clock, the guard digest and the
+-  number of subgoals*)
++(*the guard_decision Event_Log record, written under ML_debugger: the verdict, the
++  path -- the entry's verdict (hit), which refuter, the judge's answer -- the call's
++  wall clock, the guard digest and the number of subgoals*)
+ val guard_decision_category =
+   Event_Log.category {name = "guard_decision", enabled = fn () => true,
+     encode = fn {verdict, hit, refuter, judge, elapsed_ms, digest, n_goals} =>
+@@ -1353,23 +1348,22 @@ fun undecided_guard_warning ctxt goals =
+               block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
+     end)) goals
+ 
+-(*the loud guard warning: the entry said Proved, P-auto could not prove the guard with
+-  the entry's lemmas, and the call ends Refuted or Unknown; printed unconditionally,
+-  with the refuters' and the judge's results*)
+-fun loud_guard_warning ctxt goals results =
++(*the loud guard warning: the entry said Proved, no refuter could refute the guard,
++  and the judge overturned it; printed unconditionally*)
++fun loud_guard_warning ctxt goals =
+   warning (Pretty.string_of (let open Pretty in
+-    chunks (block (text "A guard condition the guard cache recorded as proved can no longer be proved:")
+-            :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) goals
+-            @ [block (text ("The refuters and the judge answered: " ^ results))])
++    chunks (block (text "A guard condition proved before is now refuted by the LLM judge:")
++            :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) goals)
+   end))
+ 
+ (*The replay of one lemma (plan section 5 step 1): the statement certified in ctxt0
+   and proved by its own method text in ctxt0 exactly as the run holds it -- nothing
+   enhanced, no other lemma enabled -- under Phi_Proof_Store.replay_limits of the
+   recorded times, each floored by the classic bound.  Fails_To_Certify = TYPE, TERM
+-  or THM (the last from Thm.trivial on a non-prop); Fails_To_Replay = Auto_Fail, the
++  or THM (the last from Goal.init on a non-prop); Fails_To_Replay = Auto_Fail, the
+   whole failure vocabulary of eval_prf_str; anything else, the interrupt family
+-  included, propagates.*)
++  included, propagates.  The goal is Goal.init's, concluded here; eval_prf_str's own
++  protect/conclude pair works on the layer it adds.*)
+ datatype failure = Fails_To_Certify | Fails_To_Replay
+ datatype replay = Replayed of thm | Failed of failure
+ 
+@@ -1387,11 +1381,11 @@ fun replay_lemma ctxt0 ((stmt, (times, script), _) : Phi_Guard_Cache.lemma) =
+       val limits = Phi_Proof_Store.replay_limits
+                      {thread_cpu = Time.max (#thread_cpu times, floor), wall = Time.max (#wall times, floor)}
+       val kws = Keyword.no_major_keywords (Thy_Header.get_keywords (Proof_Context.theory_of ctxt0))
+-   in case (SOME (Thm.trivial (Thm.cterm_of ctxt0 stmt))
++   in case (SOME (Goal.init (Thm.cterm_of ctxt0 stmt))
+             handle TYPE _ => NONE | TERM _ => NONE | THM _ => NONE) of
+         NONE => Failed Fails_To_Certify
+       | SOME goal =>
+-          (Replayed (snd (snd (Phi_Sledgehammer_Solver.eval_prf_str kws 1 limits script (ctxt0, goal))))
++          (Replayed (Goal.conclude (snd (snd (Phi_Sledgehammer_Solver.eval_prf_str kws 1 limits script (ctxt0, goal)))))
+            handle Phi_Sledgehammer_Solver.Auto_Fail _ => Failed Fails_To_Replay)
+   end
+ 
+@@ -1508,23 +1502,18 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
+                     else judge_or_give_up ())
+ 
+       val {verdict, refuter, judge = judge_answer, result} = outcome
+-      (*the two warnings, mutually exclusive at this one site: the loud guard warning
+-        when a call from a Proved entry ends otherwise, the undecided-guard warning
+-        when a call from any other entry ends Unknown*)
++      (*a Proved entry changes the report only when the judge overturns it (the loud
++        guard warning); every other ending reports as a call without an entry does:
++        a refutation is silent, Unknown gets the undecided-guard warning*)
+       val _ =
+-        if entry_verdict = SOME Phi_Guard_Cache.Proved
+-        then if verdict = Phi_Guard_Cache.Proved then ()
+-             else loud_guard_warning ctxt goals
+-                    (case (refuter, judge_answer) of
+-                       (SOME name, _) => name ^ " refuted it; the judge was not consulted"
+-                     | (NONE, SOME answer) => "neither R-conv nor R-nitpick refuted it; the judge answered " ^ answer
+-                     | (NONE, NONE) => "neither R-conv nor R-nitpick refuted it; no judge is installed")
++        if entry_verdict = SOME Phi_Guard_Cache.Proved andalso judge_answer = SOME "Unprovable"
++        then loud_guard_warning ctxt goals
+         else if verdict = Phi_Guard_Cache.Unknown then undecided_guard_warning ctxt goals
+         else ()
+ 
+       val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
+       val _ =
+-        if Config.get ctxt0 log_guard_decision
++        if Config.get ctxt0 ML_Options.debugger
+         then Event_Log.append guard_decision_category
+                {verdict = string_of_verdict verdict,
+                 hit = (case entry_verdict of NONE => "none" | SOME v => string_of_verdict v),
+
+# Performant_Isabelle_ML ecfbbd6
+commit ecfbbd642c0726be71842e3241dcfed883614296
+Author: Qiyuan Xu <xqyww123@gmail.com>
+Date:   Mon Sep 14 20:30:09 2026 +0800
+
+    Event_Log: the record boundary is the comment line "<!-- record -->"
+    
+    Every item (a record or a human comment) is preceded by the marker; the
+    reader splits the file at it and parses each piece on its own.  The
+    space-stuffing transform of the writer and its inverse in both readers are
+    gone -- the marker cannot occur inside an item ("<" is escaped in text and
+    attribute values; a comment body never contains "--").  Plan section 5/8
+    record the ruling.  ai-artifacts/event_log_migrate.py migrated the
+    existing logs (591 files, 303609 records before and after);
+    ai-artifacts/Event_Log_Marker_Probe.thy is a TEMPORARY check of the
+    edited source until Test/Event_Log_Test.thy runs on a rebuilt heap.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+diff --git a/Test/Event_Log_Test.thy b/Test/Event_Log_Test.thy
+index ac63ffc..8d53b1e 100644
+--- a/Test/Event_Log_Test.thy
++++ b/Test/Event_Log_Test.thy
+@@ -5,7 +5,7 @@ begin
+ text \<open>
+   Unit test for Event_Log / Exception_Log (ai-artifacts/EVENT_LOG_PLAN.md, section 10.2).
+ 
+-  The theory writes records that stress the record-boundary transform, the
++  The theory writes records that stress the record boundary, the
+   control-character filter, the comment sanitizer, and the frame capture; it
+   then injects one deliberately corrupt record and appends one more good one.
+   The byte-for-byte round-trip and the skip-one-bad-record property are
+@@ -23,7 +23,7 @@ ML \<open>
+         error "Event_Log_Test must run with ISABELLE_EVENT_LOG_DIR set to a scratch directory")
+ \<close>
+ 
+-section \<open>Plain records, boundary transform, control characters, comment\<close>
++section \<open>Plain records, boundary, control characters, comment\<close>
+ 
+ ML \<open>
+   val test_category =
+@@ -35,9 +35,8 @@ ML \<open>
+     ([("k", "v1")], [Event_Log.elem_text "payload" "plain text"])
+ 
+   (*2: boundary stress -- a text node ending in a newline right before an
+-    element (the stuffing point), and content that already looks stuffed
+-    (newline + space + escaped "<"), which the bijective transform must
+-    return byte-for-byte*)
++    element, and content that looks like a marker line (newline + space +
++    escaped "<"), which must come back byte-for-byte*)
+   val boundary_text = "line1\nline2\n"
+   val tricky_text = " <not-a-tag\nend\n"
+   val _ = Event_Log.append test_category
+@@ -112,7 +111,7 @@ ML \<open>
+     (case List.filter (String.isSuffix pid_suffix) (File.read_dir category_dir) of
+       [name] => Path.append category_dir (Path.basic name)
+     | names => error ("FAILED: expected exactly one log file, got: " ^ commas names))
+-  val _ = File.append log_file "<record category=\"event_log_test\" broken=\"yes\">no close\n"
++  val _ = File.append log_file "<!-- record -->\n<record category=\"event_log_test\" broken=\"yes\">no close\n"
+   val _ = Event_Log.append test_category ([("k", "v4")], [])
+   val _ = writeln ("EVENT_LOG_TEST_FILE=" ^ Path.implode log_file)
+ \<close>
+diff --git a/ai-artifacts/event_log_migrate.py b/ai-artifacts/event_log_migrate.py
+new file mode 100644
+index 0000000..e60d9c8
+--- /dev/null
++++ b/ai-artifacts/event_log_migrate.py
+@@ -0,0 +1,87 @@
++#!/usr/bin/env python3
++"""One-off migration of Event_Log files from the space-stuffed format to the
++marker format (EVENT_LOG_PLAN.md section 5, revision of 2026-09-14).
++
++Old format: an item begins at a line whose first byte is "<"; every other line
++that starts with optional spaces and "<" carries one extra stuffed space.
++New format: every item is preceded by the line "<!-- record -->".
++
++Usage: event_log_migrate.py <log directory or file>...
++A file already in the new format (it starts with the marker) is left alone.
++Each file is rewritten only when the number of well-formed <record> elements
++read from the new text equals the number read from the old text; the rewrite
++is atomic (temp file + os.replace).
++"""
++
++import os
++import re
++import sys
++import tempfile
++import xml.etree.ElementTree as ET
++from pathlib import Path
++
++MARKER = "<!-- record -->"
++_OLD_BOUNDARY = re.compile(r"\n(?=<)")
++_OLD_UNSTUFF = re.compile(r"\n (?= *<)")
++
++
++def old_chunks(text):
++    for chunk in _OLD_BOUNDARY.split(text):
++        chunk = chunk.rstrip("\n")
++        if chunk:
++            yield _OLD_UNSTUFF.sub("\n", chunk)
++
++
++def new_chunks(text):
++    for chunk in text.split(MARKER):
++        chunk = chunk.strip("\n")
++        if chunk:
++            yield chunk
++
++
++def count_records(chunks):
++    n = 0
++    for chunk in chunks:
++        if chunk.startswith("<!--"):
++            continue
++        try:
++            if ET.fromstring(chunk).tag == "record":
++                n += 1
++        except ET.ParseError:
++            pass
++    return n
++
++
++def migrate(path: Path) -> str:
++    text = path.read_text(encoding="utf-8", errors="surrogateescape")
++    if text.startswith(MARKER) or not text.strip():
++        return "kept"
++    items = list(old_chunks(text))
++    new_text = "".join(MARKER + "\n" + item + "\n" for item in items)
++    n_old = count_records(items)
++    n_new = count_records(new_chunks(new_text))
++    if n_old != n_new:
++        return f"REFUSED (records old={n_old} new={n_new})"
++    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".migrating")
++    with os.fdopen(fd, "w", encoding="utf-8", errors="surrogateescape") as out:
++        out.write(new_text)
++    os.replace(tmp, path)
++    return f"migrated ({n_new} records, {len(items)} items)"
++
++
++def main():
++    files = []
++    for arg in sys.argv[1:]:
++        p = Path(arg)
++        files += sorted(q for q in p.rglob("*.xml") if q.is_file()) if p.is_dir() else [p]
++    summary = {}
++    for f in files:
++        result = migrate(f)
++        summary[result.split(" ")[0]] = summary.get(result.split(" ")[0], 0) + 1
++        if not result.startswith("migrated") and result != "kept":
++            print(f"{f}: {result}")
++    print(summary)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/library/event_log.ML b/library/event_log.ML
+index f305d66..524f2f8 100644
+--- a/library/event_log.ML
++++ b/library/event_log.ML
+@@ -7,14 +7,12 @@ code appends a categorized, timestamped record to an XML file on disk; a write
+ never raises and never changes the result of a proof.  Design and all rulings:
+ ai-artifacts/EVENT_LOG_PLAN.md.
+ 
+-File format (PLAN 5): one record = one top-level <record> element, serialized
+-by XML.string_of (which never emits newlines by itself, so newlines come only
+-from Text content), then made line-splittable by one mechanical transform: one
+-extra space is inserted after every newline that is followed by optional
+-spaces and "<".  Since "<" is always escaped inside text and attribute values,
+-"no line but the first begins with <" becomes a theorem; and because the
+-transform stuffs EVERY such line, the reader restores content byte-for-byte
+-by deleting exactly one space after every newline followed by spaces and "<".
++File format (PLAN 5): a file is a sequence of items, each preceded by the
++comment line "<!-- record -->"; an item is one top-level <record> element
++serialized by XML.string_of, or a human-written comment.  A reader splits the
++file at the marker and parses each piece on its own, so a corrupt item loses
++only itself.  The marker cannot occur inside an item: "<" is escaped inside
++text and attribute values, and a comment body never contains "--".
+ 
+ Configuration (PLAN 2.2): the single environment variable
+ ISABELLE_EVENT_LOG_DIR.  Unset -> $ISABELLE_HOME_USER/event_log (default ON);
+@@ -79,18 +77,8 @@ val filter_control =
+     if Char.ord c >= 32 orelse c = #"\t" orelse c = #"\n" orelse c = #"\r"
+     then str c else "")
+ 
+-(*must run AFTER filter_control: deleting a control byte could create "\n<"*)
+-fun stuff_boundaries s =
+-  (case String.fields (fn c => c = #"\n") s of
+-    [] => s
+-  | line0 :: lines =>
+-      let
+-        fun starts_tag line =
+-          Substring.isPrefix "<" (Substring.dropl (fn c => c = #" ") (Substring.full line))
+-      in
+-        String.concatWith "\n"
+-          (line0 :: map (fn l => if starts_tag l then " " ^ l else l) lines)
+-      end)
++(*the item boundary: written before every item, never inside one*)
++val record_marker = "<!-- record -->"
+ 
+ 
+ (* record attributes filled by append (PLAN 4) *)
+@@ -161,7 +149,7 @@ fun append_string (Category {name, enabled, state, ...}) make_string =
+       else
+         Thread_Attributes.uninterruptible_body (fn _ =>
+           (case Exn.capture0 (fn () =>
+-              let val s = stuff_boundaries (filter_control (make_string ())) ^ "\n" in
++              let val s = record_marker ^ "\n" ^ filter_control (make_string ()) ^ "\n" in
+                 Synchronized.change state (fn memo =>
+                   let
+                     val pid = ML_Pid.get ()
+@@ -196,30 +184,21 @@ fun comment cat text =
+ 
+ (* reading back *)
+ 
+-fun read_file path =
++(*the pieces between the markers, each without its surrounding newlines*)
++fun split_items s =
+   let
+-    fun starts_tag line =
+-      Substring.isPrefix "<" (Substring.dropl (fn c => c = #" ") (Substring.full line))
+-    fun unstuff line =
+-      if String.isPrefix " " line andalso starts_tag line
+-      then String.extract (line, 1, NONE) else line
+-    (*group lines into items: an item begins at a line whose FIRST byte is "<"
+-      (the boundary theorem of the writer); continuation lines are unstuffed*)
+-    fun group ([], cur, items) = rev (rev cur :: items)
+-      | group (line :: rest, cur, items) =
+-          if String.isPrefix "<" line
+-          then group (rest, [line], if null cur then items else rev cur :: items)
+-          else group (rest, unstuff line :: cur, items)
+-    fun trim_blank lines = rev (drop_prefix (fn l => l = "") (rev lines))
+-    val items =
+-      (case split_lines (File.read path) of
+-        [] => []
+-      | lines => group (drop_prefix (fn l => not (String.isPrefix "<" l)) lines, [], []))
+-  in
+-    items
+-    |> map (String.concatWith "\n" o trim_blank)
+-    |> map_filter (fn "" => NONE | item => try XML.parse item)
+-  end
++    fun trim ss = ss |> Substring.dropl (fn c => c = #"\n") |> Substring.dropr (fn c => c = #"\n")
++    fun loop ss acc =
++      let val (piece, rest) = Substring.position record_marker ss
++          val acc' = Substring.string (trim piece) :: acc
++      in if Substring.isEmpty rest then rev acc'
++         else loop (Substring.triml (size record_marker) rest) acc'
++      end
++  in loop (Substring.full s) [] end
++
++fun read_file path =
++  split_items (File.read path)
++  |> map_filter (fn "" => NONE | item => try XML.parse item)
+ 
+ 
+ (* encoder helpers *)
+diff --git a/tools/event_log.py b/tools/event_log.py
+index 060f07e..60d8764 100755
+--- a/tools/event_log.py
++++ b/tools/event_log.py
+@@ -1,12 +1,11 @@
+ #!/usr/bin/env python3
+ """Reference reader for Event_Log files (ai-artifacts/EVENT_LOG_PLAN.md, section 8).
+ 
+-A log file is a sequence of top-level items -- <record> elements and
+-<!-- ... --> comments -- and the writer guarantees that a line's first byte
+-is "<" exactly at the start of an item: it inserts one extra space after
+-every newline that is followed by optional spaces and "<".  The reader
+-splits on lines starting with "<", then deletes exactly one space after
+-every newline followed by spaces and "<", restoring content byte-for-byte.
++A log file is a sequence of items -- <record> elements and <!-- ... -->
++comments -- each preceded by the marker line "<!-- record -->".  The marker
++cannot occur inside an item ("<" is escaped inside text and attribute values,
++and a comment body never contains "--"), so the reader splits the file at
++the marker and parses each piece on its own.
+ 
+ One corrupt item loses only itself: every chunk is parsed independently and
+ bad chunks are skipped (count them via the `bad` callback if you care).
+@@ -19,21 +18,19 @@ Typical use:
+ """
+ 
+ import argparse
+-import re
+ import sys
+ import xml.etree.ElementTree as ET
+ from pathlib import Path
+ 
+-_BOUNDARY = re.compile(r"\n(?=<)")
+-_UNSTUFF = re.compile(r"\n (?= *<)")
++RECORD_MARKER = "<!-- record -->"
+ 
+ 
+ def chunks(text):
+-    """Split a log file's text into per-item strings, unstuffed."""
+-    for chunk in _BOUNDARY.split(text):
+-        chunk = chunk.rstrip("\n")  # the trailing newline the writer appends
++    """Split a log file's text into per-item strings."""
++    for chunk in text.split(RECORD_MARKER):
++        chunk = chunk.strip("\n")
+         if chunk:
+-            yield _UNSTUFF.sub("\n", chunk)
++            yield chunk
+ 
+ 
+ def records(path, bad=None):
+
+# Isa-Mini 54de855
+commit 54de8550b71f75a9dd2e4140c993667203bec968
+Author: Qiyuan Xu <xqyww123@gmail.com>
+Date:   Mon Sep 14 20:30:16 2026 +0800
+
+    Cost line: drop the false provenance note from string_of_cost's comment
+    
+    The format was set by a review round, not finalised by the author; the
+    comment now only says what the function is for.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+diff --git a/Agent/agent_server.ML b/Agent/agent_server.ML
+index c62682f..42ea634 100644
+--- a/Agent/agent_server.ML
++++ b/Agent/agent_server.ML
+@@ -150,9 +150,8 @@ val zero_cost : agent_cost = {
+   quota_wait_time = 0.0
+ }
+ 
+-(* One definition for every cost print (author-finalized format, 2026-08-10):
+-   phi's give-up path prints exactly this line; the AoA-side tracing line
+-   appends its locally-timed " time=" field. *)
++(* One definition for every cost print: phi's give-up path prints exactly this
++   line; the AoA-side tracing line appends its locally-timed " time=" field. *)
+ fun string_of_cost ({input, cache_write, cache_read, output, cost, tool_calls,
+                      isabelle_time, model_time, quota_wait_time} : agent_cost) =
+   String.concat [
