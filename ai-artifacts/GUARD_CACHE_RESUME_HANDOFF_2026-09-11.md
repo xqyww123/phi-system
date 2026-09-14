@@ -87,12 +87,14 @@ Plan rev 27, §38; the report `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`; t
 harness kills the listener on its port afterwards -- a poly process outlives its process
 group -- and refuses a port that already answers).  Floors met: consecutive runs 100 % hits /
 0 flips; cache on vs off 0 flips; two concurrent servers 0 flips, no collision warning;
-Phi_Examples clean on the guard side.  Two findings for the author, NOT the guard cache's:
-(1) `exception Option` (future.ML's assign_result, the 2026-09-08 fix is not in the
-distribution) aborted both uninstrumented cache-on legs at Phi_Types.thy:2591/2594;
-(2) the AoA gate is OPEN under Isa-REPL (frontend_identity answers SOME true) -- the
-Phi_Examples leg reached for the Codex API and was saved by the proxy being down; never run a
-Phi_Examples leg again without `AoA_driver = "test"` or a closed gate.  The review of the
+Phi_Examples clean on the guard side.  Two observations outside the guard cache, both RULED:
+(1) `exception Option` (future.ML's assign_result swallowing an interrupt) aborted both
+uninstrumented cache-on legs at Phi_Types.thy:2591/2594; the 2026-09-08 one-line fix was missing
+from this machine's contrib/Isabelle2025-2 and is now applied ("请对本机打补丁") -- Pure changed,
+every heap needs the author's rebuild; (2) the AoA gate is open under Isa-REPL BY DESIGN ("AoA
+应该在 Isa-REPL 下工作的, 这是 expected", memory aoa-runs-under-isa-repl-by-design): a REPL corpus
+load spends money on every obligation missing from its store -- the Phi_Examples leg had three
+and was saved by the proxy being down; never call this a bug again.  The review of the
 audit-rulings code: ACCEPTED_ON_CONDITION, both conditions applied (phi-system fbb8ad78,
 Performant_Isabelle_ML a28e6f2).  PLPR.thy is at its committed text (every TEMPORARY declare
 reverted).  Uncommitted and NOT mine to commit: the corpus' and Phi_Examples' `.proof-store`

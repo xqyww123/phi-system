@@ -9,19 +9,18 @@ Plan: `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` §10 step 5, §37 item 12.  Harness:
 concurrent leg); 14 cores.  Each leg's configuration is a TEMPORARY `declare`
 in `PLPR.thy` (reverted before the commit).
 
-**The AoA gate is NOT closed under Isa-REPL** — a finding of this step, against
-the plan's assumption (§10 step 5 "AoA gate closed there").  The gate
-(`agent_server.ML:560-562`) opens on the second component of
-`Dialogue.frontend_identity ()`, and under the REPL server that component is
-`SOME true`: the Phi_Examples leg tried to reach the Codex API three times
-(`Bucket_Hash.thy:20`, `:99`, `Matrix_Oprs.thy:140`) and was stopped only by
-the local proxy being down ("local openai-oauth proxy unreachable at
-http://127.0.0.1:8317/v1/") — no money was spent, by luck, not by the gate.
-The `PhiTest_Arithmetic` corpus never reaches the gate (every obligation is
-in its store).  A future harness must set `AoA_driver = "test"` (the test
-driver, which the gate admits and which never calls a model) or
-`AoA_ALLOW_NONINTERACTIVE` must stay unset AND the frontend probe must answer
-NONE under Isa-REPL — which of the two is the author's call.
+**The AoA gate is open under Isa-REPL, by design** (the author, 2026-09-14:
+"AoA 应该在 Isa-REPL 下工作的, 这是 expected").  The gate (`agent_server.ML:560-562`)
+opens on the second component of `Dialogue.frontend_identity ()`, which is
+`SOME true` under the REPL server.  Consequence for a corpus run: every
+obligation missing from its store escalates to the language model and costs
+money.  The `PhiTest_Arithmetic` corpus has no missing obligation; the
+Phi_Examples leg had three (`Bucket_Hash.thy:20`, `:99`, `Matrix_Oprs.thy:140`),
+whose escalation failed only because the local proxy was down ("local
+openai-oauth proxy unreachable at http://127.0.0.1:8317/v1/").  The plan's
+step-5 clause "AoA escalation disabled in the harness" was the drafter's own
+assumption and is corrected in §10; a future Phi_Examples leg either accepts
+the cost or declares `AoA_driver = "test"`.
 
 The `guard_decision` record is written under `ML_debugger` (§37 item 1), so the
 legs that count decisions run with `declare [[ML_debugger]]`, which instruments
@@ -36,7 +35,7 @@ than a plain load by that instrumentation; the plain legs measure wall time only
 | C2_on_dbg | on | on | 213.2 s | 355 / 261 | 21.7 s | clean |
 | E_off_dbg | off | on | 412.1 s | 355 / 261 | 161.4 s | clean |
 | B_off | off | off | 415.5 s | (no records) | — | clean |
-| A_on | on | off | 182.0 s (aborted) | — | — | `exception Option` at `Phi_Types.thy:2591` |
+| A_on | on | off | 182.0 s (aborted) | — | — | `exception Option` at `Phi_Types.thy:2591` (the future.ML bug, patched afterwards) |
 | A2_on | on | off | 243.2 s (aborted) | — | — | `exception Option` at `Phi_Types.thy:2594` |
 | F1_conc, F2_conc (two servers at once, 6 threads each) | on | on | 365.4 s, 379.2 s | 355 / 261 each | 26.8 s, 24.0 s | clean, clean |
 | G_examples (the eight Phi_Examples theories) | on | on | 1059.1 s | 1756 / 1646 | 269.0 s | 4 obligation errors, see below |
@@ -110,7 +109,7 @@ Proved decisions, cache on: median 0 ms, p90 20–28 ms, p99 76–108 ms, max
 Refuted decisions reach the bound (p90 401 ms) because P-auto runs to it before
 the hit is honoured.  Nothing in this corpus argues for moving the bound.
 
-## Hard failures attributable to guard-side exceptions: TWO, both the known `Option` bug
+## Hard failures attributable to guard-side exceptions: none; two legs hit the known `Option` bug
 
 Both uninstrumented cache-on legs aborted the load of `Phi_System.Phi_Types`
 with `exception Option raised (line 84 of "General/basics.ML")` — at the
@@ -121,13 +120,15 @@ site `\<phi> statement` and `Phi_Reasoner.reason`) carry no frames without
 `ML_debugger`.  This is the bug closed on 2026-09-08 in
 `OPTION_EXCEPTION_IN_PROOF_REPLAY.md`: `Pure/Concurrent/future.ML`'s
 `assign_result` swallows an asynchronous interrupt (its `Exn.capture_body`
-handler has `| _ => ()`), then `the (Single_Assignment.peek result)` on the
-never-assigned result raises `Option`.  The one-line fix recorded there (reraise
-in that arm) is NOT in the distribution today (`future.ML:425-430`, checked
-2026-09-14): `contrib/Isabelle2025-2` is git-ignored, and the patched file did
-not survive.  The four instrumented legs and the uninstrumented cache-off leg
-did not hit it (the instrumentation and the refuter runs change the timing of
-the interrupt window); no proof store was invalidated by the two failures.
+handler had `| _ => ()`), then `the (Single_Assignment.peek result)` on the
+never-assigned result raises `Option`.  The one-line fix recorded there was
+found missing from `contrib/Isabelle2025-2/src/Pure/Concurrent/future.ML`
+(git-ignored directory; the file's mtime 2026-01-18 says the 2026-09-08 patch
+never reached this copy) and was applied on this machine on the author's
+order ("请对本机打补丁"): `future.ML:430-431`, the `Exn.Exn` arm reraises.  Pure
+changed, so every heap is outdated until the author rebuilds.  The other five
+legs did not hit the bug (instrumentation and the refuter runs shift the
+interrupt window); no proof store was invalidated by the two failures.
 
 ## Not measured (no probe installed; the plan lists them)
 

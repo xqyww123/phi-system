@@ -5,8 +5,8 @@ acceptance**: the preparatory phase, steps 0–2 (§26–§32), step 3's first
 half (§34) and step 4 (§35, redone on the author's design) are done; the
 entry became a delta and the canonical form was withdrawn (§36); the
 provenance audit's items were gone through one by one and ruled (§37);
-step 5's legs ran on Isa-REPL (§38: the floors met; two findings outside
-the guard cache for the author).  The
+step 5's legs ran on Isa-REPL (§38: the floors met; two observations
+outside the guard cache, both ruled).  The
 revision history below (rev 18–24) narrates the canonical form as it
 stood then; it no longer exists.
 Rev 22 was **READY** by the nineteenth review (rev 21:
@@ -1563,9 +1563,13 @@ P. **The preparatory phase** — DONE 2026-09-09 and accepted by the author
    digest cost, store I/O, the forked-proof write, the guard-cache export
    hook's cost per run boundary; re-measure 400 ms.  Testing via Isa-REPL
    against `Phi_System_Base` sources — no `isabelle build` beyond the two
-   approved rebuilds of steps 1 and 4, and with AoA escalation disabled in
-   the harness (the 2026-09-08 probe cost real money by copying a theory
-   under a new name and defeating its proof store).
+   approved rebuilds of steps 1 and 4.  (Rev 18–26 added "with AoA
+   escalation disabled in the harness": the drafter's assumption that the
+   AoA gate is closed under Isa-REPL, which it is not — by design [author
+   2026-09-14 "AoA 应该在 Isa-REPL 下工作的, 这是 expected"]; a corpus whose
+   obligations are all in their stores never reaches the gate, and the
+   2026-09-08 probe cost money only by copying a theory under a new name
+   and defeating its store.)
 
 After this plan: move the raw-term codec functor to
 `Performant_Isabelle_ML` [author 2026-09-03 14:19].
@@ -3308,23 +3312,27 @@ no guard-side exception.  The 400 ms bound re-measured: proved decisions
 p99 76–108 ms, far under it; refuted decisions reach it because P-auto runs
 to the bound before the hit is honoured (§5 step 2, accepted §17 item 5).
 
-**Two findings outside the guard cache, for the author.**
+**Two observations outside the guard cache, both ruled.**
 1. `exception Option` aborted both uninstrumented cache-on legs at
    `Phi_Types.thy:2591` / `:2594` (the `len_intvl` lemma of §33).  It is the
    bug closed on 2026-09-08 in `OPTION_EXCEPTION_IN_PROOF_REPLAY.md`
    (`future.ML`'s `assign_result` swallows an asynchronous interrupt, then
-   `the` on the unassigned result), whose one-line fix is NOT in
-   `contrib/Isabelle2025-2/src/Pure/Concurrent/future.ML` today (the
-   directory is git-ignored; the patched file did not survive).  The five
-   other legs did not hit it.  Not the guard cache's; the fix is a
-   distribution patch and the author's decision.
-2. The AoA gate is open under Isa-REPL: `Dialogue.frontend_identity ()`
-   answers `SOME true` for the REPL server, so the Phi_Examples leg tried
-   the Codex API three times and was stopped only by the local proxy being
-   down.  Step 5's clause "AoA escalation disabled in the harness" held for
-   the `PhiTest_Arithmetic` corpus (every obligation in its store) and by
-   luck for Phi_Examples.  Either the harness declares `AoA_driver = "test"`
-   or the probe must answer NONE under Isa-REPL — the author's call.
+   `the` on the unassigned result); its one-line fix was found missing from
+   `contrib/Isabelle2025-2/src/Pure/Concurrent/future.ML` (the directory
+   is git-ignored; the file's mtime was 2026-01-18, so the 2026-09-08 patch
+   had never reached this copy) and is applied on this machine [author
+   2026-09-14 "请对本机打补丁"]: `future.ML:430-431`, the `Exn.Exn` arm
+   reraises.  Pure changed, so every heap is outdated until rebuilt.  The
+   five other legs did not hit it.
+2. The AoA gate is open under Isa-REPL — by design [author 2026-09-14 "AoA
+   应该在 Isa-REPL 下工作的, 这是 expected"]: `Dialogue.frontend_identity ()`
+   answers `SOME true` for the REPL server, so the Phi_Examples leg
+   escalated three obligations not in their stores to the Codex API and
+   was stopped only by the local proxy being down.  The drafter had filed
+   this as a finding against a clause of §10 step 5 that was its own
+   assumption (corrected there).  A corpus load under Isa-REPL spends
+   money on every obligation missing from its store; the
+   `PhiTest_Arithmetic` corpus has none missing.
 
 Not measured (no probe): lemma replay cost and budget cut-offs (no judge
 installed, every entry lemma-less: both zero), store I/O, the forked-proof
