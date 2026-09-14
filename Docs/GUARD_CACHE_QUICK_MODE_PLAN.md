@@ -1,10 +1,10 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 25 (2026-09-13) — **IN IMPLEMENTATION**: the preparatory
+Status: rev 26 (2026-09-14) — **IN IMPLEMENTATION**: the preparatory
 phase, steps 0–2 (§26–§32), step 3's first half (§34) and step 4 (§35,
 redone on the author's design) are done; the entry became a delta and
-the canonical form was withdrawn (§36); step 4's close-out (the
-collision alarm, the store files to track) and step 5 remain.  The
+the canonical form was withdrawn (§36); the provenance audit's items
+were gone through one by one and ruled (§37); step 5 remains.  The
 revision history below (rev 18–24) narrates the canonical form as it
 stood then; it no longer exists.
 Rev 22 was **READY** by the nineteenth review (rev 21:
@@ -473,18 +473,22 @@ its entry and enabled the entry's lemmas (§5).
   "更新 the budget"); 2026-09-12 "judge 的输出永远是对 the condition's slot
   的完全替换"].  Its obligations, a contract with no run-time check beyond what
   §5 does anyway: each lemma is a closed statement of type `prop`
-  (`Trueprop`-wrapped for a HOL proposition), certifiable by `Thm.cterm_of
-  ctxt0` and provable by its own method text in ANY `ctxt0` that can
-  reach this guard's digest — the digest covers the goal state and the
-  context's assumptions but not the ctxt's simpset, lemmas or local facts
-  [author 06:10 "2. 不掺"; 2026-09-11], and the entry is shared across
-  contexts that agree on those, so the
-  method text may cite theory-level facts only, never a fact local to the
-  recording call's context, and runs without `oblg_template`'s fixes, the
-  inserted aux facts and the guard-side assumptions; the lemmas together
-  must make P-auto prove the guard; its
+  (`Trueprop`-wrapped for a HOL proposition) [drafter], certifiable by
+  `Thm.cterm_of ctxt0` and provable by its own method text in `ctxt0`.
+  The method text MAY cite the context's facts, the contextual
+  assumptions included, by name: the digest covers the goal state and the
+  contextual assumptions, and PLPR reasoning is deterministic, so every
+  replay of the entry happens in the same `ctxt0`, rebuilt with the same
+  facts under the same names [author 2026-09-14 "我认为必须可引用 contextual
+  assumptions 这是很重要的!"; "复现是同一个 ctxt 具有相同的 fact names"].  (Rev
+  18–25 said the opposite — "theory-level facts only, never a fact local
+  to the recording call's context" — under a citation of "2. 不掺", which
+  had ruled the assumptions OUT of the digest and was reversed on
+  2026-09-11; the clause was the drafter's, corrected here.)  The replay
+  runs without `oblg_template`'s fixes and the inserted aux facts; the
+  lemmas together must make P-auto prove the guard; its
   times are RAW measured times (`Phi_Proof_Store.times`, thread CPU and
-  wall), which `prove_or_refute` normalises with
+  wall) [drafter], which `prove_or_refute` normalises with
   `Phi_Proof_Store.standard_time` (`cache_file.ML:238`, `:914`) once, ON
   RECEIPT — before the replay of §5 step 6, because `replay_limits` takes
   standard-machine times and `Thread_CPU.apply` re-scales them by this
@@ -500,11 +504,14 @@ its entry and enabled the entry's lemmas (§5).
   broken, propagating as the run's exception [author 08:45 "我建议直接 error
   说内部错误: the judge 有问题"; "2. 我建议此时也 error"].  The judge is called
   on each run's own thread, concurrently across runs, and must be
-  re-entrant.  It may re-enter PLPR — nothing counts calls any more
-  [supersedes 2026-09-07 13:21] — but a re-entered run inside the judge
-  enables its own lemmas on top of `judge_arg.ctxt`'s (§1 the lemma
-  budget: nesting is not handled) [author 2026-09-08 11:44 "你不用担心嵌套的
-  问题. 你可以 leave a comment"].  An exception escaping the judge or a
+  re-entrant [drafter].  The judge must not re-enter PLPR, and neither may
+  its proof texts [author 2026-09-07 13:21 "定一条规约, judge 不能重入 PLPR";
+  §17 item 8].  (Rev 18–25 said here "It may re-enter PLPR — nothing
+  counts calls any more, supersedes 13:21": the drafter's reversal of that
+  rule, never ruled — audit A4, 2026-09-12; withdrawn 2026-09-14.  The
+  author's 2026-09-08 11:44 "你不用担心嵌套的问题. 你可以 leave a comment"
+  concerned the lemma budget's nesting, which therefore stays unhandled
+  and commented.)  An exception escaping the judge or a
   refuter propagates through `prove_or_refute` like any other exception of
   the run [author 2026-09-03 12:31 "hook 的崩溃应该视作 PLPR 推理链的崩溃"].
 - **`Guard_Simp_SS`**, attribute **`\<phi>guard_simp`**: the simpset of
@@ -699,18 +706,24 @@ its entry and enabled the entry's lemmas (§5).
   `\<phi>trace_reasoning >= 1` (the corpus sets it: `IDE_CP_App2.thy:256`).
   Printed when a call ends `Unknown`, on a first decision and on every
   `Unknown` hit alike [author 2026-09-08 05:53 "对于 reliable = false 的,
-  我们直接 warning 不再跑 R-conv, R-nitpick"] — except on a call from a
-  `Proved` entry, where the loud guard warning alone is printed: the two
-  warnings are mutually exclusive, decided at one site from the final
-  verdict [author 2026-09-09 "spec-3 赞同 (a)"].  [descriptive]
+  我们直接 warning 不再跑 R-conv, R-nitpick"], a call from a `Proved`
+  entry included; the two warnings are decided at one site from the final
+  verdict [author 2026-09-09 "spec-3 赞同 (a)"; 2026-09-14].  [descriptive]
 - **the loud guard warning**: the message printed when a guard whose entry
-  said `Proved` could not be proved by P-auto with the entry's lemmas AND
-  the call finally ends `Refuted` or `Unknown` — whichever path ended it:
-  a refuter, the judge's `Unprovable`, or nobody — printed through
-  `warning` unconditionally, not trace-gated, carrying the results of
-  R-conv, R-nitpick and the judge [author 07:45 "好"; 08:45 "这个报警仅仅是
-  最后真的给出了 refuted/unknown 判决时才报, 如果 the judge 最后还是 proved 那么
-  不会报错"].  [descriptive]
+  said `Proved` could not be proved by P-auto with the entry's lemmas,
+  neither R-conv nor R-nitpick refuted it, and the judge answered
+  `Unprovable` — printed through `warning` unconditionally, not
+  trace-gated; its text is the line
+  `A guard condition proved before is now refuted by the LLM judge:`
+  followed by the guard's subgoals [author 2026-09-14].  Every other ending
+  of a call from a `Proved` entry reports as a call without an entry
+  does: a refuter's verdict is silent (the refuters are trusted), `Unknown`
+  gets the undecided-guard warning [author 2026-09-14 "只有在 previously
+  proven but the LLM judge now refutes 的时候说"; "R-conv/R-nitpick 都是靠谱
+  的, 都是可信的, 此时就不用报警"].  (Until 2026-09-14 the warning fired on
+  every non-`Proved` ending and carried the refuters' and the judge's
+  results in a three-arm text the author had not seen; §17 item 13 and
+  §31 item 6 record that state.)  [descriptive]
 - **`Guard_Record_Stale`**, **the env**, **the run**, **run failure**,
   **record**, **record key**, **final digest**, **tombstone**, **the
   no-cache re-run**, **run lemmas**, **R1–R4**, **the refutation future**,
@@ -927,9 +940,13 @@ solver), `d` the guard digest and `thm` the goal state.
    `entry := decode (get_cached_proof thy (key d))`.
 1. **Apply the entry's delta.**  For each `(stmt, (t, script), tier)` of
    the entry's `added`, in order: `Thm.cterm_of ctxt0 stmt` ("fails to certify" =
-   `TYPE`, `TERM` or `THM` — the last from `Thm.trivial` on a non-`prop` —
+   `TYPE`, `TERM` or `THM` — the last from `Goal.init` on a non-`prop` —
    caught with one explicit `handle`, the interrupt family untouched);
-   `Thm.trivial` of the cterm as the goal; `eval_prf_str` of `script` with
+   `Goal.init` of the cterm as the goal, `Goal.conclude` on what comes
+   back — the standard pair, each layer of protection removed by whoever
+   added it; `eval_prf_str`'s own `protect`/`conclude` works on the layer
+   it adds [author 2026-09-14 "Goal.init/protect 与 Goal.conclude 是成对的
+   啊! 这才是标准做法"; before: `Thm.trivial`]; `eval_prf_str` of `script` with
    `n = 1` under `Phi_Proof_Store.replay_limits t'` (`cache_file.ML:228-230`,
    `:935-939`), where `t'` is the stored `times` `t` with each of its two
    components raised by `Time.max` to at least
@@ -989,10 +1006,12 @@ solver), `d` the guard digest and `thm` the goal state.
    - `Proved` — the lemmas did not suffice → R-conv; else R-nitpick; else
      a judge is installed → step 6 [author 06:10 "补充一点 … 如果 R-conv,
      R-nitpick 都失败了, 还要跑 LLM judge, 然后响亮报警"; "6. 要的"].  The
-     loud guard warning belongs to the call's FINAL verdict: whenever a
-     call that started from a `Proved` entry ends `Refuted` (a refuter
-     here, or the judge's `Unprovable` in step 6) or `Unknown` (nobody, no
-     judge), print it with the refuters' and the judge's results, write
+     loud guard warning belongs to the call's FINAL verdict, and since
+     2026-09-14 to one path only: a call that started from a `Proved`
+     entry and ends with the judge's `Unprovable` (step 6) prints it; a
+     refuter's `Refuted` here is silent and `Unknown` (nobody, no judge)
+     gets the undecided-guard warning, as without an entry [author
+     2026-09-14]; either way write
      `{delta, Refuted | Unknown}` — the delta stays [author 06:16 "lemmas
      始终是不丢的"] — and return `Seq.empty`; when step 6 ends `Proved`, no
      warning [author 08:45].
@@ -1085,15 +1104,16 @@ the judge may — a nested call is an ordinary call against the store.
   installed it is the judge's cue: a later-installed judge takes over
   every undecided guard without any file being deleted.
 - **A `Proved` entry with an empty lemma list is reachable** (§5 step 3's
-  silent promotion), and the loud guard warning fires on `Proved` entries
-  by their verdict, not by their lemmas.  So a guard that was once
-  undecided or refuted and then proved, and later fails P-auto again, runs
-  the whole refuter chain, consults the judge and prints the loud warning.
-  Two contexts sharing a digest with different provability flip such an
-  entry back and forth — `Proved` under one, `Refuted`/`Unknown` under the
-  other — and the loud warning fires on every flip; the digest excludes
-  the aux facts and the ctxt's assumptions precisely so that entries are
-  shared [author 06:10 "2. 不掺"; 11:52], and this is the price.
+  silent promotion), and a `Proved` entry is treated by its verdict, not
+  by its lemmas.  So a guard that was once undecided or refuted and then
+  proved, and later fails P-auto again, runs the whole refuter chain and
+  consults the judge; the loud guard warning is printed only if the judge
+  overturns it (§1, 2026-09-14).  Two contexts sharing a digest with
+  different provability would flip such an entry back and forth; since
+  2026-09-11 the digest includes the contextual assumptions (§1; "2. 不掺"
+  had excluded them and was reversed), so two calls share a key only when
+  their whole goal state and their assumptions agree, and the aux facts
+  stay out because they are derivable.
 - **The same guard can get more than one key.**  For a guard that still
   carries schematic variables at the factory, the key includes their
   indices, and — for the variables `oblg_template`'s import fixed, every
@@ -1286,9 +1306,12 @@ the judge may — a nested call is an ordinary call against the store.
   instream measured slower, which the `BytesIO` instance removes
   (`ai-artifacts/Term_Codec_Bench.thy`).  NO format version [author
   2026-09-03 03:02]: the decode is wrapped `\<^try>\<open>SOME (decode v)
-  catch _ => NONE\<close>` — catch-ALL, because a truncated payload raises
-  `Subscript` out of `BytesIO.inputN` (`mlmsgpack.sml:929-935`); `\<^try>`
-  re-raises interrupts.  Any exception means "there is no entry".
+  catch Subscript => NONE | U.Unpack => NONE\<close>` — a truncated payload
+  raises `Subscript` out of `BytesIO.inputN` (`mlmsgpack.sml:929-935`), a
+  foreign or outdated one `Unpack`; both mean "there is no entry" and the
+  call decides afresh and overwrites the key; any other exception is a
+  bug and propagates [author 2026-09-14 "赞同 (a) + (c)": silent, and the
+  handler narrowed from the drafter's catch-all].
 - `\<phi>guard_cache` (default true) is the one debugging switch [author
   2026-09-02 10:41]; off = no entry is read and no entry is written, every
   call decides as if it had no entry [author 2026-09-03 12:52]; the
@@ -1351,7 +1374,7 @@ stop proving reach it, `Refuted` entries never do.
 | `\<phi>guard_classic_prover_timeout` | 400 ms of thread CPU, provisional — P-auto's and R-conv's budget [author 2026-09-04 03:23 "直接重命名为 \<phi>guard_classic_prover_timeout"] and the replay floor of §5 step 1 [author 2026-09-07 13:16]; NOT the "G.simpcut" pass's bound any more — that is 5 s of thread CPU fixed in the code, no option (§1 "G.simpcut", §33) [author 2026-09-11, superseding 2026-09-08 12:51]; thread CPU, never wall clock, an error without a CPU clock [author 2026-09-09]; the `is_F` shortcut's 250 ms is thread CPU too [drafter] |
 | `\<phi>guard_refute_timeout` | 2000 ms (Nitpick's parameter; R-nitpick's outer net is `\<phi>guard_refute_timeout + 5000 ms × length goals`, and each subgoal inside it is bounded by `\<phi>guard_refute_timeout + 5000 ms`) |
 | `\<phi>guard_cache` | true |
-| `\<phi>log_guard_race` → `\<phi>log_guard_decision` | false (renamed) |
+| `\<phi>log_guard_race` → `\<phi>log_guard_decision` → deleted | the `guard_decision` record is written under the runtime `ML_debugger` option, no option of its own [author 2026-09-14 "建议用 ML_debugger 这个 configuration option 来控制"]; `\<phi>log_guess_inst` the same way |
 | `\<phi>guard_lemma_apply_limit` | 1000 — the budget of `Frequent`, the ceiling of every tier [author 2026-09-08 07:44 "我们只给一个 1000 的上限"] |
 | the tier budgets (ML constants) | `Only_Once` 3, `Rarely` 30, `Normal` 300, `Frequent` = the option [author 08:19, 08:20] |
 
@@ -1362,9 +1385,16 @@ named by the author are the drafter's under the 11:24 delegation (among
 them the judge ref's name and module, `guard_cache.ML`,
 `enhance_with_lemmas`).
 
-Nothing is pending the author.
+Pending the author: nothing of this plan's design (the provenance audit's
+items were ruled one by one on 2026-09-14, §37).  Deferred by ruling: the
+tier measurement (§33; "(a)" — after step 5), the `\<check> \<hypothesis>
+\<consistency>` follow-up (§33; a plan of its own after step 5), phase-2
+point 2 (`Frequent` = the ceiling; §37).  Next: step 5.  (Rev 18–25 said
+"Nothing is pending the author" while §35 and §8 held open items —
+audit A10.)
 
-**Drafter decisions that change behavior**, each vetoable: the file
+**Drafter decisions that change behavior**, each vetoable (those ruled on
+2026-09-14 are marked; §37): the file
 `guard_cache.ML` and what it holds (§4); the shape of the ctxt threading
 through the factory — `oblg_template` polymorphic through `inj`, `on_thm`
 and `prj`, bypass exits (the zero-premise arm of `head_only` among them)
@@ -1377,15 +1407,18 @@ the state unchanged (§1); the provers run from `ctxt_g`, the guard-side
 ctxt plus the lemmas (§5 step 1); the lemma replay in `ctxt0` with
 nothing enhanced (§5 step 1); the append skipping a proposition already
 present (§1, §5 step 1); the dropped-lemma warning's gate
-(`warning`, unconditional — §5 step 1); `enhance_with_lemmas` extracting
+(`warning`, unconditional — §5 step 1) [ruled 2026-09-14 "可以保留无条件"];
+`enhance_with_lemmas` extracting
 rules with `mksimps` first, rotating the budget premise last, and adding
 by `addsimps`, with fresh budgets per consumer run (§1); the one simproc
 per `enhance_with_lemmas` and its `Strhashtab` (§1); the export hook's
-priority and its overwrite (§1); the exact exceptions of "fails to
+priority and its overwrite (§1) [priority 200 ruled 2026-09-14 "200 可以
+的"; the overwrite was ruled 2026-09-04]; the exact exceptions of "fails to
 certify" and "fails to replay" (§5 step 1); U3 (the factory parameter's
 type — §1); the sequential order of R-nitpick's subgoals inside its net
 (§6); `zero_times` / `hash = NONE` in the entry write (§8); the catch-all
-decode (§8); the `SSymb.thy` certification assertion over
+decode (§8) [ruled 2026-09-14: silent, narrowed to `Subscript` and
+`Unpack`]; the `SSymb.thy` certification assertion over
 `Phi_Tool_Symbol.constants`, the tag number of the symbol clause, the
 name `RPC_Pretty_Bytes`, and the codec functor with its `MESSAGE_PACK`
 extraction done in step P rather than step 4 (§8, §10); the store functor's
@@ -1400,9 +1433,11 @@ hit kind, which refuter, judge asked — elapsed, `Hasher.hex` of the guard
 digest and n_goals; no lemma count — the drafter's "number of lemmas
 enabled" was deleted [author 2026-09-09 "(2)"], and how many reached
 their budget lives in the simprocs' closures, which no channel §4
-permits carries out), behind `\<phi>log_guard_decision`, written by
-`prove_or_refute` [drafter].  `Hasher.hex` appears in exactly that line of
-the permanent code.
+permits carries out), written by `prove_or_refute` under the runtime
+`ML_debugger` option — its own switch `\<phi>log_guard_decision` deleted
+[author 2026-09-14 "建议用 ML_debugger 这个 configuration option 来控制, 可以保留
+为永久"; the fields, chosen by the drafter, shown to the author and kept].
+`Hasher.hex` appears in exactly that line of the permanent code.
 
 Order:
 
@@ -1763,7 +1798,9 @@ for them.  Explaining the third led the author to redesign:
 5. **The steady-state cost — P-auto on every unprovable guard — accepted
    without measurement** [06:10 "值的. 不需要测量. 相信我是值的"].
 6. **The store is keyed by the guard's digest, not by run** [06:10 "1. 同
-   意"]; **no ctxt assumptions in the digest** [06:10 "2. 不掺"]; **the
+   意"]; **no ctxt assumptions in the digest** [06:10 "2. 不掺"] — REVERSED
+   2026-09-11: the digest is the whole goal state plus the contextual
+   assumptions (§1, §33 item 4); **the
    digest is taken before "G.simpcut"** [07:05 "赞同"]; the out-of-run
    instances never touch the store [07:34]; the persistence gate of §10
    step 4 deleted [07:38 "赞同删掉"].
@@ -1793,7 +1830,8 @@ for them.  Explaining the third led the author to redesign:
 13. **The loud guard warning** is unconditional (`warning`, not
     trace-gated), carries the refuters' and the judge's results, and fires
     only when the call finally ends `Refuted` or `Unknown` [07:45 "好";
-    08:45].
+    08:45] — narrowed 2026-09-14 to the judge's `Unprovable` alone, the
+    results sentence dropped (§1, §37).
 14. Process: the drafter must not relay an agent's progress ticks [07:41,
     07:46]; the 2026-09-08 rewrite-count probe cost ≈ $23 in LLM calls by
     defeating the proof store of a copied theory, and its semantic-DB
@@ -3136,3 +3174,110 @@ in the two reports.  P5 ruled: the two test theories' `.proof-store` files
 are not tracked and not ignored.  After the round-two fixes: PLPR.thy,
 both test theories and the corpus clean again (355 decisions, 146
 `Refuted` and 5 `Unknown` hits).
+
+## 37. The provenance audit gone through (2026-09-14) — rulings
+
+The audit of 2026-09-12 (`ai-artifacts/PROVENANCE_AUDITS_2026-09-12.md`)
+listed designs that had reached the code without a ruling.  The author
+went through them one at a time; each item was explained (essence first,
+then the mechanism, with `file:line`) and ruled in the author's words
+below.  Items of other repositories are recorded here too, since this is
+where the audit lives.  No code changed before its ruling.
+
+**The guard cache (audit B2).**
+1. `guard_decision`: "建议用 ML_debugger 这个 configuration option 来控制, 可以保留
+   为永久" — the record is permanent; its switch `\<phi>log_guard_decision`
+   is deleted and the write is gated on the runtime value of `ML_debugger`
+   ("对": it replaces the option, the two do not stack).  Fields unchanged.
+2. The loud guard warning: "A guard condition proved before is now refuted
+   by the LLM judge:" is the whole text, followed by the subgoals ("'The
+   refuters and the judge answered:' 为什么两个主语? … 我感觉甚至不需要这句话");
+   it fires only when the judge overturns a `Proved` entry ("只有在
+   previously proven but the LLM judge now refutes 的时候说 … R-conv/R-nitpick
+   都是靠谱的, 都是可信的, 此时就不用报警"); a refuter's verdict over a `Proved`
+   entry is silent and an `Unknown` ending gets the undecided-guard
+   warning, as without an entry (the drafter's reading, confirmed).
+3. The dropped-lemma warning stays unconditional ("我认为可以保留无条件").
+4. `\<phi>log_guess_inst`: "赞同 (a)" — the `guess_inst` record stays, the
+   option is deleted, the write is gated on `ML_debugger` like item 1.
+5. The export hook's priority 200 stays ("我觉得 200 可以的"; 0 is the
+   highest priority, `Hook.ML:10`).
+6. The decode: "赞同 (a) + (c)" — an entry that does not decode is silently
+   no entry (the only normal cause is a format change; the key is
+   overwritten on the spot), and the handler catches `Subscript` and
+   `Unpack` only, so any other exception surfaces as the bug it is.
+7. The judge's lemmas MAY cite contextual assumptions, by name: "我认为必须
+   可引用 contextual assumptions 这是很重要的! … PLPR 整个推理是确定性的, 复现是同
+   一个 ctxt 具有相同的 fact names".  No mechanism changes; §1's contract
+   clause is corrected (it had said the opposite, under a citation that
+   did not carry it).  The drafter's proposal to insert the assumptions
+   into the replay goal was withdrawn as unnecessary ("纯粹是胡闹").
+8. The replay's goal: `Goal.init` and `Goal.conclude`, the standard pair,
+   at the call site ("你自己加的壳由你自己解"); `Thm.trivial` gone.
+9. Phase-2 points: (1) a budgeted lemma's rules being conditional rules
+   — "现在就定了, 直接接受"; (2) `Frequent` = the ceiling — "阶段 2 一起定";
+   (3) is item 7.
+10. The tier measurement (§33): "(a)" — stays shelved until after step 5.
+11. The `\<check> \<hypothesis> \<consistency>` follow-up: "赞同" — a plan of
+    its own after step 5.
+12. Step 5: "赞同" to the drafter's proposal — right after this round's
+    implementation and review; the corpus of the earlier runs first, then
+    `Phi_Examples` as an extra leg; the consecutive-run leg's floor is
+    100 % hits and 0 flips; the concurrent leg is two Isa-REPL processes.
+13. `Phi_System/Resource_Template.proof-store` stays tracked ("保留").  The
+    audit's own "unverified" list is not urgent ("不用着急").
+
+**The proof store (B3)**: ruling O's widening to the whole record ("赞同
+保留"); the goal hash of a runtime symbol by its identifier (`0146687`,
+"追认"); the "Find proof" trace at the search sites only (`c88ad1d`,
+"追认").  **phi-system (B4)**: the theory-qualified keys of derived
+obligations (`752be368`, "追认"); `bool`-typed arbitrary-precision
+comparisons in generated C (`d4cbde68`, "追认"); the failure text "Fail to
+solve the proof obligation automatically" is the author's own from 2023
+(`ccbe42f8`), the audit had misdated it — nothing to rule.  **Isa-Mini
+(B5)**: the price table is the drafter's to refresh from the official page,
+"但必须确认是对的"; the cost line's format stays, the false "(author-finalized
+format, 2026-08-10)" in its comment is deleted.  **Performant_Isabelle_ML
+(B6)**: the Event_Log default directory `$ISABELLE_HOME_USER/event_log`
+("赞同"); the record boundary is the comment line `<!-- record -->` before
+every item, the review agent's space-stuffing transform withdrawn ("你这个边
+界太黑了, 我记得我当时的意见是用注释来标记每个对象的开始"; "标记文本就用 <!-- record
+-->"; "旧日志文件请你迁移" — done by `ai-artifacts/event_log_migrate.py`, 591
+files, 303 609 records before and after); Dynamic_Array was the author's
+own order (2026-09-08 10:56), the audit had missed the session.
+**Semantic_Embedding (B7)**: D19 (an empty wire statement keeps the stored
+`expr`) "追认", the plan row now names the drafter.  **Isabelle_RPC (B8)**:
+the `pretty_unicode` / `FileIndex` divergence (private-use symbols, a
+drift of six columns per symbol, measured live) becomes a plan of its own
+after step 5 — one rendering function shared by both ("请记一下, 作为单独一
+个计划之后去实施"); the map size and the version bump "追认".  **The jEdit
+slice (B9)**: the 78 old-grammar orphans stay ("留着, 别动"); `phi_field_font`,
+the generator-written font name table and the primary-selection wrapper
+"追认".
+
+**Accountability** ("对这种对我当时的决策的偏离请问责然后报告"): two departures
+were found and reported — the Event_Log boundary (a review agent's
+mechanism replacing the approved design under a blanket go-ahead) and
+D19 (the drafter's decision recorded as the author's); feedback drafts
+filed for both, and for the drafter's repeated forgetting of PLPR's
+determinism.
+
+**What changed in code** (rev 26): `reasoners.ML` — the option gone, the
+record under `ML_debugger`, the loud guard warning's text and condition,
+`Goal.init`/`Goal.conclude` in `replay_lemma`; `guess_instantiate.ML` —
+the option gone, the record under `ML_debugger`; `guard_cache.ML` — the
+narrowed handler; `Test/Guard_Decision_Smoke.thy` — `declare
+[[ML_debugger]]`, the three probes whose ending changed, and `warnings_of`
+/ `assert_loud` observing the loud warning (0 on a refuter's verdict, 1 on
+the judge's); Isa-Mini `agent_server.ML` — the comment; Performant_Isabelle_ML
+`event_log.ML`, `tools/event_log.py`, `Test/Event_Log_Test.thy`,
+`EVENT_LOG_PLAN.md` §5/§8 — the marker format; Semantic_Embedding's plan —
+the D19 row.
+
+**Verification**: PLPR.thy and both test theories clean under Isabelle-MCP
+on the current heap; the marker format checked by a TEMPORARY probe
+(`Performant_Isabelle_ML/ai-artifacts/Event_Log_Marker_Probe.thy`, three
+records byte-for-byte, the comment skipped) because `event_log.ML` is
+compiled into the heap — `Test/Event_Log_Test.thy` runs after the next
+rebuild; the migration verified on a copy first (record counts equal),
+then applied.

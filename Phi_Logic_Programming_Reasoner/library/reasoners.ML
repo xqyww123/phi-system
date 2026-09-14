@@ -181,11 +181,10 @@ signature PHI_REASONERS = sig
   datatype judgement = Provable of Phi_Guard_Cache.delta | Unprovable
   val judge : (judge_arg -> judgement) option Unsynchronized.ref
 
-  val log_guard_decision : bool Config.T
-      (*context-level switch of the guard_decision Event_Log category (default
-        off): one record per prove_or_refute call -- verdict (proved/refuted/unknown),
-        hit (the entry's verdict, or none), refuter (R-conv/R-nitpick/-), judge
-        (Provable/Unprovable/-), wall-clock ms, the guard digest in hex, #subgoals*)
+  (*the guard_decision Event_Log category, written under ML_debugger: one record
+    per prove_or_refute call -- verdict (proved/refuted/unknown), hit (the entry's
+    verdict, or none), refuter (R-conv/R-nitpick/-), judge (Provable/Unprovable/-),
+    wall-clock ms, the guard digest in hex, #subgoals*)
 
 end
 
@@ -1325,13 +1324,9 @@ val judge : (judge_arg -> judgement) option Unsynchronized.ref = Unsynchronized.
 
 (** One prove_or_refute call **)
 
-val log_guard_decision =
-      Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guard_decision\<close> (K false)
-
-(*the guard_decision Event_Log record, the one permanent record of the guard cache
-  (plan section 10): the verdict, the path -- the entry's verdict (hit), which
-  refuter, the judge's answer -- the call's wall clock, the guard digest and the
-  number of subgoals*)
+(*the guard_decision Event_Log record, written under ML_debugger: the verdict, the
+  path -- the entry's verdict (hit), which refuter, the judge's answer -- the call's
+  wall clock, the guard digest and the number of subgoals*)
 val guard_decision_category =
   Event_Log.category {name = "guard_decision", enabled = fn () => true,
     encode = fn {verdict, hit, refuter, judge, elapsed_ms, digest, n_goals} =>
@@ -1353,23 +1348,22 @@ fun undecided_guard_warning ctxt goals =
               block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
     end)) goals
 
-(*the loud guard warning: the entry said Proved, P-auto could not prove the guard with
-  the entry's lemmas, and the call ends Refuted or Unknown; printed unconditionally,
-  with the refuters' and the judge's results*)
-fun loud_guard_warning ctxt goals results =
+(*the loud guard warning: the entry said Proved, no refuter could refute the guard,
+  and the judge overturned it; printed unconditionally*)
+fun loud_guard_warning ctxt goals =
   warning (Pretty.string_of (let open Pretty in
-    chunks (block (text "A guard condition the guard cache recorded as proved can no longer be proved:")
-            :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) goals
-            @ [block (text ("The refuters and the judge answered: " ^ results))])
+    chunks (block (text "A guard condition proved before is now refuted by the LLM judge:")
+            :: map (Goal_Display.pretty_a_goal ctxt o Thm.term_of) goals)
   end))
 
 (*The replay of one lemma (plan section 5 step 1): the statement certified in ctxt0
   and proved by its own method text in ctxt0 exactly as the run holds it -- nothing
   enhanced, no other lemma enabled -- under Phi_Proof_Store.replay_limits of the
   recorded times, each floored by the classic bound.  Fails_To_Certify = TYPE, TERM
-  or THM (the last from Thm.trivial on a non-prop); Fails_To_Replay = Auto_Fail, the
+  or THM (the last from Goal.init on a non-prop); Fails_To_Replay = Auto_Fail, the
   whole failure vocabulary of eval_prf_str; anything else, the interrupt family
-  included, propagates.*)
+  included, propagates.  The goal is Goal.init's, concluded here; eval_prf_str's own
+  protect/conclude pair works on the layer it adds.*)
 datatype failure = Fails_To_Certify | Fails_To_Replay
 datatype replay = Replayed of thm | Failed of failure
 
@@ -1387,11 +1381,11 @@ fun replay_lemma ctxt0 ((stmt, (times, script), _) : Phi_Guard_Cache.lemma) =
       val limits = Phi_Proof_Store.replay_limits
                      {thread_cpu = Time.max (#thread_cpu times, floor), wall = Time.max (#wall times, floor)}
       val kws = Keyword.no_major_keywords (Thy_Header.get_keywords (Proof_Context.theory_of ctxt0))
-   in case (SOME (Thm.trivial (Thm.cterm_of ctxt0 stmt))
+   in case (SOME (Goal.init (Thm.cterm_of ctxt0 stmt))
             handle TYPE _ => NONE | TERM _ => NONE | THM _ => NONE) of
         NONE => Failed Fails_To_Certify
       | SOME goal =>
-          (Replayed (snd (snd (Phi_Sledgehammer_Solver.eval_prf_str kws 1 limits script (ctxt0, goal))))
+          (Replayed (Goal.conclude (snd (snd (Phi_Sledgehammer_Solver.eval_prf_str kws 1 limits script (ctxt0, goal)))))
            handle Phi_Sledgehammer_Solver.Auto_Fail _ => Failed Fails_To_Replay)
   end
 
@@ -1508,23 +1502,18 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th) =
                     else judge_or_give_up ())
 
       val {verdict, refuter, judge = judge_answer, result} = outcome
-      (*the two warnings, mutually exclusive at this one site: the loud guard warning
-        when a call from a Proved entry ends otherwise, the undecided-guard warning
-        when a call from any other entry ends Unknown*)
+      (*a Proved entry changes the report only when the judge overturns it (the loud
+        guard warning); every other ending reports as a call without an entry does:
+        a refutation is silent, Unknown gets the undecided-guard warning*)
       val _ =
-        if entry_verdict = SOME Phi_Guard_Cache.Proved
-        then if verdict = Phi_Guard_Cache.Proved then ()
-             else loud_guard_warning ctxt goals
-                    (case (refuter, judge_answer) of
-                       (SOME name, _) => name ^ " refuted it; the judge was not consulted"
-                     | (NONE, SOME answer) => "neither R-conv nor R-nitpick refuted it; the judge answered " ^ answer
-                     | (NONE, NONE) => "neither R-conv nor R-nitpick refuted it; no judge is installed")
+        if entry_verdict = SOME Phi_Guard_Cache.Proved andalso judge_answer = SOME "Unprovable"
+        then loud_guard_warning ctxt goals
         else if verdict = Phi_Guard_Cache.Unknown then undecided_guard_warning ctxt goals
         else ()
 
       val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
       val _ =
-        if Config.get ctxt0 log_guard_decision
+        if Config.get ctxt0 ML_Options.debugger
         then Event_Log.append guard_decision_category
                {verdict = string_of_verdict verdict,
                 hit = (case entry_verdict of NONE => "none" | SOME v => string_of_verdict v),

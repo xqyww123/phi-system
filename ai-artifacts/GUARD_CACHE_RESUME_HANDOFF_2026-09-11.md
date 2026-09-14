@@ -81,7 +81,31 @@ reviewer's design under an author citation; source comments are for readers (sho
 no dates, no logs).  Corpus loads under Isabelle-MCP: add the TEMPORARY test-driver declare (the
 author calls AoA escalation expected behaviour; the declare keeps verification runs deterministic).
 
-## ADDENDUM 2026-09-13 evening — where to resume after compaction (READ THIS FIRST)
+## ADDENDUM 2026-09-14 — the provenance audit ruled; where to resume (READ THIS FIRST)
+Plan rev 26, §37: every item of the audit (B2–B9) was gone through one by one and ruled;
+B10 (plan text) was the drafter's to fix and is fixed (A1, A2-class citations, A4, A9,
+A10).  Code changed accordingly (list in §37 "What changed in code"); PLPR.thy and both
+test theories clean under Isabelle-MCP; Event_Log's marker format checked by the
+TEMPORARY probe `Performant_Isabelle_ML/ai-artifacts/Event_Log_Marker_Probe.thy` (delete
+it once `Test/Event_Log_Test.thy` has run on a rebuilt heap); the author's event logs
+migrated in place (591 files).  Isa-Mini's `toplevel.py`/`translator` are still another
+agent's, untouched.
+NEXT, in order: (1) a review of today's code (workflow, Opus, English, interrogators →
+fresh defenders → judge; report in Chinese; no fix before the author agrees on the
+MUST_DISCUSS items); (2) the author rebuilds Phi_System_Base (`event_log.ML` is in the
+heap) — never run `isabelle build` yourself; then `Test/Event_Log_Test.thy` with
+ISABELLE_EVENT_LOG_DIR set to a scratch directory; (3) STEP 5 per §37 item 12 (Isa-REPL,
+cache-on/off, two concurrent REPL processes, consecutive-run floor 100 % hits / 0 flips;
+the earlier corpus first, then Phi_Examples).  DEFERRED by ruling, after step 5: the tier
+measurement (§33 "(a)"), the `\<check> \<hypothesis> \<consistency>` plan, the
+Isabelle_RPC rendering unification (one rendering function for `pretty_unicode` and
+`FileIndex`; `UNICODE_CONSISTENCY_FIX_PLAN.md` is the draft), phase-2 point 2.
+Standing rule added today: a departure from an author decision, or a drafter decision
+recorded as the author's, is reported with a feedback draft ("对这种对我当时的决策的偏离请问
+责然后报告").  PLPR reasoning is DETERMINISTIC: a replay of an entry happens in the same
+ctxt0 with the same fact names — never reason as if it were "another context".
+
+## ADDENDUM 2026-09-13 evening — where to resume after compaction
 Everything is committed on the repos' current branches, nothing pushed: phi-system master
 `643f6da4`, auto_sledgehammer main `8134469`, Isa-Mini main `cfe6942`, root `f4a01a43`
 (Isa-Mini's `IsaMini/AoA/toplevel.py` and `translator` are another agent's, untouched).

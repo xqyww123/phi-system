@@ -124,10 +124,11 @@ fun encode_entry ({delta = {added, deleted}, verdict} : entry) =
                     int_of_verdict verdict) outs;
       BytesIO.toString outs
   end
-(*catch-all: a truncated payload raises Subscript out of BytesIO, a foreign one
-  Unpack; \<^try> re-raises interrupts*)
+(*a truncated payload raises Subscript out of BytesIO, a foreign one Unpack: both
+  mean no entry; anything else is a bug and propagates*)
 fun decode_entry s =
-  \<^try>\<open>SOME (#1 (U.doUnpack entry_unpacker (BytesIO.fromString s))) catch _ => NONE\<close>
+  \<^try>\<open>SOME (#1 (U.doUnpack entry_unpacker (BytesIO.fromString s)))
+    catch Subscript => NONE | U.Unpack => NONE\<close>
 end
 
 fun lookup_entry thy d =

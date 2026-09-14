@@ -37,9 +37,8 @@ fun qchk_one_side ctxt bvtys tm =
   a\<^sub>i are pairwise distinct variables bound inside the formula -- a Miller pattern,
   and bans is exactly that list of locally bound variables.  Otherwise the
   equation constrains ?f at isolated points and this is one solution out of many,
-  committed silently and without backtracking.  Records both kinds; off unless
-  \<phi>log_guess_inst is set (context-level switch, EVENT_LOG_PLAN 2.3).*)
-val log_guess_inst = Attrib.setup_config_bool \<^binding>\<open>\<phi>log_guess_inst\<close> (K false)
+  committed silently and without backtracking.  Records both kinds, under
+  ML_debugger.*)
 
 (*term printing happens in the encoder, i.e. under Event_Log's own write
   protection: a failing printer drops the record, never the tactic*)
@@ -231,12 +230,12 @@ fun guess_inst ctxt bans cterm =
 val enable_inst = Config.declare_bool ("enable_inst", \<^here>) (K true)
 
 (*One record per goal this tactic actually instantiates -- see the note at
-  log_guess_inst above.  The commitment lands on the WHOLE state, so what
+  log_category above.  The commitment lands on the WHOLE state, so what
   decides whether a choice is harmless is where else the variable occurs: in
   the rest of this subgoal, and in every other subgoal.  Both are recorded --
   the count, and each other subgoal that mentions an instantiated variable.*)
 fun probe_flush ctxt n st goal entries =
-  if not (Config.get ctxt log_guess_inst) orelse null entries then ()
+  if not (Config.get ctxt ML_Options.debugger) orelse null entries then ()
   else
     let
       val vars = map (fn (_, v, _, _) => v) entries

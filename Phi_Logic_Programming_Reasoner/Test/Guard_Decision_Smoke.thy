@@ -28,7 +28,7 @@ begin
    construct declarations below, turning them into frees (measured trap). *)
 
 declare [[\<phi>trace_reasoning = 3]]
-declare [[\<phi>log_guard_decision]]
+declare [[ML_debugger]]  \<comment> \<open>the guard_decision records are written under it\<close>
 
 ML \<open>
 (*locate this process's guard_decision log file; pid reuse across reboots, and
@@ -58,7 +58,7 @@ fun decision_records () =
          (Event_Log.read_file path))
 
 (*the projection of a guard_decision record every probe asserts on (see the
-  log_guard_decision signature comment in reasoners.ML): the verdict, the entry's
+  guard_decision comment in reasoners.ML's signature): the verdict, the entry's
   verdict, the refuter, the judge's answer; the timing-dependent fields stay out*)
 fun attr a ((atts, _): Properties.T * XML.body) =
   the_default "?" (AList.lookup (op =) atts a)
@@ -182,6 +182,21 @@ fun with_delta_and_judge delta verdict j =
 fun with_entry_and_judge lemmas verdict j = with_delta_and_judge (adds lemmas) verdict j
 
 fun expect path store = {path = path, store = store}
+
+(*the warnings a probe prints, markup stripped, for the probes that assert on the
+  loud guard warning*)
+fun warnings_of f =
+  let val got = Unsynchronized.ref ([] : string list)
+   in Unsynchronized.setmp Private_Output.warning_fn
+        (fn outs => got := XML.content_of (YXML.parse_body (implode outs)) :: ! got) f ();
+      rev (! got)
+  end
+val loud_line = "A guard condition proved before is now refuted by the LLM judge:"
+fun assert_loud name expected ws =
+  let val n = length (filter (String.isPrefix loud_line) ws)
+   in if n = expected then writeln (name ^ ": " ^ string_of_int n ^ " loud guard warning(s), as expected")
+      else error (name ^ ": " ^ string_of_int n ^ " loud guard warning(s), expected " ^ string_of_int expected)
+  end
 
 (*a numeral no call of this or any earlier run used, for a guard that must meet no
   entry: the store outlives the process, and a process serial alone could repeat
@@ -371,15 +386,17 @@ ML \<open>test (with_entry [] Phi_Guard_Cache.Unknown) \<^context>
   (expect ("unknown", "unknown", "-", "-") "Unknown with 0 lemma(s)")
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
-ML \<open>test (with_entry [] Phi_Guard_Cache.Proved) \<^context>
-  "Proved hit that P-auto cannot prove: R-conv refutes it, the loud guard warning, Refuted written"
-  (expect ("refuted", "proved", "R-conv", "-") "Refuted with 0 lemma(s)")
-  ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
+ML \<open>assert_loud "a refuter's verdict over a Proved entry" 0 (warnings_of (fn () =>
+  test (with_entry [] Phi_Guard_Cache.Proved) \<^context>
+    "Proved hit that P-auto cannot prove: R-conv refutes it silently, Refuted written"
+    (expect ("refuted", "proved", "R-conv", "-") "Refuted with 0 lemma(s)")
+    ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")))\<close>
 
-(*the loud guard warning only -- not the undecided-guard warning (plan section 5 step 4);
-  the delta stays through the Unknown write*)
+(*a Proved entry does not change the report unless the judge overturns it: this
+  ending gets the undecided-guard warning, as a call without an entry does; the
+  delta stays through the Unknown write*)
 ML \<open>test (with_delta {added = [useless_other \<^context>], deleted = [chain_nil]} Phi_Guard_Cache.Proved) \<^context>
-  "Proved hit that nobody decides, no judge: the loud guard warning, Unknown written"
+  "Proved hit that nobody decides, no judge: the undecided-guard warning, Unknown written"
   (expect ("unknown", "proved", "-", "-") "Unknown with 1 lemma(s), 1 deletion(s)")
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
@@ -410,9 +427,9 @@ ML \<open>test (with_entry [looping \<^context>] Phi_Guard_Cache.Proved) \<^cont
 
 (*two dropped lemmas -- one uncertifiable, one unreplayable -- each with the
   dropped-lemma warning; the entry is rewritten without them, P-auto then fails,
-  both refuters fail, the loud guard warning, Unknown written*)
+  both refuters fail, the undecided-guard warning, Unknown written*)
 ML \<open>test (with_entry [uncertifiable \<^context>, unreplayable \<^context>] Phi_Guard_Cache.Proved) \<^context>
-  "Proved hit whose lemmas fail to certify and to replay: both dropped, loud warning"
+  "Proved hit whose lemmas fail to certify and to replay: both dropped, Unknown written"
   (expect ("unknown", "proved", "-", "-") "Unknown with 0 lemma(s)")
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
 
@@ -618,10 +635,11 @@ ML \<open>test (with_delta_and_judge {added = [useless_other \<^context>], delet
   (expect ("refuted", "unknown", "-", "Unprovable") "Refuted with 1 lemma(s), 1 deletion(s)")
   ("\<condition> (BLIND_SPIN " ^ fresh () ^ ")")\<close>
 
-ML \<open>test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.Unprovable)) \<^context>
-  "Proved hit, refuters fail, the judge answers Unprovable: the loud guard warning"
-  (expect ("refuted", "proved", "-", "Unprovable") "Refuted with 0 lemma(s)")
-  ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+ML \<open>assert_loud "the judge overturning a Proved entry" 1 (warnings_of (fn () =>
+  test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.Unprovable)) \<^context>
+    "Proved hit, refuters fail, the judge answers Unprovable: the loud guard warning"
+    (expect ("refuted", "proved", "-", "Unprovable") "Refuted with 0 lemma(s)")
+    ("\<condition> (PP (LOOP " ^ fresh () ^ "))")))\<close>
 
 (*the judge's lemma may not fail: the error names the judge*)
 ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [unreplayable \<^context>]))) \<^context>
