@@ -1,10 +1,12 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 26 (2026-09-14) — **IN IMPLEMENTATION**: the preparatory
-phase, steps 0–2 (§26–§32), step 3's first half (§34) and step 4 (§35,
-redone on the author's design) are done; the entry became a delta and
-the canonical form was withdrawn (§36); the provenance audit's items
-were gone through one by one and ruled (§37); step 5 remains.  The
+Status: rev 27 (2026-09-14) — **STEP 5 RUN, pending the author's
+acceptance**: the preparatory phase, steps 0–2 (§26–§32), step 3's first
+half (§34) and step 4 (§35, redone on the author's design) are done; the
+entry became a delta and the canonical form was withdrawn (§36); the
+provenance audit's items were gone through one by one and ruled (§37);
+step 5's legs ran on Isa-REPL (§38: the floors met; two findings outside
+the guard cache for the author).  The
 revision history below (rev 18–24) narrates the canonical form as it
 stood then; it no longer exists.
 Rev 22 was **READY** by the nineteenth review (rev 21:
@@ -3281,3 +3283,52 @@ records byte-for-byte, the comment skipped) because `event_log.ML` is
 compiled into the heap — `Test/Event_Log_Test.thy` runs after the next
 rebuild; the migration verified on a copy first (record counts equal),
 then applied.
+
+## 38. Step 5 run (2026-09-14) — corpus acceptance via Isa-REPL, pending the author's acceptance
+
+Shape as ruled (§37 item 12): one fresh Isa-REPL server per leg on the
+`Phi_System_Base` heap, the corpus loaded from source, wall clock by the
+harness (`ai-artifacts/step5/run_leg.py`), the `guard_decision` records
+read back by `ai-artifacts/step5/analyze.py`; the full report with every
+number is `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`.  The corpus:
+`Phi_Test.PhiTest_Arithmetic` and its imports (355 decisions, 261 digests),
+then the eight `Phi_Examples` theories as the extra leg.  The legs that
+count decisions run under `declare [[ML_debugger]]` (the record's gate,
+§37 item 1), a TEMPORARY declare in `PLPR.thy`, reverted.
+
+**Floors — MET.**  Consecutive runs (cache on, twice, fresh process each):
+261 of 261 digests in common, 0 flips, 151 of 151 non-proved decisions hits
+(100 %); wall 320 s then 213 s; guard time 24.5 s then 21.7 s.  Cache on vs
+cache off: 0 flips over the 261 digests; cache off costs 161 s of guard
+time and 412–416 s of wall against 21.7 s and 213 s.  Concurrent: two
+servers loading the corpus at once, 0 flips between them and against the
+sequential run, 100 % hits on both, no collision warning.  Phi_Examples:
+1756 decisions over 1646 digests, 703 of 708 non-proved decisions hits,
+no guard-side exception.  The 400 ms bound re-measured: proved decisions
+p99 76–108 ms, far under it; refuted decisions reach it because P-auto runs
+to the bound before the hit is honoured (§5 step 2, accepted §17 item 5).
+
+**Two findings outside the guard cache, for the author.**
+1. `exception Option` aborted both uninstrumented cache-on legs at
+   `Phi_Types.thy:2591` / `:2594` (the `len_intvl` lemma of §33).  It is the
+   bug closed on 2026-09-08 in `OPTION_EXCEPTION_IN_PROOF_REPLAY.md`
+   (`future.ML`'s `assign_result` swallows an asynchronous interrupt, then
+   `the` on the unassigned result), whose one-line fix is NOT in
+   `contrib/Isabelle2025-2/src/Pure/Concurrent/future.ML` today (the
+   directory is git-ignored; the patched file did not survive).  The five
+   other legs did not hit it.  Not the guard cache's; the fix is a
+   distribution patch and the author's decision.
+2. The AoA gate is open under Isa-REPL: `Dialogue.frontend_identity ()`
+   answers `SOME true` for the REPL server, so the Phi_Examples leg tried
+   the Codex API three times and was stopped only by the local proxy being
+   down.  Step 5's clause "AoA escalation disabled in the harness" held for
+   the `PhiTest_Arithmetic` corpus (every obligation in its store) and by
+   luck for Phi_Examples.  Either the harness declares `AoA_driver = "test"`
+   or the probe must answer NONE under Isa-REPL — the author's call.
+
+Not measured (no probe): lemma replay cost and budget cut-offs (no judge
+installed, every entry lemma-less: both zero), store I/O, the forked-proof
+write, the export hook's cost per boundary — bounded by the wall times.
+The legs wrote guard entries into the corpus' tracked `.proof-store` files
+(and Phi_Examples' exported C files); those files were already modified in
+the working tree by other work and are left uncommitted.

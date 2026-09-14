@@ -81,7 +81,26 @@ reviewer's design under an author citation; source comments are for readers (sho
 no dates, no logs).  Corpus loads under Isabelle-MCP: add the TEMPORARY test-driver declare (the
 author calls AoA escalation expected behaviour; the declare keeps verification runs deterministic).
 
-## ADDENDUM 2026-09-14 — the provenance audit ruled; where to resume (READ THIS FIRST)
+## ADDENDUM 2026-09-14 night — STEP 5 run; pending the author's acceptance (READ THIS FIRST)
+Plan rev 27, §38; the report `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`; the harness
+`ai-artifacts/step5/{run_leg.py,analyze.py}` (one fresh Isa-REPL server per leg; the
+harness kills the listener on its port afterwards -- a poly process outlives its process
+group -- and refuses a port that already answers).  Floors met: consecutive runs 100 % hits /
+0 flips; cache on vs off 0 flips; two concurrent servers 0 flips, no collision warning;
+Phi_Examples clean on the guard side.  Two findings for the author, NOT the guard cache's:
+(1) `exception Option` (future.ML's assign_result, the 2026-09-08 fix is not in the
+distribution) aborted both uninstrumented cache-on legs at Phi_Types.thy:2591/2594;
+(2) the AoA gate is OPEN under Isa-REPL (frontend_identity answers SOME true) -- the
+Phi_Examples leg reached for the Codex API and was saved by the proxy being down; never run a
+Phi_Examples leg again without `AoA_driver = "test"` or a closed gate.  The review of the
+audit-rulings code: ACCEPTED_ON_CONDITION, both conditions applied (phi-system fbb8ad78,
+Performant_Isabelle_ML a28e6f2).  PLPR.thy is at its committed text (every TEMPORARY declare
+reverted).  Uncommitted and NOT mine to commit: the corpus' and Phi_Examples' `.proof-store`
+files (guard entries written on top of other work's modifications), Phi_Examples' `*.C`/`*.o`.
+NEXT: the author's acceptance of step 5; then the deferred plans (tier measurement, the
+`\<check> \<hypothesis> \<consistency>` constant, the Isabelle_RPC rendering unification).
+
+## ADDENDUM 2026-09-14 — the provenance audit ruled; where to resume
 Plan rev 26, §37: every item of the audit (B2–B9) was gone through one by one and ruled;
 B10 (plan text) was the drafter's to fix and is fixed (A1, A2-class citations, A4, A9,
 A10).  Code changed accordingly (list in §37 "What changed in code"); PLPR.thy and both
