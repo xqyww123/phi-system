@@ -1970,10 +1970,8 @@ declare Premise_def [\<phi>guard_refute_simp]
 ML_file "library/reasoners.ML"
 
 method_setup \<phi>guard_P_auto = \<open>
-  Scan.succeed (fn ctxt => SIMPLE_METHOD (
-    Phi_Reasoners.cpu_bounded_tac (Phi_Reasoners.guard_classic_prover_bound ctxt)
-                            (Phi_Reasoners.p_auto_body ctxt)))
-\<close> "P-auto: the one proof attempt every prove_or_refute call makes on a guard, with \<phi>guard_simp and the guard cache's lemmas, under \<phi>guard_classic_prover_timeout"
+  Scan.succeed (fn ctxt => SIMPLE_METHOD (Phi_Reasoners.p_auto_attempt ctxt))
+\<close> "the guard-side simplification (guard_simp_tac: \<phi>guard_simp and the guard cache's lemmas, 60 s of thread CPU) and then P-auto's search under \<phi>guard_classic_prover_timeout -- the one proof attempt every prove_or_refute call makes on a guard the simplification does not refute"
 
 ML \<open>
 val Phi_Reasoner_solve_obligation_and_no_defer =

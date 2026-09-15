@@ -6,7 +6,11 @@ begin
    the guard solver is asked to prove False from the contextual premises (the useful facts).
    Question: does a contradiction that needs classical search, not simp, get proved?
    Prediction from reading the code: no -- the "G.simpcut" pass cuts the state before
-   the is_F branch's auto_search_tac ever sees the goal. *)
+   the is_F branch's auto_search_tac ever sees the goal.
+   2026-09-15: the is_F branch and the factory's pass are gone (plan section 39); the
+   pass is guard_simp_tac inside the solving function, and P-auto is the search alone,
+   p_auto_tac -- the last control below now runs that search, not the former
+   p_auto_body (simp + search), so its outcome is not the 2026-09-11 one. *)
 
 consts RR :: "nat \<Rightarrow> nat \<Rightarrow> bool"
 
@@ -47,6 +51,6 @@ ML \<open>run "classical-only contradiction (EX x. ALL y. RR x y ; ALL x. ~ RR x
 ML \<open>control "asm_full_simp" \<^context> classical_facts Simplifier.asm_full_simp_tac;
     control "blast" \<^context> classical_facts Blast.blast_tac;
     control "auto (Clasimp)" \<^context> classical_facts (fn ctxt => fn _ => Clasimp.auto_tac ctxt);
-    control "P-auto's body (p_auto_body)" \<^context> classical_facts (fn ctxt => fn _ => Phi_Reasoners.p_auto_body ctxt)\<close>
+    control "P-auto's search (p_auto_tac)" \<^context> classical_facts (fn ctxt => fn _ => Phi_Reasoners.p_auto_tac ctxt)\<close>
 
 end

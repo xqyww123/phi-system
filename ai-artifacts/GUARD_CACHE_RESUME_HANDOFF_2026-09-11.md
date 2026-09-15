@@ -1,3 +1,47 @@
+# 2026-09-15 evening — the Quicksort regression fix (plan §39), READ THIS FIRST
+
+State when this addendum was written (context at 79 %, a compaction may follow):
+
+- **Plan**: `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` rev 28, §39 holds everything: the
+  diagnosis (P-auto repeated the guard-side simplification; the 5 s bound was below the
+  7–13 s that `asm_full_simp` needs on Quicksort's slice-bound guards), rulings 1–10
+  verbatim, the measurement table, the code plan, the verification runs, the two reviews.
+- **Code (UNCOMMITTED, phi-system)**: `library/reasoners.ML` (`guard_simp_tac` top level,
+  60 s thread CPU; `p_auto_tac` = the search alone; `p_auto_attempt` = `guard_simp_tac`
+  THEN P-auto once, used by `p_auto_solving` and the method; `prove_or_refute`: step 1½
+  on `ctxt_g` from `th0`, `decide th` holds steps 2–6, step 6 re-simplifies `th0` on
+  `ctxt_g'`, a `quick_cut` refutation at step 1½ is `refuted_by simp_refuter`
+  ("guard_simp_tac") with the loud warning naming "the simplifier" over a Proved entry;
+  the factory has no pass and no `is_F`), `PLPR.thy` (`\<phi>guard_P_auto` =
+  `p_auto_attempt`, description string), `Test/Guard_Decision_Smoke.thy` (two new probes:
+  the judge's third error; the simplifier refuting a Proved entry; three assert helpers;
+  header), `ai-artifacts/Guard_False_Probe.thy` (`p_auto_tac`, dated note).
+- **Store**: `Phi_Examples/Quicksort.proof-store` carries the AoA record
+  `Quicksort.qsort/2/8/10/2:0` appended back from HEAD (author: "你现在就可以做"); it must
+  be committed with the code (222 live records before the final run).
+- **TEMPORARY, revert before commit**: `Phi_Examples/Quicksort.thy:10`
+  `declare [[AoA_driver = "test"]]` — present only while the final MCP run of
+  `Quicksort.thy` under rulings 8–10 is in flight (started ~15:45 under Isabelle-MCP
+  `Phi_System_Base`; expected: clean, only three undecided guards at the `return`, the AoA
+  record replays; then compare the store's live-record count with 222 to see what ruling
+  10 wrote).
+- **Reviews**: first `wf_cdb1c300-357` (MET_ON_CONDITION; MD1 → ruling 8, D1–D12 applied,
+  P1/P2 → rulings 9/10), re-review `wf_3ac0ec80-955` (MET_ON_CONDITION, C1–C9 all text,
+  all applied).  Reports: `ai-artifacts/QUICKSORT_REGRESSION_FIX_REVIEW_2026-09-15.md`,
+  `..._REREVIEW_2026-09-15.md`; context `..._REVIEW_CONTEXT_2026-09-15.md`; patches
+  `..._REVIEW_INPUT_...patch` (code vs HEAD), `..._PLAN_REV28_...patch` (plan vs 49fd27f3),
+  `..._PLAN_CONDITIONS_...patch` (plan vs e21d2a5b) — regenerate after any edit.
+- **Next**: (1) read the final Quicksort result, revert the declare, terminate the MCP;
+  (2) regenerate the three patches; (3) one light final review round of C1–C9 (2 lenses,
+  1 defender each, judge); (4) report to the author in Chinese and ask to commit — commit
+  on phi-system master (never branch), message in the repo's style, plus the root's
+  submodule bump; nothing is pushed.  The other session's commits of today (12558336,
+  656a8b42, e21d2a5b) swept rev 28's first text into HEAD already — the plan's diff vs
+  HEAD is only today's later edits.
+- Standing rules unchanged (see below): no `isabelle build` without the author's word
+  (today's one rebuild of `Phi_System_Base` was approved), no memory writes without
+  approval, comments short, no coined words, explain essence first.
+
 # Handoff: guard cache — step 4 REDONE on the author's design (entries in the proof store); uncommitted; audit findings pending the author (updated 2026-09-12 evening)
 
 Plan: `contrib/phi-system/Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` rev 24.  §1 glossary (the guard digest

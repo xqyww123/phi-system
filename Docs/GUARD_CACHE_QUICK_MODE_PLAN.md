@@ -1,10 +1,17 @@
 # PLPR Guard Cache — prove_or_refute rework
 
 Status: rev 28 (2026-09-15) — **THE QUICKSORT REGRESSION DIAGNOSED AND
-RULED, pending implementation** (§39): P-auto no longer simplifies; the
-guard-side simplification is `guard_simp_tac`, run once by every solving
-function on the context that carries the entry's delta, and again after
-the judge's delta; the `is_F` shortcut is deleted.  Before that: the
+RULED, implemented, verified, reviewed three times — the first review
+MET_ON_CONDITION (MD1 → ruling 8, D1–D12 applied, P1/P2 → rulings 9 and
+10), the re-review MET_ON_CONDITION (nine text conditions, applied), the
+final round MET_ON_CONDITION (seven text conditions, applied) — ready to
+commit** (§39): P-auto no longer simplifies; the
+guard-side simplification is `guard_simp_tac`, run by the solving
+functions that simplify — in `prove_or_refute` on the context that carries
+the entry's delta and again, from the state the call was given, after the
+judge's delta; once in `p_auto_solving` — under 60 s of thread CPU (from
+5 s: the Quicksort guards' simplification measured at 7–13 s); the `is_F`
+shortcut is deleted.  Before that: the
 preparatory phase, steps 0–2 (§26–§32), step 3's first
 half (§34) and step 4 (§35, redone on the author's design) are done; the
 entry became a delta and the canonical form was withdrawn (§36); the
@@ -113,7 +120,9 @@ call reach the following calls and statements.  Line anchors are as of
 2026-09-09 for `reasoners.ML` (after commit `8c26c3b4`; lines up to
 `:942` unchanged, `:1168`–`:1798` moved by −197, `:1811` onward by −199),
 2026-09-04 for `mlmsgpack.sml` and `pretty.ML`, 2026-09-07
-for `PLPR.thy`, `reasoner.ML` and the `Phi_System` callers, 2026-09-08
+for `PLPR.thy` (the §1 and §3 anchors of the two `\<condition>` reasoners,
+`solve_obligation_now`, `defer_premise` and `prove_obligations_in_time`
+re-taken 2026-09-15), `reasoner.ML` and the `Phi_System` callers, 2026-09-08
 for `sledgehammer_solver.ML`, `raw_simplifier.ML`, `simpset.ML`,
 `accounted_timeout.ML`, and 2026-09-08 evening for `cache_file.ML` — that
 file changed under the plan during the day (commit `7615fe5` and
@@ -137,9 +146,10 @@ phrase.  No other name is used for any of these concepts anywhere in this
 document.
 
 - **guard**: a premise of the `\<condition>` family (`Premise mode P`, mode
-  `MODE_GUARD` or `NO_INST`; `is_guard_mode`, `reasoners.ML:1582-1584`),
-  discharged inside a run by the reasoners registered at `PLPR.thy:1984`,
-  `:1987`.  [code]
+  `MODE_GUARD` or `NO_INST`, `PLPR.thy:187`, `:189`; until 2026-09-15 also
+  the predicate `is_guard_mode`, deleted with the `is_F` shortcut, §39),
+  discharged inside a run by the reasoners registered at
+  `PLPR.thy:2005-2006`, `:2008-2009`.  [code]
 - **a `prove_or_refute` call**: one invocation of `prove_or_refute` run
   through its whole protocol (§5).  Its ML type becomes `bool ->
   Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq`
@@ -149,14 +159,18 @@ document.
   -> context_state, 我们要改 context, 且要一路改下去一直到 gen_reason' 的返回"].
   The ctxt it returns is `ctxt0` with this guard's delta applied to the lemma
   list, and nothing else changed.  Its verdict is decided on the spot, by P-auto,
-  on every call [author 2026-09-08 05:53 "一切裁决都是取决于 P-auto 的"].
+  on every call [author 2026-09-08 05:53 "一切裁决都是取决于 P-auto 的"] — unless
+  `guard_simp_tac` refuted the guard at step 1½, where the verdict is the
+  simplifier's and P-auto does not run (§5 step 1½, §39 ruling 10).
   [descriptive]
 - **the goal state**: the thm `prove_or_refute` receives — the PLPR sequent
   after `gen_guard_condition_solver`'s `Goal.protect 1` (`head_only`,
   `reasoners.ML:385-388`): the guard's subgoals visible, the rest of the
-  sequent wrapped in `Pure.prop` (`#(rest ⟹ C)`) as the conclusion; case
-  split, the aux-fact insertion and the "G.simpcut" pass have already acted
-  on it.  A **solved** goal state has no premises and is NOT
+  sequent wrapped in `Pure.prop` (`#(rest ⟹ C)`) as the conclusion; the
+  case split and the aux-fact insertion have already acted on it, no
+  simplification has — `guard_simp_tac` is the solving function's own
+  first step (§5 step 1½; until 2026-09-15 the factory's pass had acted
+  on it too).  A **solved** goal state has no premises and is NOT
   `Goal.conclude`d — `head_only` concludes it afterwards [author 2026-09-04
   03:14].  [descriptive]
 - **`guard_simp_tac`** (until 2026-09-15 the "G.simpcut" pass — that name
@@ -168,15 +182,23 @@ document.
   THEN_ALL_NEW quick_cut)` (`quick_cut` `:960-963` fails a subgoal whose
   conclusion simplified to `False`) — standard `asm_full_simp` in the
   guard-side simpset with the refutation cut and a bound, nothing else
-  [author 2026-09-15 "这不就是标准的 simp 吗？"].  The bound is **5 s of
-  THREAD CPU, fixed in the code, no option** (`Time.fromSeconds 5`;
+  [author 2026-09-15 "这不就是标准的 simp 吗？"].  The bound is **60 s of
+  THREAD CPU, fixed in the code, no option** (`Time.fromSeconds 60`;
   `Thread_CPU.apply` scales it by `timeout_scale` itself; thread CPU with
   no wall limit, an error where the thread has no CPU clock — every
   guard-side bound is thread CPU, so that machine load cannot flip a
   verdict; only R-nitpick, which waits on an external process, keeps wall
   clock [author 2026-09-09 "400ms 时限改成线程 CPU 时间. 如果相关库没加载直接
-  报错"]); ten times the corpus maximum of 437 ms (§33), so a timeout means
-  the simplifier is looping, and the function then prints, unconditionally,
+  报错"]); several times the slowest simplification measured — 13 s, a
+  Quicksort slice-bound guard with 26 premises under
+  `linarith_split_limit = 20` (§39) — so a timeout means the simplifier is
+  looping [author 2026-09-15 "赞同" (60 s); supersedes the 5 s of
+  2026-09-11, ten times the 437 ms that was then the corpus maximum, which
+  §39 found below the cost of a terminating simplification]; the bound
+  exists to catch a loop, which any finite value catches, while a bound
+  below a terminating simplification's cost turns a provable guard into
+  `Unknown` and the reasoning into a wrong branch — the Quicksort
+  regression.  On a timeout the function prints, unconditionally,
   the warning `The system simplifier probably loops on:` followed by the
   visible subgoals, and yields the state it was given, unchanged; its
   sequence is cut to its first state (`Seq.take 1`) and pulled inside the
@@ -192,18 +214,21 @@ document.
   Since 2026-09-15 it is a TOP-LEVEL function of `reasoners.ML`, not a
   pass of the factory: it is the ONE simplification of a guard, and it
   must run on the context that carries the entry's delta — `ctxt_g`,
-  which only the solving function has — so every solving function calls
-  it itself (§3; §5 step 1½), P-auto no longer simplifies (§1 P-auto), and
-  after the judge replaces the delta it runs again, on `ctxt_g'` (§5 step
-  6) [author 2026-09-15 "显然，simpcut 得用 enhance_for_guard(guard_ctxt +
+  which only the solving function has — so the solving functions that
+  simplify call it themselves: `prove_or_refute` (§5 steps 1½ and 6) and
+  `p_auto_solving`, as does the `\<phi>guard_P_auto` method; the obligation
+  instance does not (§39 ruling 6).  P-auto no longer simplifies (§1
+  P-auto), and after the judge replaces the delta it runs again, on
+  `ctxt_g'` and from the state the call was given (§5 step 6) [author
+  2026-09-15 "显然，simpcut 得用 enhance_for_guard(guard_ctxt +
   delta) 但这样的话，注意 judge 是会修改 delta 的，于是在修改后我们必须重新跑
   simpcut 对吗？" — yes; §39].  Its output is what P-auto, R-conv, R-nitpick
   and the judge all see — it is not a part of P-auto [author 2026-09-15
   "你考虑过别的 refuter 吗？R-conv, R-nitpick 吗？？"].  Supersedes the
   2026-09-11 ruling that made it a local function of the factory ("建议挪
   动进 gen_guard_condition_solver 里", §33), whose premise — used nowhere
-  else — no longer holds: three solving functions and the
-  `\<phi>guard_P_auto` method call it.  [code]
+  else — no longer holds: two solving functions, `prove_or_refute` and
+  `p_auto_solving`, and the `\<phi>guard_P_auto` method call it.  [code]
 - **`gen_guard_condition_solver`** (until 2026-09-11 `guard_condition_solver`;
   renamed as the factory [author 2026-09-11]): from now on a FACTORY — the existing
   preprocessing template (`oblg_template`, case split, `apply_tac`'s fact
@@ -218,10 +243,14 @@ document.
   `is_false` and `is_guard_mode` if nothing else uses them [author
   2026-09-15 "建议直接删除 is_F 分支"]: §33 item 3 had found its search never
   runs, and with `guard_simp_tac` inside the solving function such a guard
-  ends exactly as the shortcut ended it — closed by simp (`Proved`, no
-  entry written on a first decision) or dropped by `quick_cut` (no state,
-  no verdict); the one visible difference is a `guard_decision` record for
-  the closed case.  Its pipeline (`reasoners.ML:1625-1635`), in order:
+  ends as the shortcut ended it — closed by simp (`Proved`, no entry
+  written on a first decision) or its conclusion rewritten to `False` by
+  `quick_cut` (until 2026-09-15 no state and no verdict; since P2 of the
+  same day a refutation by the simplifier: `Refuted` written, the record,
+  the loud guard warning over a `Proved` entry — §5 step 1½); the other
+  visible differences for the closed case are `prove_or_refute`'s trace
+  line (at `\<phi>trace_reasoning` ≥ 2) and, under `ML_debugger`, a
+  `guard_decision` record.  Its pipeline (`reasoners.ML:1625-1635`), in order:
   `quick_cut`; under `head_only`: the configured pre-tactic `pre`; the
   case split of the leading subgoal (`case_split_by_annotations_leading_subgoal`,
   `:1628`); **the guard digest** (below), taken on the whole state at this
@@ -287,17 +316,19 @@ document.
   to `prove_or_refute`, `{can_inst : bool} -> context_state ->
   context_state Seq.seq`, registered on the state by the in-run
   `\<condition>` reasoners as `guard_condition_judge {can_inst = …} o snd`
-  (at `PLPR.thy:1984`, `:1987` only `Phi_Reasoners.wrap` goes — it re-pairs
+  (at `PLPR.thy:2005`, `:2008` only `Phi_Reasoners.wrap` goes — it re-pairs
   the incoming ctxt and would drop the lemmas; `o snd` stays because
   `apply_tactic`, `reasoner.ML:688`, hands an ML reasoner `(backtrack_mode,
   context_state)`); the existing **`guard_condition_solver'`** /
-  **`guard_condition_solver1`** = the factory applied to `guard_simp_tac`
-  and then `try_prove_or_give_up` over P-auto, used by the out-of-run
+  **`guard_condition_solver1`** = the factory applied to `p_auto_attempt`
+  (§1 P-auto, §3, §39 ruling 9), used by the out-of-run
   callers; and the factory applied to `try_prove_or_give_up` over
   `fastforce` for `defer_premise`'s solve-now case — with NO
-  `guard_simp_tac` before it: `fastforce` clarifies and simplifies
-  itself, in the same simpset (the guard-side ctxt plus `Guard_Simp_SS`),
-  so the pass the factory used to run there was one more duplicate; the
+  `guard_simp_tac` before it: `fastforce` is `fast_force_tac` =
+  `Classical.fast_tac o addss`, so its `asm_full_simp_tac` runs inside the
+  search, on the whole goal, in the same simpset (the guard-side ctxt plus
+  `Guard_Simp_SS`), so the pass the factory used to run there was one more
+  duplicate; the
   entry lemmas it incidentally brought to that instance's simplification
   end with it — the obligation instance was never a consumer of the lemma
   list (§1 the lemma list) [author 2026-09-15 "你都用 fastforce 了为什么还要用
@@ -309,9 +340,9 @@ document.
   做"].
 - **`try_prove_or_give_up`**: `Time.time option -> (Proof.context -> tactic)
   -> Proof.context -> thm -> thm Seq.seq` — run the tactic once, under the
-  bound if given, keep only a solved state; otherwise `Seq.empty`.  Out of
-  a run: `SOME \<phi>guard_classic_prover_timeout` over P-auto, after
-  `guard_simp_tac` (§39) [author 2026-09-03 09:44]; for obligations: `fastforce` in a
+  bound if given, keep only a solved state; otherwise `Seq.empty`.  Its one
+  caller since 2026-09-15 (§39 ruling 9 gave the out-of-run instance
+  `p_auto_attempt`): for obligations, `fastforce` in a
   `Guard_Simp_SS`-enhanced ctxt, no bound by default [author 2026-09-03
   11:15; 12:53].
 - **lemma**, **tier**, **delta**, **entry**, **verdict**: what the store holds
@@ -339,8 +370,11 @@ document.
   `:176` in the signature; `:274`, `:285` in the body): two independent
   standard-machine measurements of the replay, thread CPU and wall, and
   the method text.  `Proved` = P-auto proved the guard
-  with the lemmas; `Refuted` = a refuter found a countermodel, or the judge
-  answered `Unprovable` — a reliable negative, silent on a hit; `Unknown` =
+  with the lemmas; `Refuted` = a refuter found a countermodel, the judge
+  answered `Unprovable`, or `guard_simp_tac` rewrote the guard to `False`
+  at step 1½ (§39 ruling 10) — a reliable negative, silent on a hit except
+  the simplifier's refutation over a `Proved` entry, which prints the loud
+  guard warning; `Unknown` =
   nobody could decide — a hit warns again [author 2026-09-08 06:10 "3. 好
   的, 那么赞同 Proved of lemmas | Refuted | Unknown"; "4. 对"].  The tier is
   the judge's estimate of how often the lemma will be applied in one
@@ -386,7 +420,7 @@ document.
   guard does (`:341-342`, the ctxt's simpset on the tag); and, for a state
   that still carries schematic variables when it reaches the factory, when
   those variables' names or INDICES do.  On the `\<condition> ?P` reasoner
-  (`PLPR.thy:1984`, `can_inst = true`) the factory runs `oblg_template` at
+  (`PLPR.thy:2005`, `can_inst = true`) the factory runs `oblg_template` at
   `fix_level = 1` (`reasoners.ML:1591`; `:332-334`), whose fixing targets
   are the variables of the leading antecedent's own premises that its
   conclusion does not mention, plus the `LPR_ctrl`-annotated ones of the
@@ -403,7 +437,7 @@ document.
   carries no `LPR_ctrl` annotation, all of them — reaches the digest as
   `Var`/`TVar` and is hashed by its name AND its index (`Hasher.ML:193-199`,
   `:173-179`), an index that moves with the sequent's `maxidx`.  Only on
-  the `NO_INST` reasoner (`:1987`, `fix_level = 2`) does the import run
+  the `NO_INST` reasoner (`:2008`, `fix_level = 2`) does the import run
   over every variable of the antecedent (`:359`).  Not when a lemma is
   enabled, not when an upstream
   statement adds a useful fact.  A statement replayed as it was gets the
@@ -447,8 +481,11 @@ its entry and enabled the entry's lemmas (§5).
   i)`, `REPEAT_DETERM (FIRSTGOAL main_tac)`, first state only) in
   `enhance_for_guard ctxt` — the search step alone; and P-auto =
   `cpu_bounded_tac \<phi>guard_classic_prover_timeout o p_auto_tac` (thread
-  CPU) — the one proof attempt EVERY call makes, hit or no hit, with the
-  entry's lemmas enabled; its outcome IS the call's verdict [author
+  CPU) — the one proof attempt every call that reaches step 2 makes, hit
+  or no hit, with the entry's lemmas enabled, and its outcome IS the call's
+  verdict — unless `guard_simp_tac` refuted the guard at step 1½, where the
+  verdict is the simplifier's and P-auto does not run (§5 step 1½, §39
+  ruling 10) [author
   2026-09-02 07:11; 400 ms provisional 08:49; on every call: 2026-09-08
   05:36 "即便是对于 refuted 也要跑 400ms 的 P-auto 以检查是否 refutation 依旧有
   效"; the steady-state cost of one P-auto budget per unprovable guard per
@@ -467,7 +504,10 @@ its entry and enabled the entry's lemmas (§5).
   `p_auto_body` [`p_auto_body`: author 2026-09-15 "这个名字很难听"; the new
   name: author 2026-09-15 "批准 p_auto_tac"].  Exposed as the proof method
   **`\<phi>guard_P_auto`** [author 2026-09-03 11:11], whose body is
-  `guard_simp_tac` then P-auto — the whole attempt, both steps.
+  **`p_auto_attempt`**: `guard_simp_tac` then P-auto — the whole attempt,
+  both steps, one definition shared with the out-of-run instance
+  `p_auto_solving` so that the two cannot drift apart [author 2026-09-15
+  "P1 赞同"; the name: drafter].
 - **R-conv**, **R-nitpick**: the two refuters, run in that order, inline
   on the run's thread, after P-auto fails and only on the paths §5 names,
   each bounding itself [author 2026-09-03 12:36 "每个 hook 自行决定是否
@@ -483,7 +523,8 @@ its entry and enabled the entry's lemmas (§5).
   subgoal's overrun moves on to the next instead of eating the whole net
   [author 2026-09-03 13:05; inner bound 2026-09-07 13:00; order: drafter].
   Both catch their own `TIMEOUT` and report "not refuted".  A refutation
-  by either is what makes an entry `Refuted`.
+  by either refuter, or by `guard_simp_tac` at step 1½ (§39 ruling 10), is
+  what makes an entry `Refuted`.
 - **the judge**: ONE optional function in a process-global ref,
   `judge : (judge_arg -> judgement) option Unsynchronized.ref`, default
   `NONE`, installed by ML code (phase 2: the LLM judge) [author 2026-09-04
@@ -762,7 +803,11 @@ its entry and enabled the entry's lemmas (§5).
   `Unprovable` — printed through `warning` unconditionally, not
   trace-gated; its text is the line
   `A guard condition proved before is now refuted by the LLM judge:`
-  followed by the guard's subgoals [author 2026-09-14].  Every other ending
+  followed by the guard's subgoals [author 2026-09-14] — and, since
+  2026-09-15, also when `guard_simp_tac` rewrote such a guard's conclusion
+  to `False` at step 1½ (§5), with `the simplifier` in place of `the LLM
+  judge` in that line [author 2026-09-15 "P2 可以写 Refuted、出记录、entry 原是
+  Proved 时响亮报警"; the wording: drafter].  Every other ending
   of a call from a `Proved` entry reports as a call without an entry
   does: a refuter's verdict is silent (the refuters are trusted), `Unknown`
   gets the undecided-guard warning [author 2026-09-14 "只有在 previously
@@ -836,7 +881,7 @@ Three entry points, distinguished statically by which factory instance a
 caller uses — no run-time "is there a cache" test anywhere:
 
 ```
-IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:1984/1987)
+IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:2005/2008)
   gen_reason' (reasoner.ML:906) — UNCHANGED
     … reasoning …  (state = (ctxt, thm); the ctxt flows from call to call)
       guard_condition_judge = gen_guard_condition_solver guard_digest prove_or_refute
@@ -846,7 +891,7 @@ IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:1984/1
         prove_or_refute can_inst ctxt d (ctxt0, thm): steps 0–6 of §5 — the entry
              read, its delta applied (ctxt1 returned, ctxt_g the provers' base),
              guard_simp_tac on ctxt_g (enhances internally: Guard_Simp_SS, then
-             the lemmas; 5 s of thread CPU — TIMEOUT = warned, state unchanged),
+             the lemmas; 60 s of thread CPU — TIMEOUT = warned, state unchanged),
              P-auto (the search, 400 ms), the refuters, the judge (then
              guard_simp_tac again on ctxt_g' and P-auto), the writes.  §5 is the
              one description; nothing is repeated here.
@@ -859,19 +904,19 @@ OUT OF A RUN   (guard_condition_solver' / guard_condition_solver1: four
                 application.ML:137 is commented out — solving proof
                 obligations, `Premise default P` / `Premise MODE_COLLECT P`)
   gen_guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
-      guard_simp_tac ctxt th
-      |> Seq.maps (try_prove_or_give_up (SOME \<phi>guard_classic_prover_timeout) p_auto_tac ctxt)
-      |> Seq.map (pair ctxt0)):
-    same preprocessing (no digest step), then guard_simp_tac under its bound
-    and P-auto once, no store; not proved → Seq.empty →
+      p_auto_attempt ctxt th |> Seq.map (pair ctxt0)):
+    same preprocessing (no digest step), then p_auto_attempt — guard_simp_tac
+    under its bound and P-auto once, the one definition the method
+    \<phi>guard_P_auto also runs — no store; not proved → Seq.empty →
     the caller's error continuation.  A deliberate narrowing: today these
     sites also get a 35 ms auto_search_tac gate (reasoners.ML:1405) and a
     2000 ms P-auto budget (:1421, :1504); all four sites raise `error` on
     failure, so §10 step (5) surfaces any regression as a build failure.
 
-OBLIGATIONS SOLVED ON THE SPOT   (defer_premise, PLPR.thy:1975/1976, when
+OBLIGATIONS SOLVED ON THE SPOT   (solve_obligation_now, PLPR.thy:1982/1983, from
+                defer_premise at :1990 when
                 Phi_Reasoner_solve_obligation_and_no_defer is 1 or 2 — set
-                by the user's prove_obligations_in_time (PLPR.thy:1999-2005)
+                by the user's prove_obligations_in_time (PLPR.thy:2017, :2019)
                 and internally by rule_generation.ML:443, the only internal
                 setter left since SE_Trim_Empty.ML was deleted, commit 11499285)
   gen_guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
@@ -896,8 +941,8 @@ take the state directly (§1 `gen_guard_condition_solver`) [2026-09-02 12:08
 
 Every caller of the old `guard_condition_solver` must migrate, and the
 factory's changed type makes a missed one a compile error.  Known callers
-(2026-09-07): `PLPR.thy:1984`, `:1987` → `guard_condition_judge` on the
-state; `PLPR.thy:1975`, `:1976` (`defer_premise`) → the `fastforce`
+(2026-09-07; re-anchored 2026-09-15): `PLPR.thy:2005`, `:2008` → `guard_condition_judge` on the
+state; `PLPR.thy:1982`, `:1983` (`solve_obligation_now`, from `defer_premise` at `:1990`) → the `fastforce`
 instance [author 2026-09-03 11:15]; `Test/Guard_Race_Smoke.thy:79` →
 migrated at §10 step (2).  `oblg_template`'s three new parameters (§1)
 make its other three callers compile errors too: `defer_obligation`
@@ -982,7 +1027,7 @@ keeps `prove_or_refute`, the factory, the refuters, the judge ref and
 ## 5. One `prove_or_refute` call
 
 `prove_or_refute can_inst ctxt d (ctxt0, thm)`, with `ctxt` the guard-side
-ctxt (`reasoners.ML:1630`'s, carrying `Guess_Instantiate`'s looper and
+ctxt (`reasoners.ML:1615`'s, carrying `Guess_Instantiate`'s looper and
 solver), `d` the guard digest and `thm` the goal state.
 
 0. **Lookup.**  If `\<phi>guard_cache` is false, `entry := NONE`; else
@@ -1024,18 +1069,24 @@ solver), `d` the guard digest and `thm` the goal state.
    proposition is already in the list taking this delta's budget instead
    — the one rule of step 1 and step 6 (§1 the lemma list, the export
    hook) [author 2026-09-12; 2026-09-13; §36].  (`ctxt_g`, not `ctxt1`, because the
-   guard-side ctxt is where the verdict is earned: `p_auto_search_tac
-   ctxt` (`reasoners.ML:1393-1394`) runs under
-   `Guess_Instantiate.add_guess_inst_looper` (`:1604`) over
-   `add_guess_inst_solver … addsimps Premise_def` (`:1630`), installed
+   guard-side ctxt is where the verdict is earned: `guard_simp_tac` and
+   `p_auto_tac` (`reasoners.ML:1074`, `:1088`; until 2026-09-15
+   `p_auto_search_tac`) run under
+   `Guess_Instantiate.add_guess_inst_looper` (`:1616`) over
+   `add_guess_inst_solver … addsimps Premise_def` (`:1615`), installed
    nowhere else since 2026-08-29 (`guess_instantiate.ML:305-311`)
    [drafter, tenth review].)
 1½. **`guard_simp_tac` on `ctxt_g`**, once: the simplification of the
    guard with the entry's lemmas enabled (its own `enhance_for_guard`
-   call, fresh budgets), under its 5 s (§1 `guard_simp_tac`).  No state
-   left (`quick_cut` found `False`) → return `Seq.empty`: no verdict, no
-   record, nothing written — as the factory's pass ended such a call
-   until 2026-09-15.  Otherwise the state it produced is THE goal state of
+   call, fresh budgets), under its 60 s (§1 `guard_simp_tac`).  No state
+   left (`quick_cut` found `False`) → the simplifier refuted the guard:
+   write `{delta, Refuted}`, the decision record with refuter
+   `guard_simp_tac`, the loud guard warning if the entry said `Proved`
+   (naming the simplifier), return `Seq.empty`; nothing else runs [author
+   2026-09-15 "P2 可以写 Refuted、出记录、entry 原是 Proved 时响亮报警";
+   until then this ending yielded no verdict, no record and nothing
+   written, as the factory's pass had ended such a call].
+   Otherwise the state it produced is THE goal state of
    the rest of the call: `goals`, P-auto, both refuters, the judge's
    `thm` and the record's `subgoals` all read it [author 2026-09-15; §39].
    The decision timer starts before it, so `elapsed_ms` includes it from
@@ -1066,10 +1117,11 @@ solver), `d` the guard digest and `thm` the goal state.
    - `Proved` — the lemmas did not suffice → R-conv; else R-nitpick; else
      a judge is installed → step 6 [author 06:10 "补充一点 … 如果 R-conv,
      R-nitpick 都失败了, 还要跑 LLM judge, 然后响亮报警"; "6. 要的"].  The
-     loud guard warning belongs to the call's FINAL verdict, and since
-     2026-09-14 to one path only: a call that started from a `Proved`
-     entry and ends with the judge's `Unprovable` (step 6) prints it; a
-     refuter's `Refuted` here is silent and `Unknown` (nobody, no judge)
+     loud guard warning belongs to the call's FINAL verdict, and to two
+     paths only: a call that started from a `Proved` entry and ends with
+     the judge's `Unprovable` (step 6) prints it [2026-09-14], as does one
+     that the simplifier refuted at step 1½ [2026-09-15, ruling 10 of §39];
+     a refuter's `Refuted` here is silent and `Unknown` (nobody, no judge)
      gets the undecided-guard warning, as without an entry [author
      2026-09-14]; either way write
      `{delta, Refuted | Unknown}` — the delta stays [author 06:16 "lemmas
@@ -1093,10 +1145,17 @@ solver), `d` the guard digest and `thm` the goal state.
      stays unless `new` deletes it; a replay failure is an `error` naming
      the judge (§1); then `guard_simp_tac` again, on the rebuilt `ctxt_g'`
      — the judge's lemmas are simp rules, and the one simplification must
-     see them — from the state step 1½ produced (no state left → `error`
+     see them — from the state the call was given, NOT from step 1½'s
+     result: a rewrite made at step 1½ by a lemma of the old delta would
+     otherwise survive the judge's deletion of that lemma, P-auto could
+     prove on its strength, and the `Proved` entry written would not
+     reproduce on a later call, which simplifies the raw state under the
+     new delta alone [author 2026-09-15 "MD1 step 6 从进入 prove_or_refute
+     时的原始状态重新化简"; the review's MD1, §39] (no state left → `error`
      "the judge is broken": its lemmas rewrote the guard to `False`)
      [author 2026-09-15 "注意 judge 是会修改 delta 的，于是在修改后我们必须重新
-     跑 simpcut 对吗？"]; then P-auto again, with a fresh time budget and —
+     跑 simpcut 对吗？"]; the judge itself was handed step 1½'s state, the
+     one every other consumer of the call sees; then P-auto again, with a fresh time budget and —
      `p_auto_tac` enhancing again — fresh lemma
      budgets.  Proved → write `{new, Proved}` with the normalised times as
      they are, return `Seq.single (ctxt1', solved)` — and no loud warning,
@@ -1137,7 +1196,7 @@ the run's thread:
 
 | step | what | its own bound |
 |---|---|---|
-| R-conv | today's `r_conv_racer` body: negate each subgoal, search with `auto_search_tac` in a `Guard_Simp_SS`- and lemma-enhanced ctxt (its own `enhance_with_lemmas`, fresh budgets), with both of its `can_inst` branches as today — the `can_inst = false` one exporting through `outer_ctxt` (`reasoners.ML:1106-1115`, `:1132-1163`) | `Thread_CPU.apply` of `\<phi>guard_classic_prover_timeout` of thread CPU, no wall limit (§1 "G.simpcut"); `TIMEOUT` → not refuted [author 2026-09-04 03:23; thread CPU 2026-09-09] |
+| R-conv | today's `r_conv_racer` body: negate each subgoal, search with `auto_search_tac` in a `Guard_Simp_SS`- and lemma-enhanced ctxt (its own `enhance_with_lemmas`, fresh budgets), with both of its `can_inst` branches as today — the `can_inst = false` one exporting through `outer_ctxt` (`reasoners.ML:1106-1115`, `:1132-1163`) | `Thread_CPU.apply` of `\<phi>guard_classic_prover_timeout` of thread CPU, no wall limit (§1 `guard_simp_tac`); `TIMEOUT` → not refuted [author 2026-09-04 03:23; thread CPU 2026-09-09] |
 | R-nitpick | today's screen and Nitpick calls (`reasoners.ML:1459-1478`), subgoals one after another, each Nitpick call with its 2000 ms parameter as today; a `genuine` or `quasi_genuine` answer refutes (`guard_refute.ML:280-281`); R-nitpick's own preprocessing simpset `Nitpick_Refute_SS`; no lemmas | one outer `Timeout.apply` of `\<phi>guard_refute_timeout + 5000 ms × length goals`, and inside it one `Timeout.apply` of `\<phi>guard_refute_timeout + 5000 ms` per subgoal — a subgoal's `TIMEOUT` moves to the next; the outer bound normally ends R-nitpick INSIDE the running subgoal and is a real cap: the running subgoal's own request has not fired, so its `Timeout.apply` cancels it, finds `was_timeout` false and releases the interrupt unchanged (`Pure/Concurrent/timeout.ML:48-56`; the shadow re-raises for the same reason, `accounted_timeout.ML:123-131`), the per-subgoal handler does not catch it, and the outer application, whose request did fire, converts it to its `TIMEOUT`; only when an inner timer and the outer fire together does the inner claim the one interrupt and the outer's request get consumed (the accepted residual, `accounted_timeout.ML:36-38`), and from then on the remaining subgoals run under their inner bounds alone, so the total can exceed the net by those bounds; either way → not refuted [author 2026-09-03 13:05; inner bound 2026-09-07 13:00; sequential: drafter] |
 | the judge | `!judge`, if `SOME` (§1) | its own |
 
@@ -1153,9 +1212,10 @@ the judge may — a nested call is an ordinary call against the store.
 ## 7. Recorded honestly, with no rule answering it
 
 - **P-auto runs on every call.**  The steady-state cost of an unprovable
-  guard is P-auto's own time, up to `\<phi>guard_classic_prover_timeout`,
-  on every run; the store saves the refuters and the warning, not P-auto
-  [author 2026-09-08 06:10 "值的"].
+  guard is `guard_simp_tac`'s time (up to its 60 s of thread CPU) and
+  P-auto's own, up to `\<phi>guard_classic_prover_timeout`, on every run;
+  the store saves the refuters and the warning, not the simplification or
+  P-auto [author 2026-09-08 06:10 "值的"].
 - **A `Refuted` entry is trusted for what it suppresses, not for the
   verdict.**  The guard is re-tried by P-auto every time, so a guard that
   becomes provable is proved; but a refutation that was wrong from the
@@ -1205,21 +1265,28 @@ the judge may — a nested call is an ordinary call against the store.
 - **A lemma that reaches its budget is cut off, not removed**, so a bad
   lemma costs its budget of rewrites in every consumer run of every guard
   call downstream of the one that enabled it — the rest of the run, the
-  following statements of the block, and the two degenerate factory
-  instances through their shared "G.simpcut" pass — until a guard's
+  following statements of the block, and the out-of-run instance
+  `p_auto_solving`, whose `guard_simp_tac` and P-auto enhance with the
+  list (the obligation instance stopped being a consumer on 2026-09-15,
+  §39 ruling 6) — until a guard's
   delta deletes it (any guard's: the judge names it by its proposition
   AS THE LIST HOLDS IT, read off `get_lemmas` of the judge's ctxt — the
   replay keeps a `⋀n. …` statement as written, a run or block boundary's
   export generalises the binder to `… ?n …`, and the two shapes are not
   `Pattern.equiv` [author 2026-09-13: no special handling, `Pattern.equiv`
-  as it is]; §5 step 6) or its own entry's delta no longer adds it.  The
-  deleting call's own "G.simpcut" pass still pays a lemma that rewrites the
-  guard term itself: it runs before `prove_or_refute`, on the list before
-  the delta (measured 2026-09-13 with the looping lemma: the goal reaches
-  `prove_or_refute` already rewritten); a lemma met only in a subgoal the
-  classical search creates is used only by the provers on the list after
-  the delta — P-auto, and R-conv, which runs on the same `ctxt_g`
-  (`Test/Guard_Decision_Smoke.thy`, `RR`).  A
+  as it is]; §5 step 6) or its own entry's delta no longer adds it.
+  Since 2026-09-15 the simplification runs inside `prove_or_refute` on
+  `ctxt_g`, after the delta: a call that APPLIES an entry's deleting delta
+  at step 1 no longer pays the deleted lemma at step 1½; the call in which
+  the JUDGE issues the deletion still pays it at step 1½ (its step 1
+  applied the old delta, which added it) and re-simplifies from the state
+  the call was given, on `ctxt_g'`, at step 6 (§5).  Until 2026-09-15 the
+  factory's pass ran before `prove_or_refute`, on the list before the
+  delta, and paid it (measured 2026-09-13 with the looping lemma: the goal
+  reached `prove_or_refute` already rewritten).  A lemma met only in a
+  subgoal the classical search creates is used by the searches — P-auto's,
+  and R-conv's, on the same `ctxt_g` (`Test/Guard_Decision_Smoke.thy`,
+  `RR`).  A
   growth rule (`g x = g (g
   x)`) that is cut off after `budget` applications leaves the term it
   grew; P-auto then works on that term and usually fails or runs to its
@@ -1228,29 +1295,33 @@ the judge may — a nested call is an ordinary call against the store.
   rewrite rules only: a lemma that loops through a simproc, a congruence
   rule, or the classical reasoner is stopped by a clock — in
   `p_auto_tac` and R-conv by `\<phi>guard_classic_prover_timeout`, and in
-  `guard_simp_tac` by its 5 s (§1; the 2026-09-08 12:51 bound was
-  superseded on 2026-09-11, §33).  A conditional lemma
+  `guard_simp_tac` by its 60 s (§1; the 2026-09-08 12:51 bound was
+  superseded on 2026-09-11, §33, and the 5 s of that day on 2026-09-15,
+  §39).  A conditional lemma
   is charged after its own premises are proved (the budget premise is
   last, §1) — a failed own premise costs nothing; only a `check_conv`
   rejection after all premises are proved costs a unit without rewriting.
   Phase 1 has no producer of lemmas (§9): the exposure begins with §10
   step 2's injected entries and the phase-2 judge.
-- **The budget's unit is one consumer run** (one P-auto, one "G.simpcut",
-  one R-conv), while the 2026-09-08 measurement counted per top-level
-  simplifier invocation; §10 step 3 confirms the tiers on that unit.
+- **The budget's unit is one consumer run** (one P-auto, one
+  `guard_simp_tac`, one R-conv), while the 2026-09-08 measurement counted
+  per top-level simplifier invocation; §10 step 3 confirms the tiers on
+  that unit.
 - **The digest is taken after the case split and before the aux-fact
-  insertion**, so a guard "G.simpcut" solves outright reaches
-  `prove_or_refute` as a zero-premise state, P-auto succeeds trivially,
+  insertion**, so a guard `guard_simp_tac` solves outright becomes a
+  zero-premise state at step 1½, P-auto succeeds trivially,
   and nothing is written unless the shared entry already says `Refuted`
   or `Unknown`, which §5 step 3 then promotes to `Proved`.
 - **Last-write-wins.**  Two runs deciding one guard at once may write
   different entries (one proved with lemmas, one refuted); the later write
   stands and the next call re-decides.
 - **The obligation instance's `fastforce`** is unbounded by default
-  [author 2026-09-03 12:53]; the template's "G.simpcut" pass, unbounded on
-  every path today, is bounded on every path from now on (§1) — a
-  behaviour change on every guard, inside PLPR, not only on the cache
-  path [author 2026-09-08 12:51].
+  [author 2026-09-03 12:53]; `guard_simp_tac` — the factory's pass until
+  2026-09-15, unbounded until 2026-09-09 — is bounded (60 s of thread CPU)
+  wherever it runs, in `prove_or_refute` and `p_auto_solving`; the
+  obligation path has no guard-side simplification (§1) — a behaviour
+  change on every guard, inside PLPR, not only on the cache path [author
+  2026-09-08 12:51].
 - Deleting `Race.race` deletes its crash absorption: today an exception in
   P-auto or a refuter is that racer's `Crashed` exit; now it is the run's
   exception (two known instances: the `Option` exception of Pure's
@@ -1436,7 +1507,7 @@ stop proving reach it, `Refuted` entries never do.
 
 | option / constant | default |
 |---|---|
-| `\<phi>guard_classic_prover_timeout` | 400 ms of thread CPU, provisional — P-auto's and R-conv's budget [author 2026-09-04 03:23 "直接重命名为 \<phi>guard_classic_prover_timeout"] and the replay floor of §5 step 1 [author 2026-09-07 13:16]; NOT the "G.simpcut" pass's bound any more — that is 5 s of thread CPU fixed in the code, no option (§1 `guard_simp_tac`, §33, §39) [author 2026-09-11, superseding 2026-09-08 12:51]; thread CPU, never wall clock, an error without a CPU clock [author 2026-09-09]; the `is_F` shortcut is deleted (§39) |
+| `\<phi>guard_classic_prover_timeout` | 400 ms of thread CPU, provisional — P-auto's and R-conv's budget [author 2026-09-04 03:23 "直接重命名为 \<phi>guard_classic_prover_timeout"] and the replay floor of §5 step 1 [author 2026-09-07 13:16]; NOT `guard_simp_tac`'s bound — that is 60 s of thread CPU fixed in the code, no option (§1 `guard_simp_tac`, §39) [author 2026-09-15 "赞同", superseding the 5 s of 2026-09-11 and the 2026-09-08 12:51 bound]; thread CPU, never wall clock, an error without a CPU clock [author 2026-09-09]; the `is_F` shortcut is deleted (§39) |
 | `\<phi>guard_refute_timeout` | 2000 ms (Nitpick's parameter; R-nitpick's outer net is `\<phi>guard_refute_timeout + 5000 ms × length goals`, and each subgoal inside it is bounded by `\<phi>guard_refute_timeout + 5000 ms`) |
 | `\<phi>guard_cache` | true |
 | `\<phi>log_guard_race` → `\<phi>log_guard_decision` → deleted | the `guard_decision` record is written under the runtime `ML_debugger` option, no option of its own [author 2026-09-14 "建议用 ML_debugger 这个 configuration option 来控制"]; `\<phi>log_guess_inst` the same way |
@@ -1467,7 +1538,7 @@ paired with `ctxt0`, `head_only`'s `Goal.conclude` on the thm half,
 `SOLVED'` through `prj`, and `apply_tac` running the body outside
 `Tactic_Configures`'s hook fold, so a hook's `Success` no longer replaces
 the body (§1); the digest step as an optional factory parameter, passed
-by `guard_condition_judge` only (§1); the "G.simpcut" timeout yielding
+by `guard_condition_judge` only (§1); the `guard_simp_tac` timeout yielding
 the state unchanged (§1); the provers run from `ctxt_g`, the guard-side
 ctxt plus the lemmas (§5 step 1); the lemma replay in `ctxt0` with
 nothing enhanced (§5 step 1); the append skipping a proposition already
@@ -1579,10 +1650,11 @@ P. **The preparatory phase** — DONE 2026-09-09 and accepted by the author
    table, the export hook, `\<phi>guard_cache` — the store instance and
    the codec wait for step 4); the factory: `gen_guard_condition_solver`
    parameterised, the digest step between the case split and the
-   insertion, the "G.simpcut" bound, `oblg_template` with `inj`, `on_thm`
+   insertion, the `guard_simp_tac` bound, `oblg_template` with `inj`, `on_thm`
    and `prj` and its three other callers, `apply_tac` reshaped around the
    `Tactic_Configures` fold with its two other callers;
-   `try_prove_or_give_up`; `p_auto_body` and `\<phi>guard_P_auto`'s
+   `try_prove_or_give_up`; `p_auto_body` (since renamed `p_auto_tac`, §39
+   ruling 5) and `\<phi>guard_P_auto`'s
    `method_setup`; the `Guard_Simp_SS` and `enhance_with_lemmas` sites; the
    `Nitpick_Refute_SS` rename; `guard_condition_solver'`/`1` on P-auto; the
    `fastforce` instance for `defer_premise`; the two warnings as functions;
@@ -1600,9 +1672,10 @@ P. **The preparatory phase** — DONE 2026-09-09 and accepted by the author
    `guard_decision`); `guard_condition_judge` registered on the state;
    migrate every caller (§3); `guard_decision`, and with the rename of its
    switch the clause `\<phi>log_guard_race = true` is DELETED from
-   `PLPR.thy:1965` (`\<phi>log_guess_inst = true` on that line is another
-   subsystem and stays), so `\<phi>log_guard_decision` keeps its default
-   `false`; step 5's harness enables it itself.
+   `PLPR.thy`'s `declare` (the `\<phi>log_guess_inst = true` clause beside
+   it was then left as another subsystem's and was deleted on 2026-09-11,
+   §33; the switch itself went with §37 item 1), so `\<phi>log_guard_decision`
+   keeps its default `false`; step 5's harness enables it itself.
 3. The export hook end to end: a lemma enabled at one call reaching the
    next call and the next statement (the V2 smoke test of the stateful
    PLPR plan as the model); the budget measured on the corpus with
@@ -2972,7 +3045,8 @@ nowhere else, is now a local function of `gen_guard_condition_solver`
 ("建议挪动进 gen_guard_condition_solver 里").  §1 "G.simpcut" and the §10
 option table carry the ruling.  [The last sentence is superseded on
 2026-09-15, §39: the pass is `guard_simp_tac`, top level again, called by
-every solving function on the context that carries the entry's delta;
+`prove_or_refute` on the context that carries the entry's delta and by
+`p_auto_solving`, not by the obligation instance;
 "P-auto then repeats the same work" above was left standing on
 2026-09-11 and is what broke `Quicksort.thy`.]
 
@@ -3466,9 +3540,14 @@ the G leg's `guard_decision` records of §38; the code history):
    decision took 410–1004 ms (the timer started after the pass: P-auto
    burnt its bound), every `Refuted` hit 14–55 ms (a search that exhausts
    quickly is not slow).  The author's jEdit showed no "probably loops"
-   warning, so the pass itself finished under its 5 s there; the warnings
-   the drafter saw came from its own loaded machine (an orphaned 28 GB
-   veriT of an earlier sledgehammer call, killed).
+   warning; the drafter first read the warnings it saw as an artefact of
+   its own loaded machine (an orphaned 28 GB veriT of an earlier
+   sledgehammer call, killed) — wrong: the measurement below shows the
+   simplification of these states needs 7–13 s at load 3, so the 5 s
+   bound is exceeded on this machine whatever the load, and the author's
+   run must have hit it too (why no warning showed there is not known; a
+   session on a heap holding the pre-2026-09-11 `reasoners.ML`, whose
+   400 ms timeout was silent, would explain it).
 4. History: from the 2024-05-15 original (`07db77d2`) until the race
    (`d49023f2`, 2026-08-24) the guard prover was ONE unbounded
    `asm_full_simp` + `quick_cut` pass and then 300 ms of
@@ -3502,8 +3581,10 @@ instances simplified twice as well [author 2026-09-15 "但 p_auto_solving
    once, before it, by `guard_simp_tac` [author "我们现在可以按你推荐的，取消
    P-auto 中的重复 simp"; the name: "赞同 guard_simp_tac"; why not
    "simpcut": "simpcut_tac 为什么要叫 simpcut_tac？这不就是标准的 simp 吗？"].
-   Terms from now on: P-auto's simplification step (what `guard_simp_tac`
-   does) and P-auto's search step (what `p_auto_tac` does).
+   Terms from now on: the guard-side simplification (`guard_simp_tac`), a
+   step of the call, and P-auto (`p_auto_tac`), the search [the first
+   wording here, "P-auto's simplification step", contradicted ruling 2 and
+   was corrected at the review's D7].
 2. `guard_simp_tac` runs on `enhance_for_guard` of the context that
    carries the entry's delta, `ctxt_g`, so it lives in the solving
    function, not in the factory; after the judge replaces the delta it
@@ -3523,13 +3604,108 @@ instances simplified twice as well [author 2026-09-15 "但 p_auto_solving
    听"; "批准 p_auto_tac"].
 6. `solve_obligation_now` (`PLPR.thy:1983`) gets NO `guard_simp_tac`
    before its `fastforce` [author "你都用 fastforce 了为什么还要用
-   guard_simp_tac？"]: `fast_force_tac` clarifies and runs `asm_full_simp`
-   itself, in the same simpset (the guard-side ctxt plus `Guard_Simp_SS`),
+   guard_simp_tac？"]: `fast_force_tac` is `Classical.fast_tac o addss`,
+   so its `asm_full_simp_tac` runs inside the search, on the whole goal,
+   in the same simpset (the guard-side ctxt plus `Guard_Simp_SS`),
    so the pass the factory ran there was one more duplicate.  The drafter
    had recommended keeping it as "no behaviour change" — wrong in spirit:
    it would have kept a duplication; the one thing that ends is the entry
    lemmas' incidental presence in that instance's simplification, and the
    obligation instance was never a consumer of the lemma list.
+
+**Measured after rulings 1–6 were implemented (2026-09-15, Isabelle-MCP on
+`Phi_System_Base`, load ≈ 3; the smoke test clean, `Quicksort.thy` still
+failing):** the three states on which `guard_simp_tac` timed out at line
+47 were captured with a TEMPORARY probe (reverted) and simplified again
+under a 120 s cap, one `asm_full_simp` in the enhanced context each:
+
+| guard (26 premises each) | `linarith_split_limit` 20 (the theory's) | 9 (the default) | 0 |
+|---|---|---|---|
+| `d + (len - d) ≤ len` | 13.1 s, proved | 6.7 s, proved | 1.8 s, proved |
+| `d - Suc 0 ≤ len` | 6.8 s, proved | 2.1 s, NOT proved | 0.8 s, NOT proved |
+| `d ≤ len` | 12.0 s, proved | 6.3 s, proved | 1.7 s, proved |
+
+(Elapsed times; the `Timing` CPU figures ran up to 2× elapsed, other PIDE
+work included.)  So: the simplification of these states terminates and
+PROVES the guards outright — the 5 s bound was simply below its cost;
+pinning the split limit to the default is no remedy (6.5 s, and the
+second guard then needs the search); `asm_simp` variants that do not
+simplify the premises ran in milliseconds but are ruled out — "必须用
+asm_full_simp，否则是错的！" [author 2026-09-15].  Until step 1 (2026-09-09)
+this simplification was unbounded, so the old pipeline paid the 7–13 s per
+guard silently.
+
+7. **`guard_simp_tac`'s bound is 60 s of thread CPU** (from 5 s), still
+   fixed in the code, no option [author 2026-09-15 "赞同"]: the bound exists
+   to catch a looping simplifier, which any finite value catches; a bound
+   below a terminating simplification's cost turns provable guards into
+   `Unknown`, which is this regression; the cost of the larger value falls
+   only on a guard whose simplification really loops, a bug in its own
+   right.  The alternative of keeping 5 s and letting a theory raise it
+   (an option, as `Quicksort.thy` raises `linarith_split_limit`) was
+   listed and not taken (§1 `guard_simp_tac`, §10).
+8. **Step 6 re-simplifies from the state the call was given**, not from
+   step 1½'s result [author 2026-09-15 "MD1 step 6 从进入 prove_or_refute 时的
+   原始状态重新化简"]: the review's one MUST_DISCUSS item — a rewrite made at
+   step 1½ by a lemma of the old delta would otherwise survive the judge's
+   deletion of that lemma and let P-auto write a `Proved` entry that a
+   later call, simplifying the raw state under the new delta alone, need
+   not reproduce (§5 step 6).  The judge is still handed step 1½'s state.
+9. **`p_auto_attempt`** — the review's P1 [author 2026-09-15 "P1 赞同"]:
+   one exported composition, `guard_simp_tac` then P-auto once under
+   `\<phi>guard_classic_prover_timeout`, run by the out-of-run instance
+   `p_auto_solving` and by the method `\<phi>guard_P_auto`, so the two
+   cannot drift apart (§1 P-auto, §3).  The name is the drafter's.
+10. **A refutation by the simplifier is a verdict** — the review's P2
+   [author 2026-09-15 "P2 可以写 Refuted、出记录、entry 原是 Proved 时响亮报警"]:
+   when `guard_simp_tac` at step 1½ rewrites the guard's conclusion to
+   `False` (`quick_cut` leaves no state), the call writes `{delta,
+   Refuted}`, emits the decision record with refuter `guard_simp_tac`, and
+   prints the loud guard warning if the entry said `Proved`, naming the
+   simplifier in place of the judge (§1 the loud guard warning; §5 step
+   1½).  Until then that ending returned before every write, warning and
+   record.  The refuter name in the record and the warning's wording are
+   the drafter's.
+
+**The review (2026-09-15, `wf_cdb1c300-357`: 8 interrogators, 57
+findings; one fresh defender per finding [author "每个质疑只配一个 rebuttal
+agent 就够了"], 35 survived; the judge): MET_ON_CONDITION** — rulings 1–7
+implemented exactly, no reachable input with a wrong verdict or a crash,
+the verification credible; one MUST_DISCUSS (ruling 8 above), twelve
+DRAFTER_MAY_DECIDE items (all text: §7's five pre-2026-09-15 sentences,
+§1's "the goal state" entry, three `reasoners.ML` comments and the
+method's description string that over-generalised "every solving
+function", the status line's quantifier, four dead anchors, ruling 1's
+terminology sentence, the `is_F` justification's visible differences,
+step 1½'s "nothing written", a probe for the judge path's third `error`
+and the smoke test's header, `ai-artifacts/Guard_False_Probe.thy`'s
+`p_auto_body`, ruling 6's description of `fast_force_tac`) — all applied
+in this revision; 25 findings rejected with rebuttals (the report:
+`ai-artifacts/QUICKSORT_REGRESSION_FIX_REVIEW_2026-09-15.md`).  Its two
+proposals became rulings 9 and 10 above.
+
+**The re-review (2026-09-15, `wf_3ac0ec80-955`: 4 interrogators, 25
+findings, one defender each, 17 survived; the judge): MET_ON_CONDITION,
+no MUST_DISCUSS** — rulings 8–10 implemented as ruled, D1–D12 applied;
+nine DRAFTER_MAY_DECIDE conditions, all text or comments, no behaviour
+change, all applied: §1's factory entry names `p_auto_attempt` and
+`try_prove_or_give_up`'s one remaining caller; the `guard_simp_tac` entry
+and §33's note count the two solving functions that call it; §1's
+description of `fast_force_tac`; §1's P-auto entry and §5 step 4 carry
+ruling 10; the `guard` entry's registration anchors and §5 step 1's
+anchors; §39's verification block records its three runs; the
+`guard_decision` signature comment lists `guard_simp_tac` among the
+refuter values; the smoke test's header names its one exception and the
+P2 probe's comment names the refuter; 8 findings rejected (the report:
+`ai-artifacts/QUICKSORT_REGRESSION_FIX_REREVIEW_2026-09-15.md`).  **The
+final round (`wf_b7d44a31-12e`: 2 interrogators, 14 findings, 10
+survived; the judge): MET_ON_CONDITION** — seven text conditions, all
+applied: this bookkeeping paragraph and the status line; the review
+context document's verification labels and its summary's quantifier; §1's
+"a `prove_or_refute` call", verdict and refuter entries qualified for
+ruling 10; §5's remaining dead anchors; §3's caller list and the
+provenance paragraph; three leftovers in §10's step list (the report:
+`ai-artifacts/QUICKSORT_REGRESSION_FIX_FINAL_ROUND_2026-09-15.md`).
 
 **The code plan** (`reasoners.ML` anchors of 2026-09-15):
 - `:999` `p_auto_search_tac` and `:1070` `p_auto_body` → one function
@@ -3546,29 +3722,55 @@ instances simplified twice as well [author 2026-09-15 "但 p_auto_solving
 - `prove_or_refute :1401`: step 1½ after step 1 — `case Seq.pull
   (guard_simp_tac ctxt_g th) of NONE => Seq.empty | SOME (th, _) => …`,
   `goals` taken there; step 2 through `p_auto_tac`; step 6 runs
-  `guard_simp_tac ctxt_g'` on that state first, `NONE` → the "judge is
-  broken" `error`.
-- `p_auto_solving :1615`: `guard_simp_tac ctxt th |> Seq.maps
-  (try_prove_or_give_up (SOME (guard_classic_prover_bound ctxt)) p_auto_tac
-  ctxt) |> Seq.map (pair ctxt0)`.
+  `guard_simp_tac ctxt_g'` first, on the state the call was given (ruling
+  8), `NONE` → the "judge is broken" `error`.
+- `p_auto_solving :1615`: `p_auto_attempt ctxt th |> Seq.map (pair
+  ctxt0)`, with `p_auto_attempt ctxt = guard_simp_tac ctxt THEN
+  cpu_bounded_tac (guard_classic_prover_bound ctxt) (p_auto_tac ctxt)`
+  defined after `p_auto_tac` (ruling 9).
 - The signature `:113-114`: `guard_simp_tac` and `p_auto_tac` exported,
   `p_auto_body` gone.
-- `PLPR.thy:1972` `\<phi>guard_P_auto`: `guard_simp_tac ctxt THEN
-  cpu_bounded_tac (guard_classic_prover_bound ctxt) (p_auto_tac ctxt)`.
+- `PLPR.thy:1972` `\<phi>guard_P_auto`: `SIMPLE_METHOD (p_auto_attempt
+  ctxt)` (ruling 9).
+- `prove_or_refute`, ruling 10: step 1½'s `NONE` is `refuted_by
+  simp_refuter` (the refuter name `"guard_simp_tac"`), `goals` are then
+  the state's as given; steps 2–6 sit in a local `decide` on the
+  simplified state; the loud guard warning takes the overturning party
+  (`"the LLM judge"` / `"the simplifier"`); `Test/Guard_Decision_Smoke.thy`
+  gains the probe "the simplifier refuting a Proved entry" and asserts the
+  two loud lines apart.
 - `PLPR.thy:1983` `solve_obligation_now`: unchanged in itself; it simply
   no longer receives the factory's pass (item 6 above).
 - `Test/Guard_Decision_Smoke.thy` and every other reference to the old
   names follow; the plan's §1, §3, §5, §10 and this section carry the
   design (done in this revision).
 - Stated consequences: `elapsed_ms` now includes the simplification; the
-  `quick_cut` refutation still yields no verdict and no entry (unchanged;
-  recording it as `Refuted` would be a separate decision); a
-  `\<condition> False` guard closed by simp now yields a decision record.
+  `quick_cut` refutation at step 1½ is a verdict since ruling 10 (`Refuted`
+  written, the record, the loud warning over a `Proved` entry) — before
+  it, no verdict and no entry write of its own; a `\<condition> False`
+  guard closed by simp now yields the trace line and, under `ML_debugger`,
+  a decision record.
 
-**Verification**: `PLPR.thy` and `Test/Guard_Decision_Smoke.thy`
-re-evaluated under Isabelle-MCP on `Phi_System_Base`; then `Quicksort.thy`
-with the tombstoned AoA record appended back from HEAD (pending the
-author's approval; the frame is extracted) and `AoA_driver = "test"`
-declared TEMPORARILY so that a miss cannot spend money — the slice-bound
-guards should return to `Proved`, the obligation to the recorded one, and
-the record replay; then the standard two-turn review.
+**Verification (2026-09-15, three runs)**: `Phi_System_Base` rebuilt on
+the author's approval ("你可以自己 build 批准": its parent
+`Semantic_Embedding` had been rebuilt by another session).  (i) Under
+rulings 1–7: `PLPR.thy` clean under Isabelle-MCP, with only the three
+pre-existing ML warnings; `Test/Guard_Decision_Smoke.thy` clean, every
+probe as before; `Phi_Examples/Quicksort.thy` CLEAN, with the tombstoned
+AoA record appended back from HEAD into `Quicksort.proof-store` ("你现在就
+可以做") and `AoA_driver = "test"` declared TEMPORARILY (reverted): at the
+`return` only the three genuinely unprovable guards are undecided, no
+"probably loops" warning, the slice-merge obligation is back to its
+provable shape, and the AoA record replays and stays live (222 live
+records, no tombstone).  With the 5 s bound the same run had still failed
+exactly as before the fix, which is what the measurement above settled.
+(ii) After the review's conditions (ruling 8, D1–D12): the smoke test
+clean with the probe of the judge's third error added.  (iii) After
+rulings 9 and 10: the smoke test clean with the probe "the simplifier
+refuting a Proved entry" added (its record: `verdict=refuted, hit=proved,
+refuter=guard_simp_tac`, one loud line naming the simplifier);
+`Quicksort.thy` re-run under this final code: CLEAN, the `return`'s
+three undecided guards and the slice-merge obligation as in run (i), the
+AoA record replaying and live; ruling 10 wrote seven `Refuted` entries
+into `Quicksort.proof-store` (222 → 229 live records, no tombstone) —
+guards the simplifier refutes outright, which until then left no trace.

@@ -5,16 +5,19 @@ begin
 (* Probes of one prove_or_refute call (library/reasoners.ML): every path
    of Docs/GUARD_CACHE_QUICK_MODE_PLAN.md section 5 -- hits of each verdict,
    lemma enabling, a looping lemma cut off by its budget, an entry's deletion,
-   the judge's delta replacing this entry's, both warnings, both errors --
+   the judge's delta replacing this entry's, both warnings, the judge's three errors --
    driven through the guard
    factory with entries injected into the store and a test judge installed into
    the ref.  Not registered in any ROOT: evaluate on demand (e.g. via
    Isabelle-MCP under session Phi_System_Base).
 
    Reachability constraint: every guard below must survive the factory's own
-   exits (the TrueI exit, fast_inst, the "G.simpcut" pass) so that it reaches
-   prove_or_refute: the atoms below carry classical rules only, never a simp
-   rule, and no guard is an equation.
+   exits (the TrueI exit, fast_inst) so that it reaches prove_or_refute, and
+   must not be closed by guard_simp_tac there, so that P-auto's search decides
+   it: the atoms below carry classical rules only, never a simp rule, and no
+   guard is an equation.  The one exception is the probe of the simplifier's
+   own refutation (plan section 5 step 1 1/2), whose injected lemma rewrites
+   the guard to False on purpose.
 
    The store is this theory's proof store, Guard_Decision_Smoke.proof-store (plan
    step 4), with no deletion, and it outlives a re-evaluation of this theory and
@@ -192,6 +195,7 @@ fun warnings_of f =
       rev (! got)
   end
 val loud_line = "A guard condition proved before is now refuted by the LLM judge:"
+val loud_simp_line = "A guard condition proved before is now refuted by the simplifier:"
 (*the undecided-guard warning is trace-gated; this theory's \<phi>trace_reasoning = 3
   keeps it on*)
 val undecided_line = "Fail to prove or falsify the following guard condition"
@@ -201,9 +205,14 @@ fun assert_warnings name line expected ws =
       else error (name ^ ": " ^ string_of_int n ^ " warning(s) " ^ quote line ^ ", expected " ^ string_of_int expected)
   end
 fun assert_loud name expected ws =
-  (assert_warnings name loud_line expected ws; assert_warnings name undecided_line 0 ws)
+  (assert_warnings name loud_line expected ws; assert_warnings name loud_simp_line 0 ws;
+   assert_warnings name undecided_line 0 ws)
+fun assert_loud_simp name expected ws =
+  (assert_warnings name loud_simp_line expected ws; assert_warnings name loud_line 0 ws;
+   assert_warnings name undecided_line 0 ws)
 fun assert_undecided name expected ws =
-  (assert_warnings name undecided_line expected ws; assert_warnings name loud_line 0 ws)
+  (assert_warnings name undecided_line expected ws; assert_warnings name loud_line 0 ws;
+   assert_warnings name loud_simp_line 0 ws)
 
 (*a numeral no call of this or any earlier run used, for a guard that must meet no
   entry: the store outlives the process, and a process serial alone could repeat
@@ -289,9 +298,8 @@ lemma PP_I[intro!]: "PP (LOOP (LOOP (LOOP (LOOP x))))" unfolding PP_def by simp
 (* QQ, RR: a deletion observed in the provers' context.  QQ n is provable by
    QQ_I once RR n is, and RR n only through the lemma `RR n = True`, whose
    left-hand side first appears in the subgoal the classical search creates:
-   the "G.simpcut" pass, which runs on the list BEFORE the delta, never meets
-   it, and only the provers on the list after the delta -- P-auto, and R-conv
-   in the same position -- can use it. *)
+   guard_simp_tac, which sees the goal before QQ_I is applied, never meets it,
+   and only the searches -- P-auto's, and R-conv's -- can use it. *)
 definition RR :: "nat \<Rightarrow> bool" where "RR n = True"
 definition QQ :: "nat \<Rightarrow> bool" where "QQ n = True"
 lemma QQ_I[intro!]: "RR n \<Longrightarrow> QQ n" unfolding QQ_def by simp
@@ -315,6 +323,8 @@ fun useless_once ctxt = lemma ctxt "CHAIN []" "(rule CHAIN_nil)" Phi_Guard_Cache
   (CHAIN []), or add_lemma merges the two and the probe cannot fail*)
 fun useless_other ctxt = lemma ctxt "CHAIN [1]" "(rule CHAIN_cons, rule CHAIN_nil)" Phi_Guard_Cache.Rarely
 fun unreplayable ctxt = lemma ctxt "\<And>n. LOOP n = LOOP (LOOP n)" "(rule no_such_fact)" Phi_Guard_Cache.Normal
+(*a true lemma that rewrites a BADN guard to False*)
+fun badn_false ctxt = lemma ctxt "\<And>n. BADN n = False" "(simp add: BADN_def)" Phi_Guard_Cache.Normal
 fun uncertifiable ctxt = (Syntax.read_term ctxt "LOOP 0", (times, "simp"), Phi_Guard_Cache.Normal)
 
 (*a run context that already carries a lemma of an earlier guard: CHAIN [] at
@@ -493,11 +503,10 @@ let val ctxt = seeded \<^context>
 end\<close>
 
 (*a deletion reaches the provers' context.  Not with the looping lemma: it rewrites
-  the guard term itself, so the "G.simpcut" pass -- on the list BEFORE the delta --
-  applies it first and the goal reaches prove_or_refute already rewritten.  RR's lemma
-  is met only by P-auto (QQ, RR above): seeded, an empty delta proves the guard through
-  it; the deletion leaves nobody to decide.  A deletion names the proposition as the
-  list holds it, here `RR ?n = True`*)
+  the guard term itself, so guard_simp_tac applies it and no search is needed.  RR's
+  lemma is met only by P-auto's search (QQ, RR above): seeded, an empty delta proves
+  the guard through it; the deletion leaves nobody to decide.  A deletion names the
+  proposition as the list holds it, here `RR ?n = True`*)
 ML \<open>
 let val th = rr_thm \<^context>
     val ctxt = Phi_Guard_Cache.add_lemma (th, 3) \<^context>
@@ -660,6 +669,26 @@ ML \<open>test_error (with_judge (fn _ => Phi_Reasoners.Provable (adds [useless 
   "the judge answers Provable with a lemma that does not suffice: error"
   "The judge is broken: P-auto cannot prove"
   ("\<condition> (PP (LOOP " ^ fresh () ^ "))")\<close>
+
+(*the simplifier refuting a Proved entry: the entry's own lemma rewrites the guard to
+  False at step 1 1/2 -- Refuted written with the delta, the refuter guard_simp_tac in
+  the record, the loud guard warning naming the simplifier; neither P-auto nor R-conv
+  nor R-nitpick nor the judge runs*)
+ML \<open>assert_loud_simp "the simplifier refuting a Proved entry" 1 (warnings_of (fn () =>
+  test (with_entry [badn_false \<^context>] Phi_Guard_Cache.Proved) \<^context>
+    "Proved hit whose lemma rewrites the guard to False: refuted by the simplifier, Refuted written"
+    (expect ("refuted", "proved", "guard_simp_tac", "-") "Refuted with 1 lemma(s)")
+    ("\<condition> (BADN " ^ fresh () ^ ")")))\<close>
+
+(*a Provable whose lemma rewrites the guard to False: the third error.  An Unknown hit
+  goes straight to the judge, so no refuter pre-empts it; BADN has no rule, so P-auto
+  fails, and the judge's true lemma `BADN n = False` lets guard_simp_tac rewrite the
+  conclusion to False, which quick_cut drops*)
+ML \<open>test_error (with_entry_and_judge [] Phi_Guard_Cache.Unknown
+                (fn _ => Phi_Reasoners.Provable (adds [badn_false \<^context>]))) \<^context>
+  "the judge answers Provable with a lemma that rewrites the guard to False: error"
+  "The judge is broken: its lemmas rewrite the guard to False"
+  ("\<condition> (BADN " ^ fresh () ^ ")")\<close>
 
 section \<open>The switch and the variable disciplines\<close>
 
