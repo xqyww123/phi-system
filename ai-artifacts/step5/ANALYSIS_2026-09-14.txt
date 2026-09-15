@@ -76,42 +76,151 @@
    first decisions: n=1053 mean=37ms
    hits           : n=703 mean=328ms
 ### analyze.py C1_on_dbg C2_on_dbg
-== C1_on_dbg C2_on_dbg: 0 decisions, 0 digests
+== C1_on_dbg: 355 decisions, 261 digests
    digests with more than one verdict in this leg: 0
-   verdict: {}
-   hit    : {}
-   refuter: {}
-   judge  : {}
-   guard time: 0.0 s total
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 24.5 s total
+   proved   n= 204 median=0ms p90=28ms p99=108ms max=112ms
+   refuted  n= 146 median=72ms p90=401ms p99=423ms max=434ms
+   unknown  n=   5 median=7ms p90=401ms p99=401ms max=401ms
+   first decisions: n=204 mean=7ms
+   hits           : n=151 mean=152ms
+== C2_on_dbg: 355 decisions, 261 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 21.7 s total
+   proved   n= 204 median=0ms p90=20ms p99=76ms max=93ms
+   refuted  n= 146 median=56ms p90=401ms p99=410ms max=416ms
+   unknown  n=   5 median=6ms p90=333ms p99=333ms max=333ms
+   first decisions: n=204 mean=5ms
+   hits           : n=151 mean=136ms
+== compare: 261 digests in A, 261 in B, 261 common, 0 only in A, 0 only in B
+   flips (a digest decided differently in A and B): 0
+   same verdicts, different decision counts: 0
+   B: 151 non-proved decisions, 151 of them hits (100.0 %)
+   B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)
 ### analyze.py C2_on_dbg E_off_dbg
-== C2_on_dbg E_off_dbg: 0 decisions, 0 digests
+== C2_on_dbg: 355 decisions, 261 digests
    digests with more than one verdict in this leg: 0
-   verdict: {}
-   hit    : {}
-   refuter: {}
-   judge  : {}
-   guard time: 0.0 s total
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 21.7 s total
+   proved   n= 204 median=0ms p90=20ms p99=76ms max=93ms
+   refuted  n= 146 median=56ms p90=401ms p99=410ms max=416ms
+   unknown  n=   5 median=6ms p90=333ms p99=333ms max=333ms
+   first decisions: n=204 mean=5ms
+   hits           : n=151 mean=136ms
+== E_off_dbg: 355 decisions, 261 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 355}
+   refuter: {'-': 209, 'R-nitpick': 142, 'R-conv': 4}
+   judge  : {'-': 355}
+   guard time: 161.4 s total
+   proved   n= 204 median=0ms p90=23ms p99=100ms max=106ms
+   refuted  n= 146 median=1006ms p90=1729ms p99=2410ms max=2690ms
+   unknown  n=   5 median=1685ms p90=3022ms p99=3022ms max=3022ms
+   first decisions: n=355 mean=455ms
+== compare: 261 digests in A, 261 in B, 261 common, 0 only in A, 0 only in B
+   flips (a digest decided differently in A and B): 0
+   same verdicts, different decision counts: 0
+   B: 151 non-proved decisions, 0 of them hits (0.0 %)
+   B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)
 ### analyze.py F1_conc F2_conc
-== F1_conc F2_conc: 0 decisions, 0 digests
+== F1_conc: 355 decisions, 261 digests
    digests with more than one verdict in this leg: 0
-   verdict: {}
-   hit    : {}
-   refuter: {}
-   judge  : {}
-   guard time: 0.0 s total
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 26.8 s total
+   proved   n= 204 median=0ms p90=29ms p99=115ms max=173ms
+   refuted  n= 146 median=74ms p90=401ms p99=413ms max=2040ms
+   unknown  n=   5 median=7ms p90=401ms p99=401ms max=401ms
+   first decisions: n=204 mean=9ms
+   hits           : n=151 mean=165ms
+== F2_conc: 355 decisions, 261 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 24.0 s total
+   proved   n= 204 median=0ms p90=32ms p99=86ms max=103ms
+   refuted  n= 146 median=63ms p90=409ms p99=414ms max=414ms
+   unknown  n=   5 median=7ms p90=395ms p99=395ms max=395ms
+   first decisions: n=204 mean=7ms
+   hits           : n=151 mean=149ms
+== compare: 261 digests in A, 261 in B, 261 common, 0 only in A, 0 only in B
+   flips (a digest decided differently in A and B): 0
+   same verdicts, different decision counts: 0
+   B: 151 non-proved decisions, 151 of them hits (100.0 %)
+   B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)
 ### analyze.py C2_on_dbg F1_conc
-== C2_on_dbg F1_conc: 0 decisions, 0 digests
+== C2_on_dbg: 355 decisions, 261 digests
    digests with more than one verdict in this leg: 0
-   verdict: {}
-   hit    : {}
-   refuter: {}
-   judge  : {}
-   guard time: 0.0 s total
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 21.7 s total
+   proved   n= 204 median=0ms p90=20ms p99=76ms max=93ms
+   refuted  n= 146 median=56ms p90=401ms p99=410ms max=416ms
+   unknown  n=   5 median=6ms p90=333ms p99=333ms max=333ms
+   first decisions: n=204 mean=5ms
+   hits           : n=151 mean=136ms
+== F1_conc: 355 decisions, 261 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 26.8 s total
+   proved   n= 204 median=0ms p90=29ms p99=115ms max=173ms
+   refuted  n= 146 median=74ms p90=401ms p99=413ms max=2040ms
+   unknown  n=   5 median=7ms p90=401ms p99=401ms max=401ms
+   first decisions: n=204 mean=9ms
+   hits           : n=151 mean=165ms
+== compare: 261 digests in A, 261 in B, 261 common, 0 only in A, 0 only in B
+   flips (a digest decided differently in A and B): 0
+   same verdicts, different decision counts: 0
+   B: 151 non-proved decisions, 151 of them hits (100.0 %)
+   B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)
 ### analyze.py C2_on_dbg F2_conc
-== C2_on_dbg F2_conc: 0 decisions, 0 digests
+== C2_on_dbg: 355 decisions, 261 digests
    digests with more than one verdict in this leg: 0
-   verdict: {}
-   hit    : {}
-   refuter: {}
-   judge  : {}
-   guard time: 0.0 s total
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 21.7 s total
+   proved   n= 204 median=0ms p90=20ms p99=76ms max=93ms
+   refuted  n= 146 median=56ms p90=401ms p99=410ms max=416ms
+   unknown  n=   5 median=6ms p90=333ms p99=333ms max=333ms
+   first decisions: n=204 mean=5ms
+   hits           : n=151 mean=136ms
+== F2_conc: 355 decisions, 261 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 24.0 s total
+   proved   n= 204 median=0ms p90=32ms p99=86ms max=103ms
+   refuted  n= 146 median=63ms p90=409ms p99=414ms max=414ms
+   unknown  n=   5 median=7ms p90=395ms p99=395ms max=395ms
+   first decisions: n=204 mean=7ms
+   hits           : n=151 mean=149ms
+== compare: 261 digests in A, 261 in B, 261 common, 0 only in A, 0 only in B
+   flips (a digest decided differently in A and B): 0
+   same verdicts, different decision counts: 0
+   B: 151 non-proved decisions, 151 of them hits (100.0 %)
+   B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)
