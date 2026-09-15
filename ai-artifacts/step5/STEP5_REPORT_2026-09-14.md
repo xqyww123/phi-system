@@ -11,8 +11,12 @@ concurrent leg); 14 cores.  For the legs below, each leg's configuration
 was a TEMPORARY `declare` in `PLPR.thy`, reverted before the commit.  Since the
 review (2026-09-15) the harness passes `-o ML_debugger=true` to the server
 itself (`--ml-debugger`: an Isabelle system option reaches every theory the
-server compiles from source, so no `PLPR.thy` edit is needed for the records;
-the cache switch is a context attribute and still needs the `declare`),
+server compiles from source — an inference from `config.ML`'s option-backed
+defaults, not yet an observation: no recorded leg used the flag; a leg that
+does instruments from the first source theory rather than from `PLPR.thy` on,
+so its wall time is not comparable with the legs below — so no `PLPR.thy`
+edit is needed for the records; the cache switch is a context attribute and
+still needs the `declare`),
 records in `result.txt` what the leg ran under (phi-system HEAD, the server
 options, `PLPR.thy`'s diff, the sha256 of `future.ML`), and refuses a non-empty
 leg directory as it already refused an occupied port.
@@ -100,8 +104,8 @@ in the store, escalated to AoA and failed on the unreachable proxy (above);
 they do not involve the guard cache.  The fourth is at `Quicksort.thy:49`:
 "Fail to solve the proof obligation automatically:" with the obligation —
 the colon form, which only the on-the-spot obligation solvers print
-(`reasoners.ML:1637`, `:1670`: `guard_condition_solver1` /
-`safe_obligation_solver1`, called from `toplevel0.ML:387`,
+(`reasoners.ML:1626`, `:1659` as committed in `fbb8ad78`:
+`guard_condition_solver1` / `safe_obligation_solver1`, called from `toplevel0.ML:387`,
 `generic_variable_access2.ML:272`, `local_value.ML:169`), not the hammer
 path.  It is UNDIAGNOSED: the leg's only exception record is not it — that
 record is at `Quicksort.thy:45` (the `;` command, 22:36:34.913, four and a
@@ -118,14 +122,21 @@ missing obligation to a paid model unless `AoA_driver = "test"` is declared).
 Whether the three escalated obligations have proofs in the stores on the
 author's machine, or were always AoA-solved, this leg cannot tell.
 
-The leg wrote guard entries into eight tracked `.proof-store` files — those of
-`Binary_Search`, `Binary_Trees`, `Bucket_Hash`, `Dynamic_Array`,
-`Dynamic_Array_arbi_len` (imported by `Bucket_Hash`), `Linked_List`,
-`Matrix_Oprs` and `Quicksort` (`Rational_Arith`'s is unchanged) — and
-regenerated the theories' exported C files (`*.C`, untracked).  Those eight
-stores were ALREADY modified in the working tree before this step (other
-work, uncommitted); this step's commit leaves every store and every generated
-file uncommitted — the author decides what to add.
+The leg wrote five guard entries, into the stores of the two theories the
+decisions are in (an entry goes to the store of the theory being loaded,
+`cache_file.ML:812`): four into `Dynamic_Array`'s (all at `Dynamic_Array.thy:121`:
+3 `Refuted` by R-nitpick, 1 `Unknown`) and one into `Quicksort`'s
+(`Quicksort.thy:46`, `Unknown`).  After the leg, eight tracked `.proof-store`
+files are modified in the working tree — those of `Binary_Search`,
+`Binary_Trees`, `Bucket_Hash`, `Dynamic_Array`, `Dynamic_Array_arbi_len`
+(imported by `Bucket_Hash`), `Linked_List`, `Matrix_Oprs` and `Quicksort`
+(`Rational_Arith`'s is unchanged) — but those eight were ALREADY modified
+before this step by other, uncommitted work, and the end-of-theory
+`compact_store` rewrites a store even when it holds no new entry; the leg also
+regenerated the theories' exported C files (six untracked `*.C`, plus
+`Bucket_Hash.C`, which is tracked and shows as modified).  This step's commits
+leave every store and every generated file uncommitted — the author decides
+what to add.
 
 ## The consecutive-run leg (C1 → C2): floor 100 % hits, 0 flips — MET
 
@@ -160,8 +171,10 @@ the uninstrumented cache-on wall time could not be measured (below).
 
 ## The 400 ms bound (re-measurement, §10 step 5)
 
-Proved decisions, cache on: median 0 ms, p90 20–28 ms, p99 76–108 ms, max
-93–112 ms — the guards this corpus proves sit far below 400 ms of thread CPU.
+Proved decisions, cache on, over the four instrumented cache-on legs (C1, C2,
+F1, F2): median 0 ms, p90 20–32 ms, p99 76–115 ms, max 93–173 ms (the highest
+figures are F1's, under the concurrent load) — the guards this corpus proves
+sit far below 400 ms of thread CPU.
 Refuted decisions reach the bound (p90 401 ms) because P-auto runs to it before
 the hit is honoured.  Nothing in this corpus argues for moving the bound.
 

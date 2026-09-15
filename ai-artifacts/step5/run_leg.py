@@ -46,7 +46,7 @@ def provenance(server_options):
     return (f'phi_system_head={git("rev-parse", "HEAD").strip()}\n'
             f'server_options={" ".join(server_options)}\n'
             f'future_ml_sha256={hashlib.sha256(FUTURE_ML.read_bytes()).hexdigest()}\n'
-            f'plpr_thy_diff={repr(git("diff", "--", str(PLPR)))}\n')
+            f'plpr_thy_diff={repr(git("diff", "HEAD", "--", str(PLPR)))}\n')  # staged edits too
 
 
 async def wait_server(server, addr, log_path, deadline_s=1800):

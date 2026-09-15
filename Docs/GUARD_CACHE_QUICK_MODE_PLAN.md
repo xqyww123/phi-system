@@ -3413,8 +3413,11 @@ forked-proof write, which exist only with the cache on and are therefore
 bounded by the 200 s a cache-on load saves; the export hook's cost per
 boundary, which is NOT bounded by that difference (the hook is installed
 unconditionally and runs on the cache-off leg too).  Only the Phi_Examples
-leg wrote guard entries (five, into eight tracked `.proof-store` files
-named in the report); the `PhiTest_Arithmetic` legs wrote none — every
+leg wrote guard entries (five: four into `Dynamic_Array`'s store, one into
+`Quicksort`'s; eight tracked stores show as modified in the working tree,
+named in the report — they were already modified by other work, and the
+end-of-theory compaction rewrites a store even without a new entry); the
+`PhiTest_Arithmetic` legs wrote none — every
 decision took a non-writing path, and that corpus' store is byte-identical
 to HEAD after them.  The Phi_Examples stores and exported C files were
 already modified in the working tree by other work and are left
