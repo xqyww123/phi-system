@@ -6,8 +6,24 @@ Plan: `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` §10 step 5, §37 item 12.  Harness:
 `guard_decision` records into the leg's own `event_log` directory) and
 `analyze.py`.  The corpus: `Phi_Test.PhiTest_Arithmetic` and its imports (the
 355-decision corpus of §26/§30/§35/§36).  Threads 8 per server (6 each on the
-concurrent leg); 14 cores.  Each leg's configuration is a TEMPORARY `declare`
-in `PLPR.thy` (reverted before the commit).
+concurrent leg); 14 cores.  For the legs below, each leg's configuration
+(`ML_debugger` for the records, `\<phi>guard_cache = false` for a cache-off leg)
+was a TEMPORARY `declare` in `PLPR.thy`, reverted before the commit.  Since the
+review (2026-09-15) the harness passes `-o ML_debugger=true` to the server
+itself (`--ml-debugger`: an Isabelle system option reaches every theory the
+server compiles from source, so no `PLPR.thy` edit is needed for the records;
+the cache switch is a context attribute and still needs the `declare`),
+records in `result.txt` what the leg ran under (phi-system HEAD, the server
+options, `PLPR.thy`'s diff, the sha256 of `future.ML`), and refuses a non-empty
+leg directory as it already refused an occupied port.
+
+If a genuine cold → warm guard pair is ever wanted (this step's consecutive leg
+was warm → warm): strip only the `PLPRGUARD` records from a COPY of the corpus
+stores, or load copied theories under new names, and declare
+`AoA_driver = "test"` first.  Never move the tracked `.proof-store` files aside:
+they carry the obligation proofs and other agents' uncommitted work in this
+shared tree, and with the AoA gate open every defeated obligation escalates to a
+paid model.
 
 **The AoA gate is open under Isa-REPL, by design** (the author, 2026-09-14:
 "AoA 应该在 Isa-REPL 下工作的, 这是 expected").  The gate (`agent_server.ML:560-562`)
