@@ -40,15 +40,29 @@ than a plain load by that instrumentation; the plain legs measure wall time only
 | F1_conc, F2_conc (two servers at once, 6 threads each) | on | on | 365.4 s, 379.2 s | 355 / 261 each | 26.8 s, 24.0 s | clean, clean |
 | G_examples (the eight Phi_Examples theories) | on | on | 1059.1 s | 1756 / 1646 | 269.0 s | 4 obligation errors, see below |
 
-## The concurrent leg (F1 ‖ F2): 0 flips, 100 % hits, no collision warning — MET
+## The concurrent leg (F1 ‖ F2): 0 flips, 100 % hits, the shared store intact — MET
 
 Two Isa-REPL servers loaded the corpus at the same time, sharing the tracked
 `.proof-store` files.  Each saw 355 decisions over 261 digests with the
 verdict distribution of the sequential runs; 261 digests in common between
 the two and with C2, 0 flips in every pairing; 151 of 151 non-proved decisions
-hits on both.  Neither server printed the collision marks' warning
-(`ML_debugger` was on, so the marks were live).  Wall 365 s and 379 s against
-213 s alone: the two servers shared the 14 cores.
+hits on both.  Both servers ran the store's end-of-theory `compact_store` —
+a whole-file rewrite under the `fcntl` lock — on
+`Phi_Test/PhiTest_Arithmetic.proof-store`: the file's mtime (22:27:13) lies
+between F1's finish (22:27:06) and F2's (22:27:20), and afterwards the file
+is byte-identical to the committed HEAD.  So two processes reading and
+rewriting one store file concurrently neither corrupted it nor changed a
+verdict.  Wall 365 s and 379 s against 213 s alone: the two servers shared
+the 14 cores.
+
+(The first version of this report also listed "no collision warning" as a
+criterion here.  Withdrawn: the collision marks cannot observe this leg at
+all — a guard entry's write is exempt from them by design (`rewrites = true`,
+`guard_cache.ML:138`; `cache_file.ML:816` tests it before `ML_debugger`), the
+`written` table is per process and sees nothing of the other server, and the
+REPL server silences warnings altogether (`REPL.disable_output ()` in
+`repl_server.sh`'s generated theory, `REPL.ML:286-296`).  "No warning" was
+vacuously true of every leg.)
 
 ## The Phi_Examples leg (G): the guard cache clean; the obligations of two theories fail for reasons outside it
 
@@ -65,28 +79,54 @@ P-auto to its 400 ms of thread CPU, then the "G.simpcut" pass had run before
 under its 5 s bound; under contention wall exceeds CPU.  No `guard_decision`
 anomaly, no guard-side exception.
 
-The load ended with errors that are not the guard cache's: three obligations
-whose proof is not in the store escalated to AoA and failed on the unreachable
-proxy (above), and one obligation of `Quicksort.thy:49` failed in
-sledgehammer (`Par_Exn` at `hammer sledgehammer`, the exception record) —
-"Fail to solve the proof obligation automatically".  Whether these four
-obligations have proofs in the tracked stores on the author's machine, or
-were always AoA-solved, is not something this leg can tell; they fail the same
-way without the guard cache.
+The load ended with four errors.  Three are obligations whose proof is not
+in the store, escalated to AoA and failed on the unreachable proxy (above);
+they do not involve the guard cache.  The fourth is at `Quicksort.thy:49`:
+"Fail to solve the proof obligation automatically:" with the obligation —
+the colon form, which only the on-the-spot obligation solvers print
+(`reasoners.ML:1637`, `:1670`: `guard_condition_solver1` /
+`safe_obligation_solver1`, called from `toplevel0.ML:387`,
+`generic_variable_access2.ML:272`, `local_value.ML:169`), not the hammer
+path.  It is UNDIAGNOSED: the leg's only exception record is not it — that
+record is at `Quicksort.thy:45` (the `;` command, 22:36:34.913, four and a
+half minutes before line 49 ran at 22:41:00–22:41:03): a `Par_Exn` raised at
+`par_exn.ML:48` wrapping `FOUND` from `Par_List.get_some`'s success
+short-circuit (`par_list.ML:47`), escaping `run_sledgehammer` into
+`Exception_Log.capture`; line 45 itself reported no error.  (An earlier
+version of this report attributed that record to line 49.)  Those on-the-spot
+solvers run the guard factory with `p_auto_solving` and no digest step, so
+they never consult the store; whether the guard cache's changes to the shared
+machinery (P-auto's body, the "G.simpcut" bound) touch the line-49 obligation
+is not known: no cache-off Phi_Examples leg was run (it would escalate every
+missing obligation to a paid model unless `AoA_driver = "test"` is declared).
+Whether the three escalated obligations have proofs in the stores on the
+author's machine, or were always AoA-solved, this leg cannot tell.
 
-The leg wrote guard entries into the eight theories' tracked `.proof-store`
-files and regenerated the theories' exported C files (`*.C`, untracked).  Those
+The leg wrote guard entries into eight tracked `.proof-store` files — those of
+`Binary_Search`, `Binary_Trees`, `Bucket_Hash`, `Dynamic_Array`,
+`Dynamic_Array_arbi_len` (imported by `Bucket_Hash`), `Linked_List`,
+`Matrix_Oprs` and `Quicksort` (`Rational_Arith`'s is unchanged) — and
+regenerated the theories' exported C files (`*.C`, untracked).  Those eight
 stores were ALREADY modified in the working tree before this step (other
 work, uncommitted); this step's commit leaves every store and every generated
 file uncommitted — the author decides what to add.
 
 ## The consecutive-run leg (C1 → C2): floor 100 % hits, 0 flips — MET
 
-261 digests in C1, 261 in C2, all 261 in common, 0 only in C2; verdict sets equal
-on every digest (0 flips).  Of C2's 151 non-proved decisions, 151 are hits
-(100 %): 146 `Refuted` hits, 5 `Unknown` hits.  The 204 proved decisions are
-first decisions in both runs by design (a first-decision proof writes no entry,
-§5 step 3).
+261 digests in C1, 261 in C2, all 261 in common, 0 only in either; verdict sets
+equal on every digest (0 flips).  Of C2's 151 non-proved decisions, 151 are hits
+(100 %): 146 `Refuted` hits, 5 `Unknown` hits — and C1's hit column is the
+same, decision for decision.  The 204 proved decisions are first decisions in
+both runs by design (a first-decision proof writes no entry, §5 step 3).
+
+What this pair is evidence of: cross-process stability of reading — two fresh
+processes, in sequence, read the entries committed in `1a02873a` (the store
+was already warm before C1) and decide identically.  Neither C1 nor C2 wrote an
+entry: every decision took a non-writing path (a first-decision proof, a
+`Refuted` hit, an `Unknown` hit with no judge), and
+`Phi_Test/PhiTest_Arithmetic.proof-store` is byte-identical to HEAD after the
+run.  The cold → warm pair on this corpus (the entries written, then read in a
+new process) is the one recorded in §35/§36 of the plan.
 
 ## Cache on vs cache off (C2 vs E, both instrumented): 0 flips
 
@@ -126,14 +166,19 @@ found missing from `contrib/Isabelle2025-2/src/Pure/Concurrent/future.ML`
 (git-ignored directory; the file's mtime 2026-01-18 says the 2026-09-08 patch
 never reached this copy) and was applied on this machine on the author's
 order ("请对本机打补丁"): `future.ML:430-431`, the `Exn.Exn` arm reraises.  Pure
-changed, so every heap is outdated until the author rebuilds.  The other five
-legs did not hit the bug (instrumentation and the refuter runs shift the
-interrupt window); no proof store was invalidated by the two failures.
+changed, so every heap is outdated until the author rebuilds.  The other seven
+legs (C1, C2, E, B, F1, F2, G) did not hit the bug (instrumentation and the
+refuter runs shift the interrupt window); no proof store was invalidated by
+the two failures.
 
 ## Not measured (no probe installed; the plan lists them)
 
 The lemma replay cost and budget cut-offs (no judge is installed, so no entry
 holds a lemma: both are zero on this corpus); the digest cost (measured 76.8 us
-per decision on 2026-09-11, §33 item 4); store I/O, the forked-proof write and
-the export hook's cost per run boundary (would need TEMPORARY probes; the wall
-times above bound them: a cache-on load is 200 s faster than a cache-off one).
+per decision on 2026-09-11, §33 item 4).  Store I/O and the forked-proof
+write exist only on the cache-on side (both gated by `use_store`,
+`reasoners.ML:1405-1409`), so the 200 s by which a cache-on load beats a
+cache-off one bounds them from above.  The export hook is installed
+unconditionally (`guard_cache.ML:177-182`, `Theory.setup`) and runs on the
+cache-off leg too, so it cancels out of that difference and is NOT bounded by
+it; measuring it would need a TEMPORARY probe at the run boundary.

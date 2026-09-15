@@ -27,9 +27,11 @@ from IsaREPL import Client, REPLFail  # noqa: E402
 STEP5 = MLML / 'contrib/phi-system/ai-artifacts/step5'
 
 
-async def wait_server(addr, log_path, deadline_s=1800):
+async def wait_server(server, addr, log_path, deadline_s=1800):
     t0 = time.time()
     while time.time() - t0 < deadline_s:
+        if server.poll() is not None:  # the build died: say so now, not after the deadline
+            raise RuntimeError(f'server exited with {server.returncode}; see {log_path}')
         try:
             await Client.test_server(addr, timeout=10)  # returns None; raises until the server answers
             return time.time() - t0
@@ -59,7 +61,7 @@ async def main():
         cwd=str(MLML), env=env, stdout=server_log, stderr=subprocess.STDOUT,
         start_new_session=True)
     try:
-        startup = await wait_server(addr, leg_dir / 'server.log')
+        startup = await wait_server(server, addr, leg_dir / 'server.log')
         print(f'[{leg}] server up after {startup:.0f}s', flush=True)
         async with Client(addr, 'Phi_Test', timeout=None) as c:
             await c.set_trace(False)

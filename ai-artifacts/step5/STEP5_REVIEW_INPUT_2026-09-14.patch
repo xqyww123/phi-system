@@ -1,0 +1,221 @@
+# phi-system 7e7d36ae + follow-up (step 5 harness, report, plan section 38)
+commit 7e7d36aed5fd3d5a6e767402a49ad387d732856c
+Author: Qiyuan Xu <xqyww123@gmail.com>
+Date:   Mon Sep 14 22:48:40 2026 +0800
+
+    Guard cache: step 5 run on Isa-REPL (plan rev 27, section 38) -- floors met, two findings for the author
+    
+    Harness ai-artifacts/step5/{run_leg.py,analyze.py}: one fresh REPL server
+    per leg on Phi_System_Base, the corpus loaded from source, guard_decision
+    records read back.  Consecutive runs: 261/261 digests, 0 flips, 100 % hits;
+    cache on vs off: 0 flips, 21.7 s vs 161 s guard time; two concurrent
+    servers: 0 flips, no collision warning; Phi_Examples: 1756 decisions, no
+    guard-side failure.  Outside the guard cache: exception Option (the
+    future.ML fix of 2026-09-08 is not in the distribution) aborted the two
+    uninstrumented cache-on legs; the AoA gate is open under Isa-REPL.  The
+    report carries every number.  PLPR.thy's temporary declares reverted.
+    
+    Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+diff --git a/ai-artifacts/step5/analyze.py b/ai-artifacts/step5/analyze.py
+new file mode 100644
+index 00000000..be5b4470
+--- /dev/null
++++ b/ai-artifacts/step5/analyze.py
+@@ -0,0 +1,73 @@
++#!/usr/bin/env python3
++"""STEP 5: read a leg's guard_decision records and summarise; compare two legs.
++
++    analyze.py <leg dir>                 -- the leg's path distribution and timings
++    analyze.py <leg dir A> <leg dir B>   -- B's hit rate over A's digests, flips A->B
++"""
++
++import statistics
++import sys
++from collections import Counter
++from pathlib import Path
++
++sys.path.insert(0, '/home/qiyuan/Current/MLML/contrib/Performant_Isabelle_ML/tools')
++from event_log import records  # noqa: E402
++
++
++def load(leg_dir):
++    rows = []
++    for p in sorted(Path(leg_dir, 'event_log', 'guard_decision').glob('*.xml')):
++        rows += [r.attrib for r in records(p)]
++    return rows
++
++
++def summarise(name, rows):
++    print(f'== {name}: {len(rows)} decisions, {len({r["digest"] for r in rows})} digests')
++    print('   verdict:', dict(Counter(r['verdict'] for r in rows)))
++    print('   hit    :', dict(Counter(r['hit'] for r in rows)))
++    print('   refuter:', dict(Counter(r['refuter'] for r in rows)))
++    print('   judge  :', dict(Counter(r['judge'] for r in rows)))
++    ms = [int(r['elapsed_ms']) for r in rows]
++    print(f'   guard time: {sum(ms) / 1000:.1f} s total')
++    for v in ('proved', 'refuted', 'unknown'):
++        xs = sorted(int(r['elapsed_ms']) for r in rows if r['verdict'] == v)
++        if xs:
++            q = lambda p: xs[min(len(xs) - 1, int(p * len(xs)))]
++            print(f'   {v:8s} n={len(xs):4d} median={statistics.median(xs):.0f}ms p90={q(0.9)}ms p99={q(0.99)}ms max={xs[-1]}ms')
++    first = [int(r['elapsed_ms']) for r in rows if r['hit'] == 'none']
++    hits = [int(r['elapsed_ms']) for r in rows if r['hit'] != 'none']
++    if first:
++        print(f'   first decisions: n={len(first)} mean={statistics.mean(first):.0f}ms')
++    if hits:
++        print(f'   hits           : n={len(hits)} mean={statistics.mean(hits):.0f}ms')
++
++
++def compare(a, b):
++    va = {}
++    for r in a:
++        va.setdefault(r['digest'], set()).add(r['verdict'])
++    vb = {}
++    for r in b:
++        vb.setdefault(r['digest'], set()).add(r['verdict'])
++    common = set(va) & set(vb)
++    flips = [d for d in common if va[d] != vb[d]]
++    print(f'== compare: {len(va)} digests in A, {len(vb)} in B, {len(common)} common, '
++          f'{len(set(vb) - set(va))} only in B')
++    print(f'   flips (verdict set differs): {len(flips)}')
++    for d in flips[:20]:
++        print(f'     {d}: A={sorted(va[d])} B={sorted(vb[d])}')
++    non_proved_b = [r for r in b if r['verdict'] != 'proved']
++    hit_b = [r for r in non_proved_b if r['hit'] != 'none']
++    print(f'   B: {len(non_proved_b)} non-proved decisions, {len(hit_b)} of them hits '
++          f'({100 * len(hit_b) / len(non_proved_b) if non_proved_b else 0:.1f} %)')
++    proved_hits = [r for r in b if r['verdict'] == 'proved' and r['hit'] != 'none']
++    print(f'   B: {len(proved_hits)} proved decisions from an entry (Proved/Unknown hits re-proved)')
++
++
++if __name__ == '__main__':
++    legs = sys.argv[1:]
++    data = [load(l) for l in legs]
++    for l, rows in zip(legs, data):
++        summarise(l, rows)
++    if len(data) == 2:
++        compare(*data)
+diff --git a/ai-artifacts/step5/run_leg.py b/ai-artifacts/step5/run_leg.py
+new file mode 100644
+index 00000000..23aed849
+--- /dev/null
++++ b/ai-artifacts/step5/run_leg.py
+@@ -0,0 +1,94 @@
++#!/usr/bin/env python3
++"""STEP 5 harness (GUARD_CACHE_QUICK_MODE_PLAN.md section 10 step 5, section 37 item 12).
++
++One leg = one fresh Isa-REPL server on the Phi_System_Base heap loading a list of
++theories from source, timed by this script's wall clock.  The guard_decision
++records the load writes (under ML_debugger, when PLPR.thy declares it) land in
++<leg dir>/event_log, because ISABELLE_EVENT_LOG_DIR is set for the server.
++
++    run_leg.py <leg name> <port> <threads> <theory>...
++
++The leg's configuration (cache on/off, ML_debugger) is whatever PLPR.thy declares
++at the time -- the caller edits PLPR.thy between legs and reverts it at the end.
++"""
++
++import asyncio
++import os
++import signal
++import subprocess
++import sys
++import time
++from pathlib import Path
++
++MLML = Path('/home/qiyuan/Current/MLML')
++sys.path.insert(0, str(MLML / 'contrib/Isa-REPL'))
++from IsaREPL import Client, REPLFail  # noqa: E402
++
++STEP5 = MLML / 'contrib/phi-system/ai-artifacts/step5'
++
++
++async def wait_server(addr, log_path, deadline_s=1800):
++    t0 = time.time()
++    while time.time() - t0 < deadline_s:
++        try:
++            await Client.test_server(addr, timeout=10)  # returns None; raises until the server answers
++            return time.time() - t0
++        except Exception:
++            pass
++        await asyncio.sleep(5)
++    raise RuntimeError(f'server not up after {deadline_s}s; see {log_path}')
++
++
++async def main():
++    leg, port, threads, *theories = sys.argv[1:]
++    addr = f'127.0.0.1:{port}'
++    leg_dir = STEP5 / leg
++    leg_dir.mkdir(parents=True, exist_ok=True)
++    try:  # a fresh leg needs a fresh server: refuse a port something already answers on
++        await Client.test_server(addr, timeout=5)
++        raise RuntimeError(f'port {port} already has a REPL server; kill it first')
++    except (ConnectionRefusedError, OSError):
++        pass
++    env = dict(os.environ)
++    env['ISABELLE_EVENT_LOG_DIR'] = str(leg_dir / 'event_log')
++    env['PATH'] = str(MLML / 'contrib/Isabelle2025-2/bin') + ':' + env['PATH']
++    server_log = open(leg_dir / 'server.log', 'w')
++    server = subprocess.Popen(
++        ['bash', str(MLML / 'contrib/Isa-REPL/repl_server.sh'), addr, 'Phi_System_Base',
++         str(leg_dir / 'repl_out'), '-o', f'threads={threads}', '-d', str(MLML)],
++        cwd=str(MLML), env=env, stdout=server_log, stderr=subprocess.STDOUT,
++        start_new_session=True)
++    try:
++        startup = await wait_server(addr, leg_dir / 'server.log')
++        print(f'[{leg}] server up after {startup:.0f}s', flush=True)
++        async with Client(addr, 'Phi_Test', timeout=None) as c:
++            await c.set_trace(False)
++            t0 = time.time()
++            errors = None
++            try:
++                loaded = await c.load_theory(theories)
++            except REPLFail as e:
++                loaded, errors = None, str(e)
++            elapsed = time.time() - t0
++        print(f'[{leg}] load_theory {theories}: {elapsed:.1f}s wall; loaded={loaded}', flush=True)
++        if errors:
++            print(f'[{leg}] ERRORS:\n{errors[:6000]}', flush=True)
++        (leg_dir / 'result.txt').write_text(
++            f'leg={leg}\ntheories={theories}\nthreads={threads}\nstartup_s={startup:.0f}\n'
++            f'wall_s={elapsed:.1f}\nloaded={loaded}\nerrors={"yes" if errors else "no"}\n')
++    finally:
++        os.killpg(os.getpgid(server.pid), signal.SIGTERM)
++        try:
++            server.wait(60)
++        except subprocess.TimeoutExpired:
++            os.killpg(os.getpgid(server.pid), signal.SIGKILL)
++        # the poly process of `isabelle build` outlives its process group: kill the
++        # listener on the port too, so the next leg cannot reuse a loaded server
++        subprocess.run(['fuser', '-k', '-TERM', f'{port}/tcp'], capture_output=True)
++        time.sleep(3)
++        subprocess.run(['fuser', '-k', '-KILL', f'{port}/tcp'], capture_output=True)
++        server_log.close()
++    print(f'[{leg}] done', flush=True)
++
++
++asyncio.run(main())
+
+# future.ML patch (this machine, git-ignored distribution)
+        NONE => []
+      | SOME id => [(Markup.exec_idN, id)])
+    in Exn_Properties.identify exec_id exn end);
+
+fun assign_result group result res =
+  let
+    val _ =
+      (case Exn.capture_body (fn () => Single_Assignment.assign result res) of
+        Exn.Exn (exn as Fail _) =>
+          (case Single_Assignment.peek result of
+            SOME (Exn.Exn e) => Exn.reraise (if Exn.is_interrupt_proper e then e else exn)
+          | _ => Exn.reraise exn)
+      | Exn.Exn exn => Exn.reraise exn  (*an interrupt here left `result` unassigned; swallowing it made the `the` below raise Option*)
+      | Exn.Res _ => ());
+    val ok =
+      (case the (Single_Assignment.peek result) of
+        Exn.Exn exn =>
+          (SYNCHRONIZED "cancel" (fn () => Task_Queue.cancel_group group exn); false)
+      | Exn.Res _ => true);
+  in ok end;
+

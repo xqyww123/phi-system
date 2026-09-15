@@ -21,8 +21,23 @@ def load(leg_dir):
     return rows
 
 
+def verdicts_by_digest(rows):
+    """digest -> Counter of verdicts (one decision = one count)."""
+    out = {}
+    for r in rows:
+        out.setdefault(r['digest'], Counter())[r['verdict']] += 1
+    return out
+
+
 def summarise(name, rows):
     print(f'== {name}: {len(rows)} decisions, {len({r["digest"] for r in rows})} digests')
+    # within one leg a digest must be decided one way: PLPR is deterministic and the
+    # store keeps one entry per digest -- an offender here is a defect, reported loudly
+    mixed = {d: c for d, c in verdicts_by_digest(rows).items() if len(c) > 1}
+    print(f'   digests with more than one verdict in this leg: {len(mixed)}'
+          + (' -- DEFECT' if mixed else ''))
+    for d, c in list(mixed.items())[:20]:
+        print(f'     {d}: {dict(c)}')
     print('   verdict:', dict(Counter(r['verdict'] for r in rows)))
     print('   hit    :', dict(Counter(r['hit'] for r in rows)))
     print('   refuter:', dict(Counter(r['refuter'] for r in rows)))
@@ -43,19 +58,18 @@ def summarise(name, rows):
 
 
 def compare(a, b):
-    va = {}
-    for r in a:
-        va.setdefault(r['digest'], set()).add(r['verdict'])
-    vb = {}
-    for r in b:
-        vb.setdefault(r['digest'], set()).add(r['verdict'])
+    va, vb = verdicts_by_digest(a), verdicts_by_digest(b)
     common = set(va) & set(vb)
-    flips = [d for d in common if va[d] != vb[d]]
+    flips = [d for d in common if set(va[d]) != set(vb[d])]
+    count_diffs = [d for d in common if va[d] != vb[d] and set(va[d]) == set(vb[d])]
     print(f'== compare: {len(va)} digests in A, {len(vb)} in B, {len(common)} common, '
-          f'{len(set(vb) - set(va))} only in B')
-    print(f'   flips (verdict set differs): {len(flips)}')
+          f'{len(set(va) - set(vb))} only in A, {len(set(vb) - set(va))} only in B')
+    print(f'   flips (a digest decided differently in A and B): {len(flips)}')
     for d in flips[:20]:
-        print(f'     {d}: A={sorted(va[d])} B={sorted(vb[d])}')
+        print(f'     {d}: A={dict(va[d])} B={dict(vb[d])}')
+    print(f'   same verdicts, different decision counts: {len(count_diffs)}')
+    for d in count_diffs[:20]:
+        print(f'     {d}: A={dict(va[d])} B={dict(vb[d])}')
     non_proved_b = [r for r in b if r['verdict'] != 'proved']
     hit_b = [r for r in non_proved_b if r['hit'] != 'none']
     print(f'   B: {len(non_proved_b)} non-proved decisions, {len(hit_b)} of them hits '
