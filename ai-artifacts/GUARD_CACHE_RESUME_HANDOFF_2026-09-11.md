@@ -1,6 +1,18 @@
 # 2026-09-15 evening — the Quicksort regression fix (plan §39), READ THIS FIRST
 
-State when this addendum was written (context at 79 %, a compaction may follow):
+COMMITTED: phi-system master `97be6d75` (root `43dddc25`), after three reviews
+(`wf_cdb1c300-357`, `wf_3ac0ec80-955`, `wf_b7d44a31-12e`; all conditions applied; the
+reports are in `ai-artifacts/`, the patches and the context document were not committed).
+Residue handled after the commit: `Bucket_Hash.proof-store` had lost the AoA record
+`Bucket_Hash.update_hash/2/6/2:0` the same way (a run under the broken guards at 11:35);
+it was appended back from HEAD ("1. 批准") and `Bucket_Hash.thy` verified clean under
+Isabelle-MCP on the fixed code (a TEMPORARY `AoA_driver = "test"` declare, reverted);
+the record replays and is live (243 live records after the run).  No other example or
+test store had lost a record (every `Phi_Examples`/`Phi_Test` store compared with HEAD).
+The author declined a memory entry for this work and said to ignore the untracked
+`PLPR.unicode.thy` twin.  The paragraph below describes the state BEFORE the commit.
+
+State when this addendum was first written (context at 79 %, a compaction may follow):
 
 - **Plan**: `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` rev 28, §39 holds everything: the
   diagnosis (P-auto repeated the guard-side simplification; the 5 s bound was below the
