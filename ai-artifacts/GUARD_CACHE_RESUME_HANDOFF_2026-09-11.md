@@ -153,8 +153,12 @@ Memory added: aoa-runs-under-isa-repl-by-design.  NEXT (order not yet ruled): th
 rendering unification (draft `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`), the
 `\<check> \<hypothesis> \<consistency>` plan, the tier measurement (§33), phase 2 (the judge:
 Frequent = ceiling, the model/driver and cost gating, the no-re-entry contract at the
-interface).  Still uncommitted in the tree, the author's to decide: 15 `.proof-store` files and
-7 `*.C` (Phi_Examples' exported C, `Bucket_Hash.C` tracked).
+interface).  The stores and C files were committed on the author's ruling (phi-system
+`1dd81168`: thirteen `.proof-store`, seven `Phi_Examples/*.C`); the two test theories' stores
+stay UNTRACKED by the 2026-09-13 ruling, reaffirmed 2026-09-21 ("测试肯定不提交").  After the
+compaction of 2026-09-21: discuss the ORDER of the four items above (the drafter's suggestion:
+rendering unification → `\<check> \<hypothesis> \<consistency>` → phase 2 → tier measurement),
+then write the first plan and have it reviewed before any code.
 
 ## ADDENDUM 2026-09-14 night — STEP 5 run; pending the author's acceptance
 Plan rev 27, §38; the report `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`; the harness
