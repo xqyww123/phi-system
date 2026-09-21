@@ -1,6 +1,16 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 29 (2026-09-21) — **STEP 5 ACCEPTED** by the author
+Status: rev 30 (2026-09-21) — **STEP 5 ACCEPTED; the Isabelle_RPC rendering
+unification goes first.**  Of the items ruled "after step 5", the author
+put the Isabelle_RPC rendering unification first ("是的，我们先看这个",
+2026-09-21).  Its plan is `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`:
+the shape ruled on 2026-08-18 (keep the regex substitution, record positions
+while it runs) is kept ("好"), and one read-only light re-check by an Opus
+agent precedes any code ("要的").  The order of the remaining three — the
+`\<check> \<hypothesis> \<consistency>` plan, the tier measurement (§33) and
+phase 2 (the judge) — is not yet ruled.  The previous status follows.
+
+rev 29 (2026-09-21) — **STEP 5 ACCEPTED** by the author
 ("宣布 step 5 验收通过", 2026-09-21; the run §38, its review and light
 re-check applied, the verification leg of 2026-09-21).  Next, each ruled
 "after step 5", their order not yet ruled: the Isabelle_RPC rendering

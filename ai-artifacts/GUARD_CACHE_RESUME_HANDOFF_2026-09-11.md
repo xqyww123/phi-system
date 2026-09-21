@@ -149,8 +149,11 @@ untracked under ai-artifacts/step5/.  The future.ML patch IS applied on this mac
 system heaps, the Phi_System_Base and Isa_REPL chains rebuilt against them (verified by the
 session databases' input_heaps).  P-4 recorded in
 `contrib/Isa-REPL/ai-artifacts/CLIENT_TIMEOUT_AND_SERVER_ECHO_2026-09-15.md`, not fixed.
-Memory added: aoa-runs-under-isa-repl-by-design.  NEXT (order not yet ruled): the Isabelle_RPC
-rendering unification (draft `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`), the
+Memory added: aoa-runs-under-isa-repl-by-design.  NEXT — order ruled 2026-09-21 ("是的，我们先看这个"): the Isabelle_RPC
+rendering unification goes first (its plan `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`;
+the shape ruled 2026-08-18 is kept, "好"; one read-only Opus light re-check before code, "要的";
+the drafter's 2026-09-14 description of the shape as symbol-by-symbol was a departure, reported
+2026-09-21); then, order not yet ruled, the
 `\<check> \<hypothesis> \<consistency>` plan, the tier measurement (§33), phase 2 (the judge:
 Frequent = ceiling, the model/driver and cost gating, the no-re-entry contract at the
 interface).  The stores and C files were committed on the author's ruling (phi-system
