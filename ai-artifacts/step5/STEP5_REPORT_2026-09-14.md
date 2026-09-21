@@ -138,6 +138,26 @@ regenerated the theories' exported C files (six untracked `*.C`, plus
 leave every store and every generated file uncommitted — the author decides
 what to add.
 
+## The verification leg V_on_dbg (2026-09-21): the harness flag observed; 0 flips on the common digests
+
+Run after the review, on the patched Pure and after the other agent's Quicksort
+fix (`97be6d75`, plan §39: `guard_simp_tac` split out of P-auto) had been
+committed, with `run_leg.py --ml-debugger` and `PLPR.thy` untouched
+(`result.txt`: `plpr_thy_diff=''`, `server_options=… -o ML_debugger=true`,
+phi-system HEAD `1f3c2142`, `future.ML` sha256 `b4aa341a…`).  The records
+were written — so the option does reach the theories the server compiles from
+source, now an observation rather than an inference.  377 decisions over 283
+digests, `{proved 206, refuted 166, unknown 5}`, 171 of 171 non-proved
+decisions hits, no error, 204.4 s wall, 37.9 s guard time.  Against C2: 261
+digests in common, **0 flips**, 0 count differences; 22 digests only in this
+leg — the decision set changed with `97be6d75`'s restructuring of the call,
+and the entries for the new digests were already in the stores from that
+work's own runs (all 20 new refuted decisions are hits).  Not comparable in
+time with the legs above: with the option set at the server, every phi-system
+ML file is instrumented (the earlier legs' `declare` instrumented only what
+follows it in `PLPR.thy`, so not `reasoners.ML` itself), and guard time rose
+from 21.7 s to 37.9 s, proved decisions' p99 from 76 ms to 408 ms.
+
 ## The consecutive-run leg (C1 → C2): floor 100 % hits, 0 flips — MET
 
 261 digests in C1, 261 in C2, all 261 in common, 0 only in either; verdict sets

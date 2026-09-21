@@ -224,3 +224,46 @@
    same verdicts, different decision counts: 0
    B: 151 non-proved decisions, 151 of them hits (100.0 %)
    B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)
+### analyze.py V_on_dbg (2026-09-21, --ml-debugger, after 97be6d75)
+== V_on_dbg: 377 decisions, 283 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 206, 'refuted': 166, 'unknown': 5}
+   hit    : {'none': 206, 'refuted': 166, 'unknown': 5}
+   refuter: {'-': 357, 'guard_simp_tac': 20}
+   judge  : {'-': 377}
+   guard time: 37.9 s total
+   proved   n= 206 median=1ms p90=51ms p99=408ms max=596ms
+   refuted  n= 166 median=78ms p90=641ms p99=741ms max=744ms
+   unknown  n=   5 median=8ms p90=307ms p99=307ms max=307ms
+   first decisions: n=206 mean=30ms
+   hits           : n=171 mean=185ms
+### analyze.py V_on_dbg C2_on_dbg
+== V_on_dbg: 377 decisions, 283 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 206, 'refuted': 166, 'unknown': 5}
+   hit    : {'none': 206, 'refuted': 166, 'unknown': 5}
+   refuter: {'-': 357, 'guard_simp_tac': 20}
+   judge  : {'-': 377}
+   guard time: 37.9 s total
+   proved   n= 206 median=1ms p90=51ms p99=408ms max=596ms
+   refuted  n= 166 median=78ms p90=641ms p99=741ms max=744ms
+   unknown  n=   5 median=8ms p90=307ms p99=307ms max=307ms
+   first decisions: n=206 mean=30ms
+   hits           : n=171 mean=185ms
+== C2_on_dbg: 355 decisions, 261 digests
+   digests with more than one verdict in this leg: 0
+   verdict: {'proved': 204, 'refuted': 146, 'unknown': 5}
+   hit    : {'none': 204, 'refuted': 146, 'unknown': 5}
+   refuter: {'-': 355}
+   judge  : {'-': 355}
+   guard time: 21.7 s total
+   proved   n= 204 median=0ms p90=20ms p99=76ms max=93ms
+   refuted  n= 146 median=56ms p90=401ms p99=410ms max=416ms
+   unknown  n=   5 median=6ms p90=333ms p99=333ms max=333ms
+   first decisions: n=204 mean=5ms
+   hits           : n=151 mean=136ms
+== compare: 283 digests in A, 261 in B, 261 common, 22 only in A, 0 only in B
+   flips (a digest decided differently in A and B): 0
+   same verdicts, different decision counts: 0
+   B: 151 non-proved decisions, 151 of them hits (100.0 %)
+   B: 0 proved decisions from an entry (Proved/Unknown hits re-proved)

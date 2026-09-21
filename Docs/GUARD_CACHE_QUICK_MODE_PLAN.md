@@ -3481,6 +3481,14 @@ to the bound before the hit is honoured (§5 step 2, accepted §17 item 5).
    money on every obligation missing from its store; the
    `PhiTest_Arithmetic` corpus has none missing.
 
+A verification leg on 2026-09-21 (after the review and after §39's
+`97be6d75`), with the harness passing `-o ML_debugger=true` and `PLPR.thy`
+untouched: the records written (the harness flag observed, not inferred);
+377 decisions over 283 digests, 171 of 171 non-proved hits, no error; 0
+flips on the 261 digests shared with the earlier cache-on leg, 22 digests
+new with §39's restructuring of the call (their entries already in the
+stores from that work's runs).  Details in the report.
+
 Not measured (no probe): lemma replay cost and budget cut-offs (no judge
 installed, every entry lemma-less: both zero); store I/O and the
 forked-proof write, which exist only with the cache on and are therefore
