@@ -137,7 +137,26 @@ reviewer's design under an author citation; source comments are for readers (sho
 no dates, no logs).  Corpus loads under Isabelle-MCP: add the TEMPORARY test-driver declare (the
 author calls AoA escalation expected behaviour; the declare keeps verification runs deterministic).
 
-## ADDENDUM 2026-09-14 night — STEP 5 run; pending the author's acceptance (READ THIS FIRST)
+## ADDENDUM 2026-09-21 — STEP 5 ACCEPTED (READ THIS FIRST)
+The author accepted step 5 on 2026-09-21 ("宣布 step 5 验收通过") after the review
+(`ai-artifacts/step5/STEP5_REVIEW_2026-09-14.md`, MET_ON_CONDITION), the conditions applied,
+a light re-check (`STEP5_RECHECK_2026-09-15.md`, twelve PASS, six observations corrected) and
+the verification leg V_on_dbg (records via `--ml-debugger` with PLPR.thy untouched; 0 flips on
+the 261 digests shared with C2).  Plan rev 29.  Rulings on the review: MD-5 (durable record of
+the future.ML patch) IGNORE; MD-6 (commit the raw leg data) NO; the leg directories stay
+untracked under ai-artifacts/step5/.  The future.ML patch IS applied on this machine
+(`Exn.Exn exn => Exn.reraise exn` in assign_result); Pure/HOL/Main/HOL-Analysis rebuilt as
+system heaps, the Phi_System_Base and Isa_REPL chains rebuilt against them (verified by the
+session databases' input_heaps).  P-4 recorded in
+`contrib/Isa-REPL/ai-artifacts/CLIENT_TIMEOUT_AND_SERVER_ECHO_2026-09-15.md`, not fixed.
+Memory added: aoa-runs-under-isa-repl-by-design.  NEXT (order not yet ruled): the Isabelle_RPC
+rendering unification (draft `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`), the
+`\<check> \<hypothesis> \<consistency>` plan, the tier measurement (§33), phase 2 (the judge:
+Frequent = ceiling, the model/driver and cost gating, the no-re-entry contract at the
+interface).  Still uncommitted in the tree, the author's to decide: 15 `.proof-store` files and
+7 `*.C` (Phi_Examples' exported C, `Bucket_Hash.C` tracked).
+
+## ADDENDUM 2026-09-14 night — STEP 5 run; pending the author's acceptance
 Plan rev 27, §38; the report `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`; the harness
 `ai-artifacts/step5/{run_leg.py,analyze.py}` (one fresh Isa-REPL server per leg; the
 harness kills the listener on its port afterwards -- a poly process outlives its process

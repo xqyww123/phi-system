@@ -1,6 +1,13 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 28 (2026-09-15) — **THE QUICKSORT REGRESSION DIAGNOSED AND
+Status: rev 29 (2026-09-21) — **STEP 5 ACCEPTED** by the author
+("宣布 step 5 验收通过", 2026-09-21; the run §38, its review and light
+re-check applied, the verification leg of 2026-09-21).  Next, each ruled
+"after step 5", their order not yet ruled: the Isabelle_RPC rendering
+unification, the `\<check> \<hypothesis> \<consistency>` plan, the tier
+measurement (§33), and phase 2 (the judge).  The previous status follows.
+
+rev 28 (2026-09-15) — **THE QUICKSORT REGRESSION DIAGNOSED AND
 RULED, implemented, verified, reviewed three times — the first review
 MET_ON_CONDITION (MD1 → ruling 8, D1–D12 applied, P1/P2 → rulings 9 and
 10), the re-review MET_ON_CONDITION (nine text conditions, applied), the
