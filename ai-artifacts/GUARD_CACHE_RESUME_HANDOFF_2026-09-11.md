@@ -150,7 +150,8 @@ system heaps, the Phi_System_Base and Isa_REPL chains rebuilt against them (veri
 session databases' input_heaps).  P-4 recorded in
 `contrib/Isa-REPL/ai-artifacts/CLIENT_TIMEOUT_AND_SERVER_ECHO_2026-09-15.md`, not fixed.
 Memory added: aoa-runs-under-isa-repl-by-design.  NEXT — order ruled 2026-09-21 ("是的，我们先看这个"): the Isabelle_RPC
-rendering unification goes first (its plan `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`;
+rendering unification goes first — DONE 2026-09-22, Isabelle_RPC commit `3360162`, the plan's
+acceptance conditions met (its plan `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`;
 the shape ruled 2026-08-18 is kept, "好"; one read-only Opus light re-check before code, "要的";
 the drafter's 2026-09-14 description of the shape as symbol-by-symbol was a departure, reported
 2026-09-21); then, order not yet ruled, the

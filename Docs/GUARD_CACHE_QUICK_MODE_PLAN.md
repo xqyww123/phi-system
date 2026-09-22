@@ -1,6 +1,15 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 30 (2026-09-21) — **STEP 5 ACCEPTED; the Isabelle_RPC rendering
+Status: rev 31 (2026-09-22) — **THE ISABELLE_RPC RENDERING UNIFICATION
+IMPLEMENTED**, its plan's acceptance conditions met (Isabelle_RPC commit
+`3360162`; the light re-check of 2026-09-21 applied, its two design points
+ruled by the author on 2026-09-22: one private core with two views, the
+indexed view taking the symbol sequence, and performance at that scale not
+a criterion).  The order of the remaining three items — the
+`\<check> \<hypothesis> \<consistency>` plan, the tier measurement (§33) and
+phase 2 (the judge) — is not yet ruled.  The previous status follows.
+
+rev 30 (2026-09-21) — **STEP 5 ACCEPTED; the Isabelle_RPC rendering
 unification goes first.**  Of the items ruled "after step 5", the author
 put the Isabelle_RPC rendering unification first ("是的，我们先看这个",
 2026-09-21).  Its plan is `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`:
