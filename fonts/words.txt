@@ -142,3 +142,5 @@ while
 with
 size_t
 wrt = w.r.t. = w.r.t,wrt
+check
+consistency

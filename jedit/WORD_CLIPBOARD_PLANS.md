@@ -17,8 +17,8 @@ is why the plans now cite it by function name instead.
 
 ## The problem, in three sentences
 
-phi-System declares 135 Isabelle symbols whose code points lie in the Unicode Private Use
-Area, U+E000..U+E086; each draws a whole keyword as one wide glyph. A private-use code point
+phi-System declares 137 Isabelle symbols whose code points lie in the Unicode Private Use
+Area, U+E000..U+E088; each draws a whole keyword as one wide glyph. A private-use code point
 means only what the drawing font says, so handing one to another application yields a blank
 box, and `phi_word_clipboard.bsh` therefore **expands** a glyph into the mathematical letters
 it draws on the way out, and **folds** those letters back into the glyph on the way in.

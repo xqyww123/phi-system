@@ -253,7 +253,7 @@ recycling one silently changes what those files say — it happened once here, w
 a deleted `\<tr>` left 0xE073 free and a later `\<size_t>` took it.  The high-water
 mark is a comment line at the top of `../symbols-words`; Isabelle folds comment
 lines away when it reads a symbol table, and unlike an entry it survives the
-deletion of the word that set it.  2048 code points, 135 in use.
+deletion of the word that set it.  2048 code points, 137 in use.
 
 Requirements: `fontTools`, `STIXTwoMath-Regular.otf` and `STIXTwoText-Medium.otf`
 — the script looks in `~/.local/share/fonts/stix2/` and the usual system font

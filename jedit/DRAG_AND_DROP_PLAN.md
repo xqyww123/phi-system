@@ -219,8 +219,8 @@ manual checks, it is plan 2's path, not this one's.
 
 ## The problem, in one paragraph
 
-phi-System declares 135 Isabelle symbols whose code points lie in the Unicode Private Use
-Area, U+E000..U+E086; each draws a whole keyword as one wide glyph, so `\<transforms>`
+phi-System declares 137 Isabelle symbols whose code points lie in the Unicode Private Use
+Area, U+E000..U+E088; each draws a whole keyword as one wide glyph, so `\<transforms>`
 renders as the word. A private-use code point means only what the drawing font says, so
 handing one to another application yields a blank box. `phi_word_clipboard.bsh` already
 fixes the **copy** direction (a copied word becomes mathematical letters) and the
@@ -454,7 +454,7 @@ come back.
 letter is involved here at all; the concatenation of two perfectly ordinary words is
 re-read by the longest-match-first scan as a different parse. This class is **finite and
 fully enumerated**: exactly **51 sequences** fail, 49 of two glyphs and 2 of three. Only 13
-of the 135 words can begin one — precisely those that are a proper prefix of another word
+of the 137 words can begin one — precisely those that are a proper prefix of another word
 (`in`, `change`, `get`, `has`, `no`, `or`, `prem`, `ref`, `ret`, `size`, `subj`, `val`,
 `var`) — and no failure can span more than three glyphs, because the longest overshooting
 tail is 5 letters, the shortest word is 2, and neither `ia` nor `it` (the first two letters
@@ -742,7 +742,7 @@ The import block of `phi_word_clipboard.bsh` brings in nothing from
 
 **Measured**: with only the first one added, the script still aborts at load with
 `Unknown class: EBComponent`, and `test_word_clipboard.bsh` never runs because its
-`source()` threw. With all five, the existing test prints `PASS: 135 entries round-tripped`.
+`source()` threw. With all five, the existing test prints `PASS: 137 entries round-tripped`.
 `JComponent` needs no import; bsh default-imports `javax.swing.*`.
 
 **None of these is needed in a running jEdit**, and the plan says so rather than leaving a

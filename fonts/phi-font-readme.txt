@@ -81,7 +81,7 @@ Whoever knows where they came from, please fill it in.
 
 Each phi-System keyword that used to be spelled one symbol per letter
 (\<t>\<r>\<a>\<n>\<s>\<f>\<o>\<r>\<m>\<s>) now has a single symbol whose glyph
-draws the whole word (\<transforms>).  135 of them occupy U+E000..U+E086.
+draws the whole word (\<transforms>).  137 of them occupy U+E000..U+E088.
 
 Outlines come from STIX Two Math (OFL, see STIX-OFL.txt), from its mathematical
 alphanumeric blocks:

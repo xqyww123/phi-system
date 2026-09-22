@@ -204,7 +204,7 @@ return costs about 3.5 µs; a compiled call handles the whole string for one. Th
 makes the number of returns proportional to the number of glyphs and of letter runs, never to
 the number of characters.
 
-**Expanding is one compiled pass.** A single `Matcher` over `[\uE000-\uE086]` walks the
+**Expanding is one compiled pass.** A single `Matcher` over `[\uE000-\uE088]` walks the
 glyphs. Between matches the text is copied wholesale with `StringBuffer.append(text, from,
 to)`, and a joiner is emitted exactly when this match starts where the previous one ended —
 which *is* the insertion condition stated above, "the previous character of the source text
@@ -214,7 +214,7 @@ block, so a joiner is never put beside a private-use character that is not a wor
 Powerline or Nerd-font glyph somebody has in the buffer, say.
 
 > An earlier draft expanded in two passes instead: a zero-width `replaceAll` over
-> `(?<=[\uE000-\uE086])(?=[\uE000-\uE086])` to insert the joiners, then one compiled
+> `(?<=[\uE000-\uE088])(?=[\uE000-\uE088])` to insert the joiners, then one compiled
 > `String.replace` per **distinct** glyph present. It returns to the interpreter about as
 > rarely, but each `String.replace` copies the whole string, so its cost grows with distinct
 > glyphs × length: **measured**, 563 ms against 102 ms over the same 5 million characters
