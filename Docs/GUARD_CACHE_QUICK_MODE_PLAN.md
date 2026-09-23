@@ -3460,8 +3460,10 @@ then applied.
 Shape as ruled (§37 item 12): one fresh Isa-REPL server per leg on the
 `Phi_System_Base` heap, the corpus loaded from source, wall clock by the
 harness (`ai-artifacts/step5/run_leg.py`), the `guard_decision` records
-read back by `ai-artifacts/step5/analyze.py`; the full report with every
-number is `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`.  The corpus:
+read back by `ai-artifacts/step5/analyze.py` (both untracked since
+2026-09-23 — experiment scripts are not committed — and readable at commit
+`56f1f569`); the full report with every number is
+`ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`.  The corpus:
 `Phi_Test.PhiTest_Arithmetic` and its imports (355 decisions, 261 digests),
 then the eight `Phi_Examples` theories as the extra leg.  The legs that
 count decisions run under `declare [[ML_debugger]]` (the record's gate,

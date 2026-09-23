@@ -166,7 +166,8 @@ then write the first plan and have it reviewed before any code.
 
 ## ADDENDUM 2026-09-14 night — STEP 5 run; pending the author's acceptance
 Plan rev 27, §38; the report `ai-artifacts/step5/STEP5_REPORT_2026-09-14.md`; the harness
-`ai-artifacts/step5/{run_leg.py,analyze.py}` (one fresh Isa-REPL server per leg; the
+`ai-artifacts/step5/{run_leg.py,analyze.py}` (untracked since 2026-09-23, readable at commit
+`56f1f569`; one fresh Isa-REPL server per leg; the
 harness kills the listener on its port afterwards -- a poly process outlives its process
 group -- and refuses a port that already answers).  Floors met: consecutive runs 100 % hits /
 0 flips; cache on vs off 0 flips; two concurrent servers 0 flips, no collision warning;
