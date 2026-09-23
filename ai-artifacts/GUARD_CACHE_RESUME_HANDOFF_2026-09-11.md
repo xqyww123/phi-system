@@ -1,3 +1,26 @@
+# 2026-09-23 — the check `\<check> \<premise> \<consistency>` implemented (addendum)
+
+Stages 1 and 2 of `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md` are done
+(its §10 "Stage 1 and stage 2"; the guard plan's status line, rev 33, and its
+§1 entries the check / `guard_kind`, `guard_simp_tac`, `gen_guard_condition_solver`,
+guard digest, R-conv/R-nitpick, the two warnings; §5 steps 1½, 4, 6; §33 item 3;
+§39 ruling 10 record the change).  In one sentence: a guard written
+`\<condition> False` is the check, decided without the three steps that presuppose
+consistent premises (the refutation by the simplifier, R-conv, R-nitpick's slice);
+`prove_or_refute` takes a `guard_kind` first; `guard_simp_tac` no longer cuts.
+Stage 3 is done as well: the code review (MET_ON_CONDITION, that plan's §10), its
+conditions ruled (that plan's rulings 22-25) and applied, the re-review before the
+commit; what remains is the author's word on two local names (that plan's §9) and the
+commit itself.
+
+Deferred by the author, recorded at his request and NOT that plan's (its ruling
+15, 2026-09-22): `\<condition>[\<safe>] P` is to be replaced by `\<condition> P`
+everywhere, eventually — "\<condition>[\<safe>] P 是另一个问题，其实我有计划打算最后都换成
+\<condition> P 的。不过这个我们之后再讨论吧。请记一笔".  Until then the `\<condition> P`
+paragraph of `PLPR.thy` does not mention the safe variant.
+
+The section below is the state of 2026-09-15 and is kept as history.
+
 # 2026-09-15 evening — the Quicksort regression fix (plan §39), READ THIS FIRST
 
 COMMITTED: phi-system master `97be6d75` (root `43dddc25`), after three reviews

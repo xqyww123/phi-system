@@ -6,7 +6,8 @@ begin
    of Docs/GUARD_CACHE_QUICK_MODE_PLAN.md section 5 -- hits of each verdict,
    lemma enabling, a looping lemma cut off by its budget, an entry's deletion,
    the judge's delta replacing this entry's, both warnings, the judge's three errors --
-   driven through the guard
+   and the check \<check> \<premise> \<consistency>, the guard \<condition> False decided
+   without assuming the premises consistent (plan section 1, the check) -- driven through the guard
    factory with entries injected into the store and a test judge installed into
    the ref.  Not registered in any ROOT: evaluate on demand (e.g. via
    Isabelle-MCP under session Phi_System_Base).
@@ -15,9 +16,12 @@ begin
    exits (the TrueI exit, fast_inst) so that it reaches prove_or_refute, and
    must not be closed by guard_simp_tac there, so that P-auto's search decides
    it: the atoms below carry classical rules only, never a simp rule, and no
-   guard is an equation.  The one exception is the probe of the simplifier's
+   guard is an equation.  Three exceptions: the probe of the simplifier's
    own refutation (plan section 5 step 1 1/2), whose injected lemma rewrites
-   the guard to False on purpose.
+   the guard to False on purpose; and, in the section The check, the probe
+   whose premise guard_simp_tac rewrites to False (closing the goal) and the
+   regression probe, an equation guard on purpose.  The other check probes are
+   decided by P-auto, by R-nitpick or by the judge, and BADN's ends unknown.
 
    The store is this theory's proof store, Guard_Decision_Smoke.proof-store (plan
    step 4), with no deletion, and it outlives a re-evaluation of this theory and
@@ -69,11 +73,12 @@ fun path_of r = (attr "verdict" r, attr "hit" r, attr "refuter" r, attr "judge" 
 fun show_record ((atts, _): Properties.T * XML.body) =
   commas (map (fn (a, v) => a ^ "=" ^ v) atts)
 
-(*the guard digest as the factory computes it, through the factory itself: a
+(*the guard digest as the factory computes it, through the factory itself and under
+  the kind of the state as written (guard_digest_of, the engine's own digest step): a
   solving function that records what the digest step handed it*)
 fun digest_of can_inst ctxt st =
   let val d = Unsynchronized.ref NONE
-      val _ = Seq.pull (Phi_Reasoners.gen_guard_condition_solver Phi_Reasoners.guard_digest
+      val _ = Seq.pull (Phi_Reasoners.gen_guard_condition_solver (Phi_Reasoners.guard_digest_of st)
                 (fn _ => fn _ => fn d' => fn _ => (d := SOME d'; Seq.empty))
                 {can_inst = can_inst} (ctxt, st))
    in the (! d) end
@@ -196,23 +201,24 @@ fun warnings_of f =
   end
 val loud_line = "A guard condition proved before is now refuted by the LLM judge:"
 val loud_simp_line = "A guard condition proved before is now refuted by the simplifier:"
-(*the undecided-guard warning is trace-gated; this theory's \<phi>trace_reasoning = 3
-  keeps it on*)
+(*the undecided-guard warning and the undecided-check warning are trace-gated; this
+  theory's \<phi>trace_reasoning = 3 keeps them on*)
 val undecided_line = "Fail to prove or falsify the following guard condition"
+val undecided_check_line = "Fail to check the consistency of the premises:"
+val warning_lines = [loud_line, loud_simp_line, undecided_line, undecided_check_line]
 fun assert_warnings name line expected ws =
   let val n = length (filter (String.isPrefix line) ws)
    in if n = expected then writeln (name ^ ": " ^ string_of_int n ^ " warning(s) " ^ quote line ^ ", as expected")
       else error (name ^ ": " ^ string_of_int n ^ " warning(s) " ^ quote line ^ ", expected " ^ string_of_int expected)
   end
-fun assert_loud name expected ws =
-  (assert_warnings name loud_line expected ws; assert_warnings name loud_simp_line 0 ws;
-   assert_warnings name undecided_line 0 ws)
-fun assert_loud_simp name expected ws =
-  (assert_warnings name loud_simp_line expected ws; assert_warnings name loud_line 0 ws;
-   assert_warnings name undecided_line 0 ws)
-fun assert_undecided name expected ws =
-  (assert_warnings name undecided_line expected ws; assert_warnings name loud_line 0 ws;
-   assert_warnings name loud_simp_line 0 ws)
+(*the given line the given number of times, every other line of warning_lines never*)
+fun assert_only name line expected ws =
+  (assert_warnings name line expected ws;
+   List.app (fn l => assert_warnings name l 0 ws) (remove (op =) line warning_lines))
+fun assert_loud name = assert_only name loud_line
+fun assert_loud_simp name = assert_only name loud_simp_line
+fun assert_undecided name = assert_only name undecided_line
+fun assert_undecided_check name = assert_only name undecided_check_line
 
 (*a numeral no call of this or any earlier run used, for a guard that must meet no
   entry: the store outlives the process, and a process serial alone could repeat
@@ -683,12 +689,95 @@ ML \<open>assert_loud_simp "the simplifier refuting a Proved entry" 1 (warnings_
 (*a Provable whose lemma rewrites the guard to False: the third error.  An Unknown hit
   goes straight to the judge, so no refuter pre-empts it; BADN has no rule, so P-auto
   fails, and the judge's true lemma `BADN n = False` lets guard_simp_tac rewrite the
-  conclusion to False, which quick_cut drops*)
+  conclusion to False, which the judge path's own test refuses for an ordinary guard*)
 ML \<open>test_error (with_entry_and_judge [] Phi_Guard_Cache.Unknown
                 (fn _ => Phi_Reasoners.Provable (adds [badn_false \<^context>]))) \<^context>
   "the judge answers Provable with a lemma that rewrites the guard to False: error"
   "The judge is broken: its lemmas rewrite the guard to False"
   ("\<condition> (BADN " ^ fresh () ^ ")")\<close>
+
+section \<open>The check\<close>
+
+(*\<check> \<premise> \<consistency>, the guard \<condition> False as written (plan section 1,
+  the check; the probes' design is the check plan's section 6, which that entry names):
+  decided without the three steps that presuppose consistent premises -- the refutation by the
+  simplifier, R-conv, R-nitpick's slice -- and ending with the verdicts of the check:
+  Proved when the premises are found inconsistent, Refuted on R-nitpick's model of them
+  or on the judge's Unprovable, Unknown otherwise.  The conclusion is the literal False
+  and cannot carry the fresh numeral, so the numeral goes into a premise.*)
+
+(*the simplification finds the contradiction: proved with refuter -, nothing written*)
+ML \<open>test plain \<^context> "the check, the premises contradictory by simp: proved"
+  (expect ("proved", "none", "-", "-") "no entry")
+  ("Suc " ^ fresh () ^ " = 0 \<Longrightarrow> \<check> \<premise> \<consistency>")\<close>
+
+(*P-auto finds it: FALLS has no simp rule, and FALLS_cons ignores the head*)
+ML \<open>test plain \<^context> "the check, the premises contradictory by P-auto's search: proved"
+  (expect ("proved", "none", "-", "-") "no entry")
+  ("FALLS (" ^ fresh () ^ " # " ^ elim_chain ^ ") \<Longrightarrow> \<check> \<premise> \<consistency>")\<close>
+
+(*consistent premises: R-nitpick exhibits a model of them.  This probe reads
+  "guard_simp_tac" if the refutation by the simplifier still fires on a check, and
+  "R-conv" if R-conv is not skipped*)
+ML \<open>test plain \<^context> "the check, consistent premises: refuted by R-nitpick's model"
+  (expect ("refuted", "none", "R-nitpick", "-") "Refuted with 0 lemma(s)")
+  ("CHAIN [" ^ fresh () ^ "] \<Longrightarrow> \<check> \<premise> \<consistency>")\<close>
+
+(*the check is not mode-specific: the same path under \<condition>[NO_INST] False*)
+ML \<open>test plain \<^context> "the check under NO_INST: the same path"
+  (expect ("refuted", "none", "R-nitpick", "-") "Refuted with 0 lemma(s)")
+  ("CHAIN [" ^ fresh () ^ "] \<Longrightarrow> \<condition>[NO_INST] False")\<close>
+
+(*undecided: BADN has no rule for P-auto and no model for Nitpick -- the undecided-check
+  warning once, the undecided-guard warning never, Unknown written.  With the premise
+  still sliced away this would read ("refuted", "none", "R-nitpick", "-")*)
+ML \<open>assert_undecided_check "the check nobody decides" 1 (warnings_of (fn () =>
+  test plain \<^context> "the check, a premise nobody decides: the undecided-check warning, Unknown written"
+    (expect ("unknown", "none", "-", "-") "Unknown with 0 lemma(s)")
+    ("BADN " ^ fresh () ^ " \<Longrightarrow> \<check> \<premise> \<consistency>")))\<close>
+
+(*the judge overturns a Proved entry of a check: the loud guard warning naming the judge*)
+ML \<open>assert_loud "the judge overturning a Proved check" 1 (warnings_of (fn () =>
+  test (with_entry_and_judge [] Phi_Guard_Cache.Proved (K Phi_Reasoners.Unprovable)) \<^context>
+    "the check, Proved hit, nobody decides, the judge answers Unprovable: the loud guard warning"
+    (expect ("refuted", "proved", "-", "Unprovable") "Refuted with 0 lemma(s)")
+    ("BADN " ^ fresh () ^ " \<Longrightarrow> \<check> \<premise> \<consistency>")))\<close>
+
+(*the regression probe: an ordinary guard the template's rewrite turns into
+  \<condition> False, under a prefix -- the kind is read on the state as written, so it
+  keeps the refutation by the simplifier, and no warning line*)
+ML \<open>assert_only "an ordinary guard rewritten to False" loud_line 0 (warnings_of (fn () =>
+  test plain \<^context> "an ordinary guard the template's rewrite turns into False: refuted by the simplifier"
+    (expect ("refuted", "none", "guard_simp_tac", "-") "Refuted with 0 lemma(s)")
+    ("CHAIN [" ^ fresh () ^ "] \<Longrightarrow> \<condition> (Suc " ^ fresh () ^ " = 0)")))\<close>
+
+(*the digest marker, through the digest step itself: two states as written, one of each
+  kind, given as guard_digest_of's first argument, digest ONE state differently -- one
+  assertion over the marker, over guard_kind_of on both written forms, and over
+  guard_digest_of reading its first argument (the wiring inside guard_condition_judge is
+  not covered)*)
+ML \<open>
+let val ctxt = \<^context>
+    fun state s = Thm.trivial (Thm.cterm_of ctxt (read false ctxt s))
+    val st = state "CHAIN [1] \<Longrightarrow> \<check> \<premise> \<consistency>"
+    fun hex th0 = Hasher.hex (Phi_Reasoners.guard_digest_of th0 ctxt st)
+ in if hex st <> hex (state "CHAIN [1] \<Longrightarrow> \<condition> (Suc 0 = 0)")
+    then writeln "the digest marker: the check's kind and an ordinary guard's digest one state differently"
+    else error "the digest marker: the two kinds digest one state alike"
+end\<close>
+
+section \<open>The method \<phi>guard_P_auto\<close>
+
+(*no caller anywhere, so it is exercised here: the guard-side simplification and P-auto on
+  a raw Isar goal with a BARE False conclusion (the method's context carries no
+  Premise_def, so a tagged conclusion is never unfolded there).  The cut that used to sit
+  inside guard_simp_tac failed this at once; now P-auto proves it from the premise*)
+lemma "FALLS [1,2,3,4,5,6,7,8,9,10] \<Longrightarrow> False" by \<phi>guard_P_auto
+
+(*the negative control: consistent premises, and the method must still fail*)
+lemma "CHAIN [1] \<Longrightarrow> False"
+  apply (fails \<open>\<phi>guard_P_auto\<close>)
+  oops
 
 section \<open>The switch and the variable disciplines\<close>
 

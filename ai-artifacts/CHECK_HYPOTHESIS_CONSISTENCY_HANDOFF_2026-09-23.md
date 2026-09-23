@@ -1,5 +1,15 @@
 # Resume handoff — `\<check> \<premise> \<consistency>`: stage 1 starts here (2026-09-23)
 
+> Later the same day: stages 1 and 2 are DONE from this handoff (the plan's
+> §10 "Stage 1 and stage 2", its status line, now rev 11, the stage-2 record
+> `CHECK_HYPOTHESIS_CONSISTENCY_STAGE2_2026-09-23.md`); the guard plan and
+> `GUARD_CACHE_RESUME_HANDOFF_2026-09-11.md` carry their addenda.  Stage 3
+> is done too: the code review (MET_ON_CONDITION, the plan's §10), its
+> conditions ruled (rulings 22-25) and applied, the re-review preceding the
+> commit; only the author's word on two local names (the plan's §9) and
+> the commit itself remain.  Sections 1 and 4 below describe the state
+> BEFORE stage 1 and are kept as the record of what was to be done.
+
 Written for the session that resumes after the author's context
 compaction.  The plan is `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`
 (rev 6): read it whole before touching anything; §5 is the stage list, §6

@@ -1,15 +1,29 @@
 # `\<check> \<premise> \<consistency>` — deciding a guard without assuming the premises consistent
 
-Status: rev 6 (2026-09-23) — **READY FOR STAGE 1; stage 1 starts after the
-author's context compaction, from the handoff
-`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_HANDOFF_2026-09-23.md`.  Stage P
-done and committed (phi-system `be16be02`); three reviews done (§10);
-every condition ruled (§2, items 1-21) or applied; every name approved
-(§9).  No ML has been changed.**  Points marked
+Status: rev 11 (2026-09-23) — **STAGES 1 AND 2 DONE, THE CODE REVIEW AND
+ITS RE-REVIEW DONE; pending the author's word on two local names (§9) and
+the commit.**  The code written; the verification of §6 run (PLPR.thy, the
+smoke theory twice and Phi_BI.thy clean; the corpus with 0 flips on
+`PhiTest_Arithmetic` and one flip on `Phi_Examples` that the change did not
+cause, §10); the code review (`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_CODE_REVIEW_2026-09-23.md`,
+MET_ON_CONDITION) with its conditions applied — D1-D3 and A1-A8 by the
+drafter, M1 by ruling 22 (the check's pattern is `Premise _ False` and
+nothing else; the bare-`False` arm of `guard_kind_of`, the drafter's,
+deleted), M2 and R5 by the drafter under ruling 23 ("Unlike every other
+guard," deleted from the new `\<^descr>` paragraph; the source comments
+point at the guard plan in `Docs/`), M3 by ruling 24 (the lost store
+records left as they are), M4 by ruling 25 (departures 1, 3 and 5 stand, 2
+is the drafter's, 4 is ruling 22) — and re-verified after every edit; the
+light re-review (`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_CODE_REREVIEW_2026-09-23.md`,
+MET_ON_CONDITION: no code defect, one item for the author — the names
+`simplified_in` and `by_simp`, §9 — and eight document items, applied in
+this revision).  §10 records all of it.  Stage P done and committed
+(phi-system `be16be02`); three plan reviews done (§10); every condition
+ruled (§2, items 1-25) or applied; every name approved (§9) but the two of
+the re-review's N1.  Points marked
 [drafter] are the drafter's and stand only until the author rules on
-them.  Line numbers are those of phi-system commit `1f3c2142` (master);
-the working tree's ML is byte-identical to it in the files this plan
-touches (the three reviews verified this).
+them.  Line numbers are those of phi-system commit `1f3c2142`, the code
+before stage 1; resolve a citation with `git show 1f3c2142:<file>`.
 
 The parent plan is `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` ("the guard plan"
 below); this is the "plan of its own" that its §33 rulings of 2026-09-11
@@ -104,17 +118,19 @@ instance, the obligation instance, the goal state).  New terms:
   kind from a goal state: `Check_Premise_Consistency` iff the state has a
   premise and that premise's conclusion under its prefix
   (`Logic.strip_assums_concl`, the same reading `quick_cut` uses today at
-  :976) is `False`, tagged (`Premise _ False`) or bare; `Normal` otherwise,
-  and for a state with no premise.  Its `False` test is its own — it must
-  ACCEPT the tagged form, which `concl_is_false` (§4.3 a) must REJECT so
-  that the factory's front `quick_cut 1 th` stays a no-op before
+  :976) is `False` under a premise tag — the pattern `Premise _ False`, and
+  no other [author 2026-09-23 "这个 pattern 是 Premise _ False", ruling 22;
+  until rev 9 the entry also admitted a bare `False`, a leftover of rev 1
+  that the drafter had kept and the code review's M1 questioned]; `Normal`
+  otherwise, and for a state with no premise.  Its `False` test is its own
+  — it must ACCEPT the tagged form, which `concl_is_false` (§4.3 a) must
+  REJECT so that the factory's front `quick_cut 1 th` stays a no-op before
   `Premise_def` is unfolded (§4.4) — and it is deliberately not
-  `concl_is_false`.  No mode check on the tag: into `guard_condition_judge`
-  only `\<condition>` guards arrive, selected by the registered patterns
-  (PLPR.thy:2005-2009); the out-of-run instance has no registration and is
-  called from ML at four live sites, but after this plan it reads no kind at
-  all (§4.4).  "Or bare" is there for the method `\<phi>guard_P_auto`,
-  which is applied to a raw Isar goal — see §6 item 6.
+  `concl_is_false`; the two predicates are disjoint by construction.  No
+  mode check on the tag: into `guard_condition_judge` only `\<condition>`
+  guards arrive, selected by the registered patterns (PLPR.thy:2005-2009);
+  the out-of-run instance has no registration and is called from ML at four
+  live sites, but after this plan it reads no kind at all (§4.4).
 - **the three steps**: the three steps of one `prove_or_refute` call whose
   validity rests on the assumption that the premises are consistent, and
   which therefore refute unconditionally every check the guard-side
@@ -257,6 +273,28 @@ the check unconditionally (§3).
     approved: "好的 批准这两个名字".  Stage 1 starts
     after the author's context compaction: "之后在 compact 后再开工，请准备，
     请确保你的计划足够详细，请再次通读确保自洽".
+
+**Fifth round** (after the code review, 2026-09-23).
+
+22. **The check's pattern is `Premise _ False`, and nothing else.**  On the
+    review's M1 (the bare-`False` arm of `guard_kind_of`, the drafter's
+    departure 4): "你为什么要擅自改变我的决策！ 让我再明确一下，这个 pattern 是
+    Premise _ False 明白了吗！" — the arm was the drafter's, not the author's
+    decision; it is deleted (§1 `guard_kind_of`, §10).
+23. **Documents and tests are the drafter's to decide**: "与文档与测试相关的可以你
+    自主决定" — under it the drafter took the review's M2 (the four words
+    "Unlike every other guard," deleted from the new `\<^descr>` paragraph,
+    §4.8) and R5 (the source comments point at the guard plan in `Docs/`,
+    §10), and kept departure 2 (the method probe's literal list).
+24. **M3 is not a problem**: "M3 别管。不是问题。" — the three records the
+    corpus legs removed from tracked stores are left as they are; no
+    restoration, no confirmation load; no store and no `.C` file enters the
+    commit (§10).
+25. **The departures**: "1. 没问题，不用管 2. 与文档与测试相关的可以你自主决定
+    3. 没问题 4. 好 5. 没问题" — departures 1, 3 and 5 stand, 2 is the
+    drafter's, 4 is ruling 22.
+26. **The two local names** `simplified_in` and `by_simp` (the re-review's
+    N1, §9): "批准 这些内部名".
 
 Earlier rulings this plan rests on: the `is_F` shortcut is deleted [author
 2026-09-15 "建议直接删除 is_F 分支"; guard plan §39]; the 2026-09-11 follow-up
@@ -414,6 +452,14 @@ the predicate so that no caller can forget it (the second review's F9).
                      | Check_Premise_Consistency => false
     val goals = Thm.cprems_of (if refuted_by_simp then th0 else th1)
     val outcome = if refuted_by_simp then refuted_by simp_refuter else decide th1
+
+(Rev 8, the code review's D1: the pull and the test are the two local
+functions `simplified_in ctxt'` and `refuted_by_simp th` of
+`prove_or_refute`, defined before step 1½ and used there — `val th1 =
+simplified_in ctxt_g`, `val by_simp = refuted_by_simp th1` — and in the
+judge path — `val th' = simplified_in ctxt_g'`, then `if refuted_by_simp
+th' then error "The judge is broken: ..." else ()` — so that the two sites
+cannot diverge; the names are the drafter's, §9.)
 
 The `case` on `Seq.pull` stays total (the first review's R1, third
 correction); its `NONE` arm is unreachable and says so in a comment.  The
@@ -700,11 +746,13 @@ Two `\<^descr>` paragraphs in the text block that documents `\<condition> P`
 - The new paragraph: "\<^prop>\<open>\<check> \<premise> \<consistency>\<close> is the guard
   \<open>\<condition> False\<close> under its own name: it holds exactly when the premises are
   inconsistent, so what it guards applies only in a case that cannot occur.
-  Unlike every other guard, the three steps that presuppose consistent
-  premises are off for it: the simplifier's refutation by a \<open>False\<close>
-  conclusion, R-conv, and R-nitpick's premise slice — R-nitpick is instead
-  asked for a model of the premises themselves (library/reasoners.ML,
-  \<open>guard_kind\<close>)."  [drafter's wording; §9]
+  The three steps that presuppose consistent premises are off for it: the
+  simplifier's refutation by a \<open>False\<close> conclusion, R-conv, and R-nitpick's
+  premise slice.  R-nitpick is instead asked for a model of the premises
+  themselves (library/reasoners.ML, \<open>guard_kind\<close>)."  [drafter's wording;
+  §9.  Rev 10, ruling 23: the opening clause "Unlike every other guard,"
+  of the earlier wording is deleted — it was false for
+  `\<condition>[NO_INST] False`, which is the check too; the code review's M2]
 
 ### 4.9 The two word symbols (stage P)
 
@@ -917,7 +965,12 @@ source.
    - **the digest marker**: on one state,
      `Phi_Reasoners.guard_digest Phi_Reasoners.Normal` and
      `Phi_Reasoners.guard_digest Phi_Reasoners.Check_Premise_Consistency`
-     differ (an `ML` assertion).
+     differ (an `ML` assertion).  [Rev 8, the code review's D2, a
+     strengthening: the assertion goes through `Phi_Reasoners.guard_digest_of`
+     on two states as written, one of each kind, given as its first
+     argument, and digests ONE state under each — so it also fails if
+     `guard_kind_of` misclassifies either written form or `guard_digest_of`
+     ignores its first argument.]
    The existing probes keep their expectations: "the simplifier refuting a
    Proved entry" (`\<condition> (BADN n)`, kind `Normal`) now runs through
    the refutation by the simplifier inside `prove_or_refute` (§4.3 a), and
@@ -1163,6 +1216,15 @@ Answered and approved on 2026-09-23 ("好的 批准这两个名字"): `guard_kin
 `guard_condition_judge`'s entrance) and `string_of_guard_kind` (§4.7: the
 one rendering of the kind for the record and the trace line).
 
+Approved on 2026-09-23 ("批准 这些内部名", ruling 26; the re-review's N1): two
+local names inside `prove_or_refute`, introduced by the code review's D1
+(§4.3 a) —
+`simplified_in ctxt'`, the one pull of `guard_simp_tac` on the state the
+call was given, used at step 1½ (`ctxt_g`) and in the judge path
+(`ctxt_g'`); and `by_simp`, step 1½'s boolean `refuted_by_simp th1`, the
+name the boolean needed once `refuted_by_simp` became the function the
+review prescribed.
+
 Under ruling 20 (the drafter's, within the design): the type name
 `guard_kind` (also "名字你随意起") and its owning structure `Phi_Guard_Refute`
 with the re-export (§1, §4.2); the record's token (the constructor's
@@ -1261,3 +1323,194 @@ The vocabulary change of ruling 12 (premise, not hypothesis) renames the
 file's subject but not the file: the plan and the reviews keep their names
 (`CHECK_HYPOTHESIS_CONSISTENCY_*`) so that the reviews' citations stay
 valid.
+
+**Stage 1 and stage 2 (2026-09-23), after the author's "开工".**  The code
+of §5 stage 1, in its order, each `.ML` re-evaluated under Isabelle-MCP
+`Phi_System_Base` (restarted first): `phi_nitpick.ML` (the two comment
+blocks, ruling 19; the partition cited by its function, `axioms_for_term`);
+`guard_refute.ML` (`guard_kind`; `preprocess kind` splits and slices under
+`Normal`, hands `([], residue)` over for the check; `nitpick kind` passes
+`(kind = Normal)`; the three comments); `reasoners.ML` (the re-export,
+`concl_is_false` with `quick_cut` over it, `guard_simp_tac` without the cut,
+`guard_kind_of`, `guard_digest kind` with the marker, `guard_digest_of`,
+`guard_condition_judge` per §4.2, `prove_or_refute kind` with step 1½ as
+§4.3 a sketches it, the judge path total with the `Normal`-only error,
+R-conv under `Normal` only, `r_nitpick kind`, `undecided_guard_warning kind`
+with the approved text, `string_of_guard_kind`, the record attribute `kind`
+and the trace suffix, the comments of §5 item 2); `PLPR.thy` (the
+abbreviation with the raw right-hand side, `hide_const (open)`, the two
+`\<^descr>` paragraphs); the smoke theory (the section "The check" with the
+eight probes of §6 item 2, the section "The method \<phi>guard_P_auto" with
+the two probes of §6 item 6, `digest_of` through `guard_digest_of`, the
+header, the four warning lines asserted through one `assert_only`);
+`Guard_False_Probe.thy` deleted.  Stage 2, every item of §6 (the record with
+the numbers: `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_STAGE2_2026-09-23.md`,
+an experiment result, not committed): `PLPR.thy` clean; the display
+measured on PLPR alone (`\<condition> False` prints as the new spelling,
+under a prefix too; the spelling reads as `Premise MODE_GUARD False`; the
+unqualified constant is hidden, the qualified one and the notation stay;
+`\<condition>[NO_INST] False` prints as itself, the abbreviation being
+`MODE_GUARD`'s); the smoke theory clean twice — the second run in a fresh
+process against the store the first wrote — every check probe on the path
+§6 predicts (the R-nitpick probe reads "R-nitpick", not "guard_simp_tac"
+or "R-conv"; the undecided probe prints the undecided-check warning once
+and nothing else; the regression probe keeps the refutation by the
+simplifier under kind `Normal`); `Phi_BI.thy` clean, its sum rules'
+`\<condition> False` printed as the new spelling in their goal states; the
+corpus leg `Phi_Test.PhiTest_Arithmetic` (Isa-REPL, `-o ML_debugger=true`
+on the server): 377 decisions over 283 digests as in the `V_on_dbg` leg of
+2026-09-21, the same verdict counts (206 / 166 / 5), 0 flips over the 277
+digests in common, and the six digests that differ are the six checks, all
+in `Phi_System.Phi_Types` — two closed by the simplification (inconsistent
+premises; 0 subgoals left), four Refuted (hits of entries written at 10:39
+by a process outside the session); no decision's verdict differs from the
+entry it hit, so the floor "0 flips against the committed stores" holds
+for this leg (and for the partial `Phi_Examples` leg below: 0; the cache-off
+leg reads no entry, so the floor does not apply to it).  The `Phi_Examples`
+leg, first cut short by the host's
+low-memory kill and then re-run whole on the author's "现在就跑": 2493
+decisions over 2383 digests, 0 flips over the 1467 digests shared with the
+partial run, and against the 2026-09-14 reference (pre-§39) 1579 shared
+digests with 2 "flips", both `unknown` then and `proved` now as hits of
+`Proved` entries the stores committed on 2026-09-21 already held — §39's
+fix, not the check's doing; against the committed stores ONE flip, the
+guard of `Bucket_Hash.thy:222` (digest `79d491a434b111b5`, kind `Normal`,
+Proved with an empty delta since `1f3c2142`; P-auto, R-conv and R-nitpick
+all failed in 3380 ms, and the entry was rewritten Unknown) — excluded as
+the change's doing by construction (for an ordinary guard the simplifier
+did not refute, P-auto and the refuters receive exactly the state and
+context the old code gave them; the review's report proves it out), its
+actual cause not established: in both legs where `Bucket_Hash.thy:20` fell
+through to the model (2026-09-14 and this one) `:222` was decided Unknown,
+and the one clean load, 2026-09-15 with the theory alone, decided it
+Proved; the same six checks of `Phi_Types`, and no check in any example
+theory (every one of the eight loaded).  Two AoA records that were LIVE in
+HEAD's stores failed to replay during that leg and were tombstoned — an
+invalidation is not gated by `AoA_write_proof_store` —: `Bucket_Hash.thy:20`'s
+`Bucket_Hash.Hash/Transformation_Functor:0` (compacted away at theory end,
+2245658 → 1855842 bytes) and `Matrix_Oprs.thy:140`'s `f73487f5bedcd330` (a
+pending tombstone); the same `:20` obligation fell through to the model on
+2026-09-14 too, and the likely cause, the wall-clock replay cap on the
+loaded machine, is not established — the review's M3 asks the author for
+a restoration and a confirmation load.  The cache-off leg on
+`PhiTest_Arithmetic` (every guard decided cold): 0 flips over 277 digests,
+and the six checks cold — two closed by the simplification (7 and 10 ms),
+four refuted by R-nitpick's model at 625-1039 ms each (P-auto's bound,
+then the search) — 3.4 s in all, the cost of ruling 5.  The machine was
+loaded by other sessions' Isabelle processes throughout, so every timing
+is inflated (leg wall 454 s against 204 s) and the increment is reported,
+not compared; P-auto and R-conv are bounded by thread CPU, but R-nitpick
+and the proof-store replays by wall clock, so load can reach a verdict
+through those two.
+
+The drafter's five departures from the letter of §5/§6, for the author
+[drafter]:
+
+1. The corpus legs were run with the harness flag `-o ML_debugger=true`
+   (as the `V_on_dbg` leg of 2026-09-21 was) instead of a temporary
+   `declare [[ML_debugger]]` in `PLPR.thy`; the temporary declare that WAS
+   made (and reverted) is `AoA_driver = "test", AoA_write_proof_store =
+   false`, so that an obligation missing from a store fails instead of
+   calling a model (the `Phi_Examples` leg needs it; §38 of the guard plan).
+2. The method probe's statement is `FALLS [1,2,3,4,5,6,7,8,9,10] \<Longrightarrow> False`
+   rather than `FALLS <elim_chain>`: an Isar `lemma` cannot splice the ML
+   value, and the probe's point is the cut's absence, not the budget.  The
+   negative control is `apply (fails \<open>\<phi>guard_P_auto\<close>) oops` — Eisbach's
+   `fails` was not this theory's idiom before (nothing in phi-system's
+   tests used it); it is now.
+3. The abbreviation sits after `Proof_Obligation`, closing the block of the
+   three tag abbreviations, with `hide_const (open)` right after it — not
+   between `Simp_Premise` and `Proof_Obligation`, where §4.8's "right after
+   `Simp_Premise`" would put it; printing does not depend on the order
+   (measured).
+4. `guard_kind_of` kept a bare-`False` arm that rev 1's §1 had specified
+   although, after R1, no caller sees a bare conclusion.  RULED (ruling 22):
+   the arm was never the author's decision — the check's pattern is
+   `Premise _ False` and nothing else — and it is deleted in rev 9, with
+   the words "or bare" in the two comments of reasoners.ML and in §1.
+5. The documents of stage 3 (the guard plan's entries, the two handoff
+   addenda, this §10) were drafted BEFORE the code review, which §5 stage 3
+   orders after it, so that the review could read them beside the code;
+   the review's judge endorsed the order.
+
+Also recorded: compared with HEAD, `Phi_System/Phi_Types.proof-store` gained
+the four entries under the marker digests (written at 10:39 on 2026-09-23,
+while this session's Isabelle-MCP was evaluating `Phi_BI.thy`, by another
+session loading `Phi_Types` from the shared working tree with the stage-1
+ML in it) and LOST the record `c8ee984a47340226`, a cached `auto_split`
+sledgehammer proof, tombstoned after a failed replay by some load since
+HEAD — that outside process or one of the legs; which is unknown.  Four
+example stores gained guard entries and nothing else (`Binary_Search`,
+`Binary_Trees`, `Dynamic_Array`, `Linked_List`), and `Bucket_Hash.C` was
+regenerated with renumbered temporaries.  None of these files is part of
+the stage-3 commit; what happens to the lost records is the review's M3,
+for the author.
+
+**The code review (2026-09-23, `wf_e343dd79-aa3`, model `claude-opus-5-5`
+at xhigh: six interrogators, a curator, one fresh defender per finding, a
+judge): MET_ON_CONDITION** — the report
+`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_CODE_REVIEW_2026-09-23.md`.  29
+findings, 17 kept, 6 relaxation proposals.  No wrong verdict, crash or
+design defect.  Applied by the drafter in rev 8: D1 (the kind-gated
+refutation test written once, as the local functions `simplified_in` and
+`refuted_by_simp` of `prove_or_refute`, used at step 1½ and in the judge
+path — the names are the drafter's, for the author), D2 (the digest-marker
+probe goes through `guard_digest_of` on two states as written, a
+strengthening of §6 item 2), D3 (the
+corpus account corrected: above and in the record), A1-A8 (the status
+line and departure 5; the guard plan's §3 diagram and §5's opening and
+step 4; "every check the simplification does not prove"; one name for
+this plan inside the guard plan; the two pointers spelt with this plan's
+path; the report comment; the smoke theory's header and section comment;
+`assert_only` asserting its own line first).  For the author: M1 (drop
+`guard_kind_of`'s bare-`False` arm and read the tag with
+`PLPR_Syntax.dest_premise_tag_opt`; recommended), M2 (delete "Unlike every
+other guard," from the new `\<^descr>` paragraph, false for
+`\<condition>[NO_INST] False`; recommended), M3 (the three lost records:
+restore from HEAD, a confirmation load, commit code and documents only;
+recommended), M4 (departures 1-3 and 5 stand, 4 is M1); the proposals R1
+(= M1, adopt), R2 (delete `quick_cut`: decline), R3 (drop "card keeps the
+model finite": decline), R4 (run corpus legs on a copy of the tree: adopt
+as the rule for future legs), R5 (point the source comments at the guard
+plan in `Docs/`: adopt), R6 (the undecided-check warning printing the
+context's Premise-tagged assumptions: decline for this change).  Rejected
+with rebuttals: F5, F12 and parts of eight others (the report).
+
+Rulings 22-25 on the review (rev 9 and rev 10): M1 — the check's pattern is
+`Premise _ False` and nothing else, the bare-`False` arm deleted; M2 —
+under ruling 23 the drafter deleted "Unlike every other guard," from the
+new `\<^descr>` paragraph (§4.8; `\<condition>[NO_INST] False` is the check
+too, so the clause was false for it); M3 — "别管": the lost records stay
+as they are and no store or `.C` file enters the commit; M4 — departures
+1, 3 and 5 stand, 2 is the drafter's (kept), 4 is M1.  The proposals: R1
+— the arm dropped (ruling 22); the tag is read by ruling 22's literal
+pattern `Premise _ False`, not by `PLPR_Syntax.dest_premise_tag_opt`, which
+R1 had also proposed and which is set aside; R2, R3, R6 declined as the
+judge recommended; R4 recorded as the rule for future corpus legs (a copy
+of the tree, feasibility to be checked first); R5 taken by the drafter
+under ruling 23 — the seven source-comment pointers (in the working tree:
+the comment on `guard_kind` in guard_refute.ML's signature and the one
+above its `preprocess`; reasoners.ML's signature comment on the
+re-exported `guard_kind`, `guard_simp_tac`'s body comment and the R-conv
+site's comment; the smoke theory's header and the comment of its section
+"The check") point at `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md`'s §1 entries or
+§5 steps, whose "the check" entry names this plan for the details.
+
+**The re-review (2026-09-23, `wf_4ce8ff13-774`, the same model: three
+verifiers — the ML, the smoke theory, the documents — and a judge):
+MET_ON_CONDITION** — the report
+`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_CODE_REREVIEW_2026-09-23.md`.
+Every condition applied or overridden by a ruling; no new code defect.  One
+item for the author, N1: the two local names of `prove_or_refute` that D1
+introduced, `simplified_in` (the one pull of `guard_simp_tac` on the state
+the call was given) and `by_simp` (step 1½'s boolean, `refuted_by_simp th1`;
+`refuted_by_simp` itself is the name the report prescribed), listed in §9.
+Eight document items N2-N9, applied in rev 11: the status paragraph; §4.8's
+quotation of the new paragraph brought to its post-M2 wording; R1's record
+(above); "eight others"; the pointer sites named by content; D2 recorded as
+a strengthening of §6 item 2; the per-leg floors completed (the partial leg
+0, the cache-off leg not applicable); the guard plan's status header and
+its §39 note on step 1½; both handoff addenda; the digest-marker probe's
+comment; the record's two stale statements (the bare `False` measured
+before ruling 22; ruling 24 cancels the confirmation load).  Seven residues
+rejected by its judge (the report).

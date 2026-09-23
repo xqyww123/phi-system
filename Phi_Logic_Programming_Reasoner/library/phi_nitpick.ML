@@ -11,15 +11,21 @@ a new Isabelle release is a diff-and-reapply of the distribution file (the
 2024 -> 2025-2 delta of this file was 20 lines).  All other Nitpick modules
 are used unmodified from the distribution.
 
-THE PATCH, in one sentence: with trust_assms = true the premises of the guard
-are encoded on the unknown-tolerant ("not definitely false") rail while the
-negated conclusion keeps the strict ("definitely true") rail, so a
-countermodel must genuinely falsify the conclusion but may leave premises
-unevaluated -- refutation under the guarantee that the premises are jointly
-satisfiable, which a verification-condition guard gives us by construction.
-Premises reach this file as nondef_assm_ts, i.e. as separate elements of the
-nondefinitional formula list, which is what makes a per-formula soundness
-flag possible at all.
+THE PATCH, in one sentence: with trust_assms = true the whole TAIL of the
+nondefinitional formula list -- every nondefinitional formula but the negated
+conjecture at its head: the assumptions passed in as nondef_assm_ts, and the
+nondefinitional axioms Nitpick generates from the constants and types of the
+conjecture and of those assumptions -- is encoded on the unknown-tolerant
+("not definitely false") rail while the negated conjecture keeps the strict
+("definitely true") rail, so a countermodel must genuinely falsify the
+conjecture but may leave the tail unevaluated -- refutation under the
+guarantee that the assumptions are jointly satisfiable, which a
+verification-condition guard gives us by construction.  Antecedents of the
+conjecture itself are in the head and are never relaxed.  An assumption that
+exclusively defines a free variable is moved to the definitional list by
+Nitpick's own preprocessing (nitpick_preproc.ML, the partition of assm_ts at
+the start of axioms_for_term) and is not in the tail either.  The per-formula
+flag is possible at all because the list keeps its formulas separate.
 
 ONE FURTHER EDIT, forced by the copy living outside HOL/Nitpick.thy: that
 theory hides the short type name fun_box AFTER loading the distribution file,
@@ -517,13 +523,14 @@ fun pick_them_nits_in_term deadline state (params : params) trust_assms mode
         val def_us =
           def_us |> map (choose_reps_in_nut scope unsound rep_table true)
         (*PHI-PATCH.  nondef_us is (negated conjecture :: nondefinitional
-          axioms), the latter being the premises passed in as nondef_assm_ts
-          together with machine-generated typedef/class axioms.  The unsound
-          flag of choose_reps_in_nut is precisely "encode unknown at positive
-          position as true rather than false", and it is taken per formula, so
-          trusting the premises while still demanding a real countermodel for
-          the conclusion is one case split: head keeps the problem's own flag,
-          tail gets the relaxed one.*)
+          axioms), the latter being the assumptions passed in as nondef_assm_ts
+          together with the class axioms and the other nondefinitional axioms
+          Nitpick generates (typedef axioms are definitional and sit in def_us).
+          The unsound flag of choose_reps_in_nut is precisely "encode unknown at
+          positive position as true rather than false", and it is taken per
+          formula, so trusting the tail while still demanding a real
+          countermodel for the conjecture is one case split: head keeps the
+          problem's own flag, tail gets the relaxed one.*)
         val nondef_us =
           (case nondef_us of
              conj_u :: axiom_us =>

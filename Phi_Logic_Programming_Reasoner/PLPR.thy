@@ -205,16 +205,26 @@ abbreviation Simp_Premise ("\<condition> _" [28] 27)
   where "Simp_Premise \<equiv> Premise MODE_GUARD"
 abbreviation Proof_Obligation ("\<obligation> _" [28] 27)
   where "Proof_Obligation \<equiv> Premise MODE_COLLECT"
+abbreviation Check_Premise_Consistency ("\<check> \<premise> \<consistency>")
+  where "\<check> \<premise> \<consistency> \<equiv> Premise MODE_GUARD False"
+
+hide_const (open) Check_Premise_Consistency
 
 
 text \<open>
   \<^prop>\<open>Premise mode P\<close> wraps a boolean assertion for different roles in reasoning.
 
   \<^descr> \<^prop>\<open>\<condition> P\<close> is \<^emph>\<open>guard\<close> of a rule constraining whether the rule can be applied.
-    The assertion \<open>P\<close> is attempted with a weak but safe solver (usually @{method clarsimp}) in order
-    to prevent infinite loop on unprovable propositions which is clearly unexpected.
-    Therefore, any rule protected by it is appliable only when the condition \<open>P\<close> is provable
-    using the safe solver.
+    The assertion \<open>P\<close> is decided by the guard machinery under its own bounds (library/reasoners.ML,
+    prove_or_refute), so that an unprovable assertion cannot loop the reasoning.
+    Therefore, any rule protected by it is applicable only when \<open>P\<close> is decided provable.
+
+  \<^descr> \<^prop>\<open>\<check> \<premise> \<consistency>\<close> is the guard \<open>\<condition> False\<close> under its own name: it holds
+    exactly when the premises are inconsistent, so what it guards applies only in a case that
+    cannot occur.  The three steps that presuppose consistent premises are off for it: the
+    simplifier's refutation by a \<open>False\<close> conclusion, R-conv, and R-nitpick's premise slice.
+    R-nitpick is instead asked for a model of the premises themselves (library/reasoners.ML,
+    \<open>guard_kind\<close>).
 
   \<^descr> \<^prop>\<open>\<premise> P\<close> reports a proof obligation, and the reasoning system moves \<open>P\<close> into the nearest
     \<^prop>\<open>\<obligation> P \<and> Q\<close> which collects all reported obligations. The reasoning system never checks

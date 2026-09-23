@@ -18,6 +18,13 @@ sig
     refutes; Provable and Unknown do not.*)
   datatype verdict = Refuted | Provable | Unknown
 
+  (*which kind of guard a decision is about (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 1: the check):
+    Normal, every ordinary guard, whose premises may be assumed consistent;
+    Check_Premise_Consistency, the guard \<condition> False as written, which asks whether
+    they are.  Declared here, the earliest structure that reads it, and re-exported by
+    Phi_Reasoners.*)
+  datatype guard_kind = Normal | Check_Premise_Consistency
+
   (*arg = Proof.context, state = term list; see the structure below*)
   structure Preprocess_Hooks : HOOKS
 
@@ -27,9 +34,9 @@ sig
   (*premises and conclusion, both with the goal's \<And>-binders fixed*)
   val premises_of : Proof.context -> term list -> term -> term list * term
   val slice : term list -> term -> term
-  val preprocess : Proof.context -> term list -> term -> (term list * term) option
+  val preprocess : guard_kind -> Proof.context -> term list -> term -> (term list * term) option
 
-  val nitpick : Proof.context -> Phi_Nitpick.params -> int * int ->
+  val nitpick : guard_kind -> Proof.context -> Phi_Nitpick.params -> int * int ->
                 (term * term) list * term list * term -> verdict
 end
 
@@ -37,6 +44,7 @@ structure Phi_Guard_Refute : PHI_GUARD_REFUTE =
 struct
 
 datatype verdict = Refuted | Provable | Unknown
+datatype guard_kind = Normal | Check_Premise_Consistency
 
 
 (*** Stores ***)
@@ -170,9 +178,17 @@ fun case_splits ctxt t =
 (*NONE means the simplifier closed the goal.  That is a real proof of the
   ORIGINAL guard: the hooks and the slice weaken the premises, and P ==> P'
   with a proof of P' ==> C gives P ==> C.  In the other direction the weakening only
-  costs completeness -- see the verdict map in reasoners.ML.*)
+  costs completeness -- see the verdict map in reasoners.ML.
 
-fun preprocess ctxt assms goal =
+  What becomes of the simplified residue depends on the kind of guard.  Under
+  Normal it is split back into premises and conclusion and sliced down to the
+  conclusion's variables.  Under Check_Premise_Consistency it is handed over
+  WHOLE as the conclusion, the premises its antecedents: the check asks
+  whether the premises have a model, and a slice from a conclusion without
+  free variables would keep none of them (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md,
+  section 1: R-conv, R-nitpick).*)
+
+fun preprocess kind ctxt assms goal =
   let
     val (prems0, concl) = premises_of ctxt assms goal
     val prems = Preprocess_Hooks.invoke (Context.Proof ctxt) ctxt prems0
@@ -193,16 +209,30 @@ fun preprocess ctxt assms goal =
   in
     if Thm.nprems_of st = 0 then NONE
     else
-      let
-        val residue = Thm.term_of (Thm.cprem_of st 1)
-        val sliced = slice (Logic.strip_imp_prems residue) (Logic.strip_imp_concl residue)
-      in SOME (Logic.strip_imp_prems sliced, Logic.strip_imp_concl sliced) end
+      let val residue = Thm.term_of (Thm.cprem_of st 1)
+       in SOME (case kind of
+                  Normal =>
+                    let val sliced = slice (Logic.strip_imp_prems residue) (Logic.strip_imp_concl residue)
+                     in (Logic.strip_imp_prems sliced, Logic.strip_imp_concl sliced) end
+                | Check_Premise_Consistency => ([], residue))
+      end
   end
 
-(*The premises go in through the ASSUMPTION parameter, not inside the goal:
-  only then are they separate formulas internally, and only per formula can
-  Phi_Nitpick take a soundness flag.  Passing them inside the goal turns the
-  trust patch silently off.
+(*Where the premises go in depends on the kind of guard.  Under Normal they go
+  in through the ASSUMPTION parameter: only then are they separate formulas
+  internally, and only per formula can Phi_Nitpick take a soundness flag --
+  trust_assms = true then puts them on its unknown-tolerant rail, the
+  deliberate choice for a guard whose premises may be assumed consistent.
+  Under Check_Premise_Consistency they are antecedents of the conjecture, on
+  the strict rail whatever the flag says: a countermodel is an assignment
+  under which every premise handed over is definitely true -- a finite model
+  of them, which is what the check asks for.  That model is CONTENT, not a
+  certificate: the hooks have weakened the premises, card keeps the model
+  finite, and under user_axioms = false phi-system's own axioms stay out.
+  The flag then governs only the rest of Nitpick's nondefinitional list, the
+  axioms it generates from the conjecture's constants and types; the check
+  passes false, so those are strict too -- a stricter problem, which can only
+  turn a Refuted into an Unknown.
 
   genuine and quasi_genuine both count, as in reasoners.ML's verdict map and
   for its reason: under user_axioms = false nothing can be certified genuine.
@@ -213,8 +243,8 @@ fun preprocess ctxt assms goal =
   reasoners.ML) is only a safety net; the search's bound is Nitpick's own
   internal net (see the note at the search call below).*)
 
-fun nitpick ctxt params (i, n) (subst, assms, goal) =
-  (case preprocess ctxt assms goal of
+fun nitpick kind ctxt params (i, n) (subst, assms, goal) =
+  (case preprocess kind ctxt assms goal of
      NONE => Provable
    | SOME (prems, concl) =>
        (*no bound is imposed here: the model search's bound is Nitpick's own
@@ -223,7 +253,7 @@ fun nitpick ctxt params (i, n) (subst, assms, goal) =
          Preprocessing stays uncharged.  Auto_Try mode: the messages are buffered and
          dropped.*)
        let val (code, _) =
-             Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params true
+             Phi_Nitpick.pick_nits_in_term (Proof.init ctxt) params (kind = Normal)
                Phi_Nitpick.Auto_Try i n 0 subst [] prems concl
         in if code = Phi_Nitpick.genuineN orelse code = Phi_Nitpick.quasi_genuineN
            then Refuted else Unknown

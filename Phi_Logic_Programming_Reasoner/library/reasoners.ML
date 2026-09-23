@@ -84,23 +84,40 @@ signature PHI_REASONERS = sig
 
   (*The guard factory (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md): the preprocessing template
     -- oblg_template, the case split, the aux-fact insertion -- parameterised by the
-    solving function it ends with (prove_or_refute's type: can_inst, the guard-side
-    context, what the digest step computed, then the state, UNSIMPLIFIED: each solving
-    function decides its own simplification) and by that digest
+    solving function it ends with (the type of `prove_or_refute kind`: can_inst, the
+    guard-side context, what the digest step computed, then the state, UNSIMPLIFIED: each
+    solving function decides its own simplification) and by that digest
     step, computed on the state after the case split and before the insertion.  A
     result carries the context the factory was called on plus what the solving
     function added.  The annotation of \<open>case_split\<close> is supported.*)
   val gen_guard_condition_solver : (Proof.context -> thm -> 'd)
                             -> (bool -> Proof.context -> 'd -> context_state -> context_state Seq.seq)
                             -> {can_inst: bool} -> context_state -> context_state Seq.seq
-  (*the in-run instance: the factory over prove_or_refute with the guard digest*)
+  (*which kind of guard a decision is about, Phi_Guard_Refute's datatype re-exported:
+    Normal, or Check_Premise_Consistency -- the guard \<condition> False AS WRITTEN, which
+    asks whether the premises are inconsistent, so the three steps that presuppose them
+    consistent are off for it: the refutation by the simplifier, R-conv, R-nitpick's slice
+    (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 1: the check)*)
+  datatype guard_kind = datatype Phi_Guard_Refute.guard_kind
+  (*the kind of guard a goal state carries: Check_Premise_Consistency iff its leading
+    antecedent concludes False under a premise tag (Premise _ False) under its \<And>/\<Longrightarrow>
+    prefix; read on the state the factory receives, BEFORE oblg_template's rewrite turns
+    ordinary guards into \<condition> False as well*)
+  val guard_kind_of : thm -> guard_kind
+  (*the in-run instance: the factory over prove_or_refute with the guard digest, both
+    under the kind of the guard as written*)
   val guard_condition_judge : {can_inst: bool} -> context_state -> context_state Seq.seq
   (*the guard digest: the whole goal state -- the guard's subgoals and the protected
     rest of the sequent -- and the context's assumptions, on the state after the case
     split and before the aux facts are inserted (those are derivable, so not part of
-    the key)*)
-  val guard_digest : Proof.context -> thm -> Hasher.digest
-  val prove_or_refute : bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
+    the key); for the check the digest marker False is prepended, so that a check and an
+    ordinary guard the template's rewrite turned into \<condition> False never share an entry*)
+  val guard_digest : guard_kind -> Proof.context -> thm -> Hasher.digest
+  (*the judge instance's digest step: guard_digest under the kind of the state given --
+    the one value the engine and the smoke test's digest helper name*)
+  val guard_digest_of : thm -> Proof.context -> thm -> Hasher.digest
+  val prove_or_refute : guard_kind -> bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
+  val string_of_guard_kind : guard_kind -> string
   (*the out-of-run instances: the factory over p_auto_attempt, no store*)
   val guard_condition_solver': {can_inst: bool}
                              -> (Proof.context -> thm -> thm) (*failure callback*)
@@ -110,16 +127,19 @@ signature PHI_REASONERS = sig
   (*run the tactic once, under the bound (thread CPU) if given, and keep only a solved state*)
   val try_prove_or_give_up : Time.time option -> (Proof.context -> tactic) -> Proof.context -> thm -> thm Seq.seq
   (*the guard-side simplification: asm_full_simp with \<phi>guard_simp and the guard
-    cache's lemmas enabled, then quick_cut, under 60 s of thread CPU (a timeout warns and
-    yields the state unchanged).  prove_or_refute runs it on ctxt_g, the context carrying
-    the entry's delta, and again on ctxt_g' when the judge replaces that delta;
-    p_auto_solving runs it once; the obligation instance runs none, its fastforce
-    simplifying in the same simpset itself*)
+    cache's lemmas enabled, under 60 s of thread CPU (a timeout warns and yields the
+    state unchanged); always exactly one state, and no refutation -- prove_or_refute
+    reads the refutation by the simplifier off its result, for an ordinary guard.  It
+    runs it on ctxt_g, the context carrying the entry's delta, and again on ctxt_g' when
+    the judge replaces that delta; p_auto_solving runs it once; the obligation instance
+    runs none, its fastforce simplifying in the same simpset itself*)
   val guard_simp_tac : Proof.context -> tactic
   (*P-auto's search, on a state guard_simp_tac has simplified, in the same enhanced
     context; P-auto = cpu_bounded_tac (guard_classic_prover_bound ctxt) o p_auto_tac*)
   val p_auto_tac : Proof.context -> tactic
-  (*guard_simp_tac then P-auto once: the out-of-run instance and the method \<phi>guard_P_auto*)
+  (*guard_simp_tac then P-auto once, no refutation: the out-of-run instance and the method
+    \<phi>guard_P_auto -- a conclusion the simplification leaves as False is P-auto's to
+    prove from the premises, or to fail on*)
   val p_auto_attempt : Proof.context -> tactic
   val cpu_bounded_tac : Time.time -> tactic -> tactic    (*thread CPU; an error without a CPU clock*)
   val guard_classic_prover_timeout : int Config.T (*milliseconds of thread CPU, 400 provisional*)
@@ -193,7 +213,7 @@ signature PHI_REASONERS = sig
   (*the guard_decision Event_Log category, written under ML_debugger: one record
     per prove_or_refute call -- verdict (proved/refuted/unknown), hit (the entry's
     verdict, or none), refuter (R-conv/R-nitpick/guard_simp_tac/-), judge (Provable/Unprovable/-),
-    wall-clock ms, the guard digest in hex, #subgoals*)
+    kind (Normal/Check_Premise_Consistency), wall-clock ms, the guard digest in hex, #subgoals*)
 
 end
 
@@ -972,10 +992,14 @@ fun hammer_obligation_solver' opts wrap id =
 
 fun norm_tac tac th = Seq.make (fn () => Seq.pull (tac th))
 
-fun quick_cut i th =
-  case Logic.strip_assums_concl (Logic.nth_prem (i, Thm.prop_of th))
-    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>False\<close>, _) => Seq.empty
-     | _ => Seq.single th
+(*a subgoal whose conclusion, under its \<And>/\<Longrightarrow> prefix, is the bare False -- not the
+  tagged one (Premise _ False): the factory's front quick_cut runs before Premise_def is
+  unfolded and must stay a no-op there*)
+fun concl_is_false subgoal =
+  case Logic.strip_assums_concl subgoal
+    of Const(\<^const_name>\<open>Trueprop\<close>, _) $ Const(\<^const_name>\<open>False\<close>, _) => true
+     | _ => false
+fun quick_cut i th = if concl_is_false (Logic.nth_prem (i, Thm.prop_of th)) then Seq.empty else Seq.single th
 
 fun slow_step_tac' ctxt =
   Classical.appWrappers ctxt
@@ -1020,12 +1044,18 @@ fun dest_all ct used =
 
 (*One prove_or_refute call decides one guard (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md,
   sections 5 and 6): the entry under the guard digest is read from the store, its
-  lemmas are replayed and enabled, the guard is simplified once (guard_simp_tac),
+  lemmas are replayed and enabled, the guard is simplified once (guard_simp_tac) and,
+  for an ordinary guard, a conclusion left as False refutes it; otherwise
   P-auto proves the guard or fails, and on a failure
   the entry's verdict selects what runs next -- the refuters R-conv and R-nitpick,
   then the judge -- one after another on the run's thread, each bounding itself.
   A non-interrupt exception of a prover, a refuter, a replay or the judge is the
   run's exception.*)
+
+(*the kind of guard the call decides (the signature): Normal, or the check
+  Check_Premise_Consistency, for which the three steps that presuppose consistent
+  premises are off*)
+datatype guard_kind = datatype Phi_Guard_Refute.guard_kind
 
 (*400 ms of thread CPU: the bound of P-auto and of R-conv, and the replay floor of a
   judge lemma; guard_simp_tac has its own 60 s.  Thread CPU, not wall clock, so that
@@ -1059,20 +1089,23 @@ fun search_solved search st =
 val enhance_for_guard =
       Phi_Guard_Cache.enhance_with_lemmas o Phi_Guard_Cache.Guard_Simp_SS.enhance
 
-(*The guard-side simplification: asm_full_simp then quick_cut on every subgoal, in the
-  enhanced context, under 60 s of thread CPU -- several times the slowest simplification
+(*The guard-side simplification: asm_full_simp on every subgoal, in the enhanced
+  context, under 60 s of thread CPU -- several times the slowest simplification
   measured (13 s, a Quicksort slice-bound guard with 26 premises under
   linarith_split_limit = 20), so a timeout means the simplifier is looping: it is warned
-  about, and the state comes back unchanged.  A subgoal simplified to False stays an
-  empty sequence; a timeout must not, since an empty sequence would read as a
-  refutation.  The first simplified state only (Seq.take 1), so the one bound covers the
-  whole simplification.  prove_or_refute runs it on ctxt_g, the context that carries the
+  about, and the state comes back unchanged.  Exactly one state, always: the first
+  simplified state only (Seq.take 1, so the one bound covers the whole simplification),
+  and the timeout path yields the state it was given -- a caller composing with THEN
+  would read an empty sequence as a failed attempt, and prove_or_refute's pulls stay
+  total.  No refutation here: prove_or_refute reads the refutation by the simplifier off
+  the result, for an ordinary guard only (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 1:
+  guard_simp_tac; section 5 step 1 1/2).  prove_or_refute runs it on ctxt_g, the context that carries the
   entry's delta, and again on ctxt_g' when the judge replaces that delta; p_auto_solving
   runs it once; the obligation instance runs none (its fastforce simplifies in the same
   simpset itself).  P-auto has no simplification step of its own -- its search still
   simplifies through addss -- so the state it is given is this function's result.*)
 fun guard_simp_tac ctxt th =
-  let val seq = Seq.take 1 (ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt) THEN_ALL_NEW quick_cut) th)
+  let val seq = Seq.take 1 (ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt)) th)
    in Seq.make (fn () =>
         cpu_bounded (Time.fromSeconds 60) Seq.pull seq
         handle Timeout.TIMEOUT _ =>
@@ -1167,10 +1200,13 @@ fun r_conv can_inst ctxt ctxt0 goals =
 (*R-nitpick (plan §2.3): refute by MODEL — a finite countermodel of the
   subgoal under the collected context assumptions.  The search is
   Phi_Guard_Refute.nitpick, which preprocesses the guard (weakening hooks,
-  the memory-model and per-struct rewrites, datatype case splits, and a
-  slice down to the conclusion's variables) and then hands the result to the
-  patched Nitpick copy Phi_Nitpick, whose premises are trusted rather than
-  re-derived.  That recipe is what makes the refuter useful: on the replayed
+  the memory-model and per-struct rewrites, datatype case splits, and -- for
+  an ordinary guard -- a slice down to the conclusion's variables) and then
+  hands the result to the patched Nitpick copy Phi_Nitpick: for an ordinary
+  guard the premises are trusted rather than re-derived; for the check they
+  are antecedents of the conjecture, so that a countermodel is a model of
+  them (the comment above Phi_Guard_Refute.nitpick).  That recipe is what
+  makes the refuter useful: on the replayed
   corpus it refutes 222 of 247 guards where the unpreprocessed call refutes
   far fewer, at zero misjudgment over 161 guards known provable (plan §22).
   The variable discipline is zero-transform, intentionally OPPOSITE to
@@ -1303,7 +1339,7 @@ fun pinned_nitpick_params ctxt budget =
   one by subst_atomic over screened assumptions (which cannot introduce
   TVars — the global assumption screen is load-bearing for the per-goal
   one), and the assumptions are asked once from the goal-side ctxt.*)
-fun r_nitpick ctxt goals =
+fun r_nitpick kind ctxt goals =
   let val refute_timeout = Time.fromMilliseconds (Config.get ctxt guard_refute_timeout)
       val margin = seconds 5.0
       val bound = refute_timeout + margin   (*one subgoal*)
@@ -1317,7 +1353,7 @@ fun r_nitpick ctxt goals =
             let val t0 = Thm.term_of goal
              in tvar_free t0 andalso
                 (Timeout.apply bound (fn () =>
-                   Phi_Guard_Refute.nitpick nctxt (Lazy.force params) (k + 1, n)
+                   Phi_Guard_Refute.nitpick kind nctxt (Lazy.force params) (k + 1, n)
                      (extract_fixed_frees nctxt (assms0, t0)) = Phi_Guard_Refute.Refuted) ()
                  handle Timeout.TIMEOUT _ => false)
             end
@@ -1353,28 +1389,41 @@ val judge : (judge_arg -> judgement) option Unsynchronized.ref = Unsynchronized.
 (** One prove_or_refute call **)
 
 (*the guard_decision Event_Log record, written under ML_debugger: the verdict, the
-  path -- the entry's verdict (hit), which refuter, the judge's answer -- the call's
-  wall clock, the guard digest and the number of subgoals*)
+  path -- the entry's verdict (hit), which refuter, the judge's answer -- the kind of
+  guard, the call's wall clock, the guard digest and the number of subgoals*)
 val guard_decision_category =
   Event_Log.category {name = "guard_decision", enabled = fn () => true,
-    encode = fn {verdict, hit, refuter, judge, elapsed_ms, digest, n_goals} =>
+    encode = fn {verdict, hit, refuter, judge, kind, elapsed_ms, digest, n_goals} =>
       ([("verdict", verdict), ("hit", hit), ("refuter", refuter), ("judge", judge),
-        ("elapsed_ms", string_of_int elapsed_ms), ("digest", digest),
+        ("kind", kind), ("elapsed_ms", string_of_int elapsed_ms), ("digest", digest),
         ("subgoals", string_of_int n_goals)], [])}
 
 fun string_of_verdict Phi_Guard_Cache.Proved = "proved"
   | string_of_verdict Phi_Guard_Cache.Refuted = "refuted"
   | string_of_verdict Phi_Guard_Cache.Unknown = "unknown"
 
-(*the undecided-guard warning: neither a proof nor a refutation, and no judge --
-  trace-gated like every reasoner warning*)
-fun undecided_guard_warning ctxt goals =
-  List.app (fn goal =>
-    Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
-      chunks [block (text "Fail to prove or falsify the following guard condition"),
-              Goal_Display.pretty_a_goal ctxt (Thm.term_of goal),
-              block (text "We assume the conditions do not hold and this assumption can cause reasoning failure.")]
-    end)) goals
+(*the kind as the record and the trace line render it: the constructor's own spelling*)
+fun string_of_guard_kind Normal = "Normal"
+  | string_of_guard_kind Check_Premise_Consistency = "Check_Premise_Consistency"
+
+(*the undecided-guard warning -- neither a proof nor a refutation, and no judge -- and,
+  for the check, the undecided-check warning in its place: one gate, trace-gated like
+  every reasoner warning, one message per goal, the kind selecting the two text lines*)
+fun undecided_guard_warning kind ctxt goals =
+  let val (head, tail) =
+        case kind of
+          Normal =>
+            ("Fail to prove or falsify the following guard condition",
+             "We assume the conditions do not hold and this assumption can cause reasoning failure.")
+        | Check_Premise_Consistency =>
+            ("Fail to check the consistency of the premises:",
+             "We assume they are consistent. If they are not, the reasoning continues \
+             \in a case that cannot occur, and may fail there.")
+   in List.app (fn goal =>
+        Phi_Reasoner.warn_pretty (Context.Proof ctxt) 1 (fn () => let open Pretty in
+          chunks [block (text head), Goal_Display.pretty_a_goal ctxt (Thm.term_of goal), block (text tail)]
+        end)) goals
+  end
 
 (*the loud guard warning: the entry said Proved and the judge (no refuter could refute
   the guard) or the simplifier (a conclusion rewritten to False) overturned it; printed
@@ -1427,10 +1476,11 @@ fun dropped_lemma_warning ctxt0 stmt failure =
     Pretty.str ("The guard cache drops a lemma that " ^ failure_text failure ^ ":"),
     Pretty.brk 1, Syntax.pretty_term ctxt0 stmt]))
 
-(*One prove_or_refute call (plan sections 5 and 6): can_inst, the guard-side context,
-  the guard digest, then the run's state -- the run's context ctxt0 and the goal
-  state.  The context it returns is ctxt0 with this guard's delta applied.*)
-fun prove_or_refute can_inst ctxt d (ctxt0, th0) =
+(*One prove_or_refute call (plan sections 5 and 6): the kind of the guard as written
+  (guard_condition_judge reads it on the state before oblg_template), can_inst, the
+  guard-side context, the guard digest, then the run's state -- the run's context ctxt0
+  and the goal state.  The context it returns is ctxt0 with this guard's delta applied.*)
+fun prove_or_refute kind can_inst ctxt d (ctxt0, th0) =
   let val timer = Timing.start ()
       val thy = Proof_Context.theory_of ctxt0
       val use_store = Config.get ctxt0 Phi_Guard_Cache.guard_cache
@@ -1472,11 +1522,24 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th0) =
         (keep Phi_Guard_Cache.Refuted;
          {verdict = Phi_Guard_Cache.Refuted, refuter = SOME name, judge = NONE, result = Seq.empty})
 
-      (*step 1 1/2: the guard-side simplification, in ctxt_g -- what P-auto, both
-        refuters and the judge all see.  A conclusion rewritten to False is a refutation
-        by the simplifier: Refuted, and nothing else runs.*)
-      val simplified = Seq.pull (guard_simp_tac ctxt_g th0)
-      val goals = Thm.cprems_of (case simplified of SOME (th, _) => th | NONE => th0)
+      (*the state this call was given, simplified in a guard-side context -- what P-auto,
+        both refuters and the judge all see; guard_simp_tac always yields exactly one
+        state, so the NONE arm is unreachable*)
+      fun simplified_in ctxt' = case Seq.pull (guard_simp_tac ctxt' th0) of SOME (th, _) => th | NONE => th0
+      (*the refutation by the simplifier, for an ordinary guard: a subgoal whose conclusion
+        the simplification left as False; for the check that conclusion is the normal state
+        before P-auto proves it from the premises*)
+      fun refuted_by_simp th =
+            case kind of Normal => exists concl_is_false (Thm.prems_of th)
+                       | Check_Premise_Consistency => false
+
+      (*step 1 1/2: the simplification in ctxt_g, then the refutation by the simplifier:
+        Refuted, and nothing else runs*)
+      val th1 = simplified_in ctxt_g
+      val by_simp = refuted_by_simp th1
+      (*the goals the warnings, the record and the trace line describe: the state the
+        call was given, UNSIMPLIFIED, when the simplifier refuted; the simplified one otherwise*)
+      val goals = Thm.cprems_of (if by_simp then th0 else th1)
 
       (*steps 2 to 6, on the simplified state th*)
       fun decide th =
@@ -1511,9 +1574,11 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th0) =
                       with them, from the state the call was given, so that what P-auto
                       proves is what the judge's delta alone produces -- a later call
                       reproduces it*)
-                    val th' = case Seq.pull (guard_simp_tac ctxt_g' th0) of
-                                SOME (th', _) => th'
-                              | NONE => error "The judge is broken: its lemmas rewrite the guard to False."
+                    val th' = simplified_in ctxt_g'
+                    (*a later call's step 1 1/2 must not refute what P-auto proves here*)
+                    val _ = if refuted_by_simp th'
+                            then error "The judge is broken: its lemmas rewrite the guard to False."
+                            else ()
                  in case p_auto ctxt_g' th' of
                       SOME solved =>
                         (write delta' Phi_Guard_Cache.Proved;
@@ -1545,27 +1610,32 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th0) =
                    SOME Phi_Guard_Cache.Refuted =>
                      {verdict = Phi_Guard_Cache.Refuted, refuter = NONE, judge = NONE, result = Seq.empty}
                  | SOME Phi_Guard_Cache.Unknown => judge_or_give_up ()
-                 | _ => if r_conv can_inst ctxt_g ctxt0 goals then refuted_by "R-conv"
-                        else if r_nitpick ctxt goals then refuted_by "R-nitpick"
-                        else judge_or_give_up ())
+                 | _ =>
+                     (*R-conv proves the negation of the conclusion, which for the check is
+                       True: it is not run for the check
+                       (Docs/GUARD_CACHE_QUICK_MODE_PLAN.md, section 5 step 4)*)
+                     let val r_conv_refutes =
+                           case kind of Normal => r_conv can_inst ctxt_g ctxt0 goals
+                                      | Check_Premise_Consistency => false
+                      in if r_conv_refutes then refuted_by "R-conv"
+                         else if r_nitpick kind ctxt goals then refuted_by "R-nitpick"
+                         else judge_or_give_up ()
+                     end)
         end
 
-      val outcome =
-        case simplified of
-          NONE => refuted_by simp_refuter
-        | SOME (th, _) => decide th
+      val outcome = if by_simp then refuted_by simp_refuter else decide th1
 
       val {verdict, refuter, judge = judge_answer, result} = outcome
       (*a Proved entry changes the report only when the judge or the simplifier
         overturns it (the loud guard warning); every other ending reports as a call
         without an entry does: a refuter's refutation is silent, Unknown gets the
-        undecided-guard warning*)
+        undecided-guard warning (the undecided-check warning for the check)*)
       val _ =
         if entry_verdict = SOME Phi_Guard_Cache.Proved andalso judge_answer = SOME "Unprovable"
         then loud_guard_warning ctxt "the LLM judge" goals
         else if entry_verdict = SOME Phi_Guard_Cache.Proved andalso refuter = SOME simp_refuter
         then loud_guard_warning ctxt "the simplifier" goals
-        else if verdict = Phi_Guard_Cache.Unknown then undecided_guard_warning ctxt goals
+        else if verdict = Phi_Guard_Cache.Unknown then undecided_guard_warning kind ctxt goals
         else ()
 
       val elapsed = Time.toMilliseconds (#elapsed (Timing.result timer))
@@ -1575,6 +1645,7 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th0) =
                {verdict = string_of_verdict verdict,
                 hit = (case entry_verdict of NONE => "none" | SOME v => string_of_verdict v),
                 refuter = the_default "-" refuter, judge = the_default "-" judge_answer,
+                kind = string_of_guard_kind kind,
                 elapsed_ms = elapsed, digest = Hasher.hex d, n_goals = length goals}
         else ()
       val _ = Phi_Reasoner.warn_pretty (Context.Proof ctxt) 2 (fn () =>
@@ -1582,7 +1653,9 @@ fun prove_or_refute can_inst ctxt d (ctxt0, th0) =
                             (case refuter of SOME name => " by " ^ name | NONE => "") ^
                             (case judge_answer of SOME answer => ", the judge: " ^ answer | NONE => "") ^
                             " in " ^ string_of_int elapsed ^ "ms, " ^
-                            string_of_int (length goals) ^ " subgoal(s)"))
+                            string_of_int (length goals) ^ " subgoal(s)" ^
+                            (case kind of Normal => ""
+                                        | Check_Premise_Consistency => ", " ^ string_of_guard_kind kind)))
    in result end
 
 
@@ -1595,8 +1668,8 @@ fun try_prove_or_give_up bound tac ctxt th =
 
 (*The factory: the preprocessing template -- oblg_template, quick_cut, under head_only
   the configured pre-tactic, the case split of the leading subgoal, the digest step,
-  the aux-fact insertion -- ending in the solving function `solve`, of
-  prove_or_refute's type, which receives the state unsimplified: the factory knows
+  the aux-fact insertion -- ending in the solving function `solve`, of the type of
+  `prove_or_refute kind`, which receives the state unsimplified: the factory knows
   nothing of entries, deltas or simplification.  `digest_of` computes, on the state
   right after the case split and before the insertion (every visible premise is then a
   guard subgoal), what `solve` is given: the guard digest for the judge instance, ()
@@ -1629,11 +1702,36 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
 
 (*the guard digest: one hash of the whole goal state (the guard's subgoals and, under
   Goal.protect, the rest of the sequent with its conclusion) and of the context's
-  assumptions; the aux facts, derivable, stay out*)
-fun guard_digest ctxt th =
-  Hasher.terms (Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt))
+  assumptions; the aux facts, derivable, stay out.  For the check the digest marker
+  False is prepended: the digest is computed AFTER the template's rewrite, where a check
+  and an ordinary guard rewritten to \<condition> False look alike, and one entry for both
+  would let the ordinary path's refutation by the simplifier overwrite the check's verdict*)
+fun guard_digest kind ctxt th =
+  Hasher.terms ((case kind of Normal => [] | Check_Premise_Consistency => [\<^prop>\<open>False\<close>]) @
+                Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt))
 
-fun guard_condition_judge cfg = gen_guard_condition_solver guard_digest prove_or_refute cfg
+(*the kind of guard a goal state carries, read on the state the factory receives --
+  BEFORE oblg_template's rewrite, which turns ordinary guards into \<condition> False too:
+  the check iff the leading antecedent concludes False under a premise tag, Premise _ False,
+  under its \<And>/\<Longrightarrow> prefix (the tag's mode is not read: only \<condition> guards reach the
+  judge instance); a state without premise is Normal.  Not concl_is_false, which reads the
+  bare False.*)
+fun guard_kind_of th =
+  case Thm.prems_of th of
+    [] => Normal
+  | prem :: _ =>
+      (case Logic.strip_assums_concl prem of
+         Const (\<^const_name>\<open>Trueprop\<close>, _) $
+           (Const (\<^const_name>\<open>Premise\<close>, _) $ _ $ Const (\<^const_name>\<open>False\<close>, _)) =>
+           Check_Premise_Consistency
+       | _ => Normal)
+
+fun guard_digest_of th0 = guard_digest (guard_kind_of th0)
+
+(*the kind enters the digest and the decision in this one place, read off the state as
+  written*)
+fun guard_condition_judge cfg (ctxt0, th0) =
+  gen_guard_condition_solver (guard_digest_of th0) (prove_or_refute (guard_kind_of th0)) cfg (ctxt0, th0)
 
 (*the out-of-run instance: one whole attempt, no store*)
 fun p_auto_solving _ ctxt _ (ctxt0, th) = p_auto_attempt ctxt th |> Seq.map (pair ctxt0)

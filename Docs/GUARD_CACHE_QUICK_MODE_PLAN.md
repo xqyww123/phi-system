@@ -1,6 +1,41 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 32 (2026-09-23) — **THE ISABELLE_RPC RENDERING UNIFICATION
+Status: rev 33 (2026-09-23) — **THE CHECK `\<check> \<premise> \<consistency>`
+IMPLEMENTED, VERIFIED, REVIEWED (stages 1 to 3 of
+`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`: the code review
+MET_ON_CONDITION, its conditions ruled — that plan's rulings 22-25 — and
+applied, the re-review MET_ON_CONDITION on document items, applied),
+pending the commit**: a guard written `\<condition> False` is the
+check (§1 the check), decided without the three steps that presuppose
+consistent premises — `prove_or_refute` takes a `guard_kind` first;
+`guard_simp_tac` no longer cuts, the refutation by the simplifier being read
+off its result inside `prove_or_refute`, for an ordinary guard only; R-conv
+is not run for the check; R-nitpick is given the check's premises as
+antecedents of its conjecture, on the strict rail; the guard digest carries
+the digest marker for the check; the `guard_decision` record gains the
+attribute `kind`; the undecided-check warning replaces the undecided-guard
+warning for it — and the abbreviation `\<check> \<premise> \<consistency>`
+(`PLPR.thy`, right after `Proof_Obligation`, its constant hidden) spells the
+guard.  Verified under Isabelle-MCP and Isa-REPL: `PLPR.thy` and `Phi_BI.thy`
+clean, `Test/Guard_Decision_Smoke.thy` clean twice with its new section "The
+check", the `PhiTest_Arithmetic` corpus with 0 flips over 277 shared digests
+(the six checks, all in `Phi_Types`, are the only digests that changed;
+cold, the four consistent ones are refuted by R-nitpick's model at
+0.6-1.0 s each, the two inconsistent ones closed by the simplification),
+the eight `Phi_Examples` with 0 flips against this morning's partial run,
+none attributable to the check against the 2026-09-14 leg, and one flip
+against the committed stores (`Bucket_Hash.thy:222`, Proved → Unknown in a
+leg where the theory's `\<phi>type_def Hash` at `:20` had failed to replay
+its record; excluded as the change's doing by construction, its cause
+not established — that plan's §10), and no check exercised outside
+`Phi_Types`; the code review of 2026-09-23 (`wf_e343dd79-aa3`,
+MET_ON_CONDITION; that plan's §10) found no wrong verdict, crash or design
+defect; the details are in that plan's §10 and, here, in §1
+(`guard_simp_tac`, `gen_guard_condition_solver`, guard digest,
+R-conv/R-nitpick, the two warnings), §3's diagram, §5's opening and steps
+1½, 4 and 6, §33 item 3 and §39 ruling 10.  The previous status follows.
+
+rev 32 (2026-09-23) — **THE ISABELLE_RPC RENDERING UNIFICATION
 REVIEWED AND CLOSED**: after `3360162`, two rounds of adversarial review
 (60 and 53 agents; the records `contrib/Isabelle_RPC/ai-artifacts/
 UNICODE_REVIEW_2026-09-22.md` and `UNICODE_REVIEW2_2026-09-22.md`, both
@@ -195,18 +230,36 @@ document.
   the predicate `is_guard_mode`, deleted with the `is_F` shortcut, §39),
   discharged inside a run by the reasoners registered at
   `PLPR.thy:2005-2006`, `:2008-2009`.  [code]
+- **the check**, **`guard_kind`** (since 2026-09-23;
+  `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`, whose §1 is
+  authoritative for both): the check is a guard whose leading antecedent,
+  under its `\<And>`/`\<Longrightarrow>` prefix, concludes `False` under a premise tag AS
+  WRITTEN — `\<condition> False`, `\<condition>[NO_INST] False`, and its own
+  spelling `\<check> \<premise> \<consistency>`, an abbreviation of the same
+  term (`PLPR.thy`, after `Proof_Obligation`) — which asks whether the
+  premises are inconsistent; `datatype guard_kind = Normal |
+  Check_Premise_Consistency` (declared in `Phi_Guard_Refute`, re-exported by
+  `Phi_Reasoners`) is what `guard_condition_judge` reads off the state
+  BEFORE `oblg_template` (`guard_kind_of`) and passes to the digest step
+  (`guard_digest_of`) and to `prove_or_refute`.  For the check the three
+  steps that presuppose consistent premises are off: the refutation by the
+  simplifier, R-conv and R-nitpick's premise slice (that plan's §4.3).  A
+  guard whose conclusion only BECOMES `False` under the template's rewrite
+  is not the check.  [author 2026-09-22, the check plan's rulings 1–21]
 - **a `prove_or_refute` call**: one invocation of `prove_or_refute` run
-  through its whole protocol (§5).  Its ML type becomes `bool ->
+  through its whole protocol (§5).  Its ML type becomes `guard_kind -> bool ->
   Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq`
-  (`can_inst`, the guard-side ctxt, the guard digest computed by the
+  (the kind of the guard as written — since 2026-09-23, §1 the check —
+  `can_inst`, the guard-side ctxt, the guard digest computed by the
   factory, then the run's state: the run's ctxt `ctxt0` and the goal state)
   [author 2026-09-04 04:19 "我们要把 prove_or_refute 的类型改成 context_state
   -> context_state, 我们要改 context, 且要一路改下去一直到 gen_reason' 的返回"].
   The ctxt it returns is `ctxt0` with this guard's delta applied to the lemma
   list, and nothing else changed.  Its verdict is decided on the spot, by P-auto,
   on every call [author 2026-09-08 05:53 "一切裁决都是取决于 P-auto 的"] — unless
-  `guard_simp_tac` refuted the guard at step 1½, where the verdict is the
-  simplifier's and P-auto does not run (§5 step 1½, §39 ruling 10).
+  the simplifier refuted an ordinary guard at step 1½ (a conclusion left as
+  `False`; never the check), where the verdict is the simplifier's and
+  P-auto does not run (§5 step 1½, §39 ruling 10).
   [descriptive]
 - **the goal state**: the thm `prove_or_refute` receives — the PLPR sequent
   after `gen_guard_condition_solver`'s `Goal.protect 1` (`head_only`,
@@ -223,11 +276,17 @@ document.
   that used to wrap the pass and that commit `8c26c3b4` removed; it stays
   only inside quotations and in §11–§38 [author 2026-09-15 "赞同
   guard_simp_tac"]): the guard-side simplification —
-  `ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt)
-  THEN_ALL_NEW quick_cut)` (`quick_cut` `:960-963` fails a subgoal whose
-  conclusion simplified to `False`) — standard `asm_full_simp` in the
-  guard-side simpset with the refutation cut and a bound, nothing else
-  [author 2026-09-15 "这不就是标准的 simp 吗？"].  The bound is **60 s of
+  `ALLGOALS (Simplifier.asm_full_simp_tac (enhance_for_guard ctxt))` —
+  standard `asm_full_simp` in the guard-side simpset under a bound, nothing
+  else [author 2026-09-15 "这不就是标准的 simp 吗？"].  Until 2026-09-23 it
+  ended in `THEN_ALL_NEW quick_cut`, which failed a subgoal whose
+  conclusion had simplified to `False`; since then the refutation by the
+  simplifier is `prove_or_refute`'s own reading of the simplified state
+  (`concl_is_false` over its subgoals), taken for an ordinary guard only and
+  never for the check (§1 the check; the check plan's §4.3 a, ruling 9 —
+  the cut inside the simplification refuted every check the simplification
+  did not prove).
+  The bound is **60 s of
   THREAD CPU, fixed in the code, no option** (`Time.fromSeconds 60`;
   `Thread_CPU.apply` scales it by `timeout_scale` itself; thread CPU with
   no wall limit, an error where the thread has no CPU clock — every
@@ -247,15 +306,19 @@ document.
   the warning `The system simplifier probably loops on:` followed by the
   visible subgoals, and yields the state it was given, unchanged; its
   sequence is cut to its first state (`Seq.take 1`) and pulled inside the
-  bound, so the one bound covers the whole simplification; a failure —
-  `quick_cut` finding `False` — stays `Seq.empty` [author 2026-09-11 "把
-  G.simpcut 的超时改为 5s"; "直接定死 5s x the scale"; "超时并警告之后, 保持现状"
-  (superseding the `\<phi>guard_classic_prover_timeout` bound of
+  bound, so the one bound covers the whole simplification [author
+  2026-09-11 "把 G.simpcut 的超时改为 5s"; "直接定死 5s x the scale"; "超时并警告之后,
+  保持现状" (superseding the `\<phi>guard_classic_prover_timeout` bound of
   2026-09-08 12:51 / 2026-09-09, which §33 found too tight); the timeout
   shape: drafter; the first state only: author 2026-09-09 "B. 赞同" — a
   deliberate narrowing, since a simpset solver could in principle make the
-  pass multi-valued].  Not `timed_tac`, whose timeout is an empty sequence
-  and would read as that refutation by simplification.
+  pass multi-valued].  Since 2026-09-23 it yields exactly one state, always
+  (until then a failure — `quick_cut` finding `False` — stayed `Seq.empty`,
+  and the timeout path yielded the state unchanged "since an empty sequence
+  would read as a refutation"); the timeout path keeps that shape for the
+  surviving reason: a caller composing with `THEN` (`p_auto_attempt`) would
+  read an empty sequence as a failed attempt, and `prove_or_refute`'s two
+  pulls stay total (the check plan's §4.3 a).
   Since 2026-09-15 it is a TOP-LEVEL function of `reasoners.ML`, not a
   pass of the factory: it is the ONE simplification of a guard, and it
   must run on the context that carries the entry's delta — `ctxt_g`,
@@ -278,7 +341,10 @@ document.
   renamed as the factory [author 2026-09-11]): from now on a FACTORY — the existing
   preprocessing template (`oblg_template`, case split, `apply_tac`'s fact
   insertion) parameterised by the solving function it ends with, whose
-  type is `prove_or_refute`'s [type: drafter], and which receives the
+  type is that of `prove_or_refute kind` (since 2026-09-23 the kind is
+  applied first, by `guard_condition_judge`, which reads it off the state
+  as written — §1 the check; the factory's type is unchanged) [type:
+  drafter], and which receives the
   guard UNSIMPLIFIED: the factory knows nothing of entries, deltas or
   simplification [author 2026-09-15 "现在的 gen_guard_condition_solver is a
   generation. The parameter `solve` can be anything. So
@@ -295,8 +361,14 @@ document.
   the loud guard warning over a `Proved` entry — §5 step 1½); the other
   visible differences for the closed case are `prove_or_refute`'s trace
   line (at `\<phi>trace_reasoning` ≥ 2) and, under `ML_debugger`, a
-  `guard_decision` record.  Its pipeline (`reasoners.ML:1625-1635`), in order:
-  `quick_cut`; under `head_only`: the configured pre-tactic `pre`; the
+  `guard_decision` record.  Since 2026-09-23 such a guard is the check
+  (§1) and is not refuted by the simplifier at all: P-auto proves it from
+  inconsistent premises, R-nitpick refutes it with a model of consistent
+  ones, else the judge or the undecided-check warning.  Its pipeline
+  (`reasoners.ML:1625-1635`), in order: `quick_cut` (a no-op on the tagged
+  conclusion the state carries at this point, `Premise_def` being unfolded
+  only inside the solving functions; kept as it is, the check plan's
+  §4.4); under `head_only`: the configured pre-tactic `pre`; the
   case split of the leading subgoal (`case_split_by_annotations_leading_subgoal`,
   `:1628`); **the guard digest** (below), taken on the whole state at this
   point — the split subgoals, nothing inserted yet [author 2026-09-08
@@ -438,7 +510,13 @@ document.
   `Thm.prop_of th :: map Thm.prop_of (Assumption.all_prems_of ctxt)`, on
   the state the factory holds right after the case split and BEFORE the
   aux facts are inserted (`gen_guard_condition_solver`'s digest step;
-  `guard_digest : Proof.context -> thm -> digest`).  `Thm.prop_of th` under
+  `guard_digest : guard_kind -> Proof.context -> thm -> digest`, since
+  2026-09-23 with the digest marker — the term `False` prepended to the
+  hashed list — for the check only, so that a check and an ordinary guard
+  the template's rewrite turned into `\<condition> False` never share an
+  entry; `guard_digest_of th0` is the judge instance's digest step, under
+  the kind of the state as written; every ordinary guard's digest is
+  byte-for-byte what it was — the check plan's §4.5).  `Thm.prop_of th` under
   `head_only`'s `Goal.protect` is the guard's subgoals — each with its
   parameters and its own premises — followed by the protected rest of the
   sequent with its conclusion; the assumptions are the ctxt's at that
@@ -528,7 +606,8 @@ its entry and enabled the entry's lemmas (§5).
   `cpu_bounded_tac \<phi>guard_classic_prover_timeout o p_auto_tac` (thread
   CPU) — the one proof attempt every call that reaches step 2 makes, hit
   or no hit, with the entry's lemmas enabled, and its outcome IS the call's
-  verdict — unless `guard_simp_tac` refuted the guard at step 1½, where the
+  verdict — unless the simplifier refuted an ordinary guard at step 1½
+  (never the check, §1), where the
   verdict is the simplifier's and P-auto does not run (§5 step 1½, §39
   ruling 10) [author
   2026-09-02 07:11; 400 ms provisional 08:49; on every call: 2026-09-08
@@ -568,8 +647,17 @@ its entry and enabled the entry's lemmas (§5).
   subgoal's overrun moves on to the next instead of eating the whole net
   [author 2026-09-03 13:05; inner bound 2026-09-07 13:00; order: drafter].
   Both catch their own `TIMEOUT` and report "not refuted".  A refutation
-  by either refuter, or by `guard_simp_tac` at step 1½ (§39 ruling 10), is
-  what makes an entry `Refuted`.
+  by either refuter, or by the simplifier at step 1½ (§39 ruling 10; an
+  ordinary guard), is what makes an entry `Refuted`.  Since 2026-09-23
+  (§1 the check): R-conv is not run for the check — its whole method is
+  proving the negation of the conclusion, `\<not> False`; and for the check
+  `Phi_Guard_Refute.preprocess` does not split and slice the simplified
+  residue but hands it over whole, so that `Phi_Guard_Refute.nitpick` gives
+  Nitpick the premises as antecedents of its conjecture, on the strict
+  rail, a countermodel being a finite model of the premises; the
+  `trust_assms` flag, which then governs only the nondefinitional axioms
+  Nitpick generates, is `(kind = Normal)` — `false` for the check [author
+  2026-09-22 "建议 the check 传 false"] (the check plan's §4.3 b, c).
 - **the judge**: ONE optional function in a process-global ref,
   `judge : (judge_arg -> judgement) option Unsynchronized.ref`, default
   `NONE`, installed by ML code (phase 2: the LLM judge) [author 2026-09-04
@@ -841,7 +929,14 @@ its entry and enabled the entry's lemmas (§5).
   `Unknown` hit alike [author 2026-09-08 05:53 "对于 reliable = false 的,
   我们直接 warning 不再跑 R-conv, R-nitpick"], a call from a `Proved`
   entry included; the two warnings are decided at one site from the final
-  verdict [author 2026-09-09 "spec-3 赞同 (a)"; 2026-09-14].  [descriptive]
+  verdict [author 2026-09-09 "spec-3 赞同 (a)"; 2026-09-14].  Since
+  2026-09-23 the same function (`undecided_guard_warning kind`) prints,
+  for the check, **the undecided-check warning** in its place — "Fail to
+  check the consistency of the premises:", the goal, "We assume they are
+  consistent. If they are not, the reasoning continues in a case that
+  cannot occur, and may fail there." — under the same gate [author
+  2026-09-22 "建议依旧在 level 1"; the text "批准"; the check plan's §4.6].
+  [descriptive]
 - **the loud guard warning**: the message printed when a guard whose entry
   said `Proved` could not be proved by P-auto with the entry's lemmas,
   neither R-conv nor R-nitpick refuted it, and the judge answered
@@ -849,8 +944,9 @@ its entry and enabled the entry's lemmas (§5).
   trace-gated; its text is the line
   `A guard condition proved before is now refuted by the LLM judge:`
   followed by the guard's subgoals [author 2026-09-14] — and, since
-  2026-09-15, also when `guard_simp_tac` rewrote such a guard's conclusion
-  to `False` at step 1½ (§5), with `the simplifier` in place of `the LLM
+  2026-09-15, also when the simplification left such a guard's conclusion
+  as `False` at step 1½ (§5; an ordinary guard — the check cannot be
+  refuted by the simplifier, §1), with `the simplifier` in place of `the LLM
   judge` in that line [author 2026-09-15 "P2 可以写 Refuted、出记录、entry 原是
   Proved 时响亮报警"; the wording: drafter].  Every other ending
   of a call from a `Proved` entry reports as a call without an entry
@@ -929,11 +1025,13 @@ caller uses — no run-time "is there a cache" test anywhere:
 IN A RUN   (\<condition> ?P, \<condition>[NO_INST] ?P reasoners, PLPR.thy:2005/2008)
   gen_reason' (reasoner.ML:906) — UNCHANGED
     … reasoning …  (state = (ctxt, thm); the ctxt flows from call to call)
-      guard_condition_judge = gen_guard_condition_solver guard_digest prove_or_refute
+      guard_condition_judge cfg (ctxt0, th0) =
+        gen_guard_condition_solver (guard_digest_of th0) (prove_or_refute (guard_kind_of th0))
+        (the kind read off the state as written, before oblg_template; since 2026-09-23, §1 the check)
         the factory (§1): quick_cut; under head_only: pre; HEADGOAL case_split;
                      digest d of the whole goal state and the context's assumptions
-                     (§1 guard digest); ALLGOALS (insert aux); then, UNSIMPLIFIED,
-        prove_or_refute can_inst ctxt d (ctxt0, thm): steps 0–6 of §5 — the entry
+                     (§1 guard digest; the digest marker for the check); ALLGOALS (insert aux); then, UNSIMPLIFIED,
+        prove_or_refute kind can_inst ctxt d (ctxt0, thm): steps 0–6 of §5 — the entry
              read, its delta applied (ctxt1 returned, ctxt_g the provers' base),
              guard_simp_tac on ctxt_g (enhances internally: Guard_Simp_SS, then
              the lemmas; 60 s of thread CPU — TIMEOUT = warned, state unchanged),
@@ -1071,7 +1169,8 @@ keeps `prove_or_refute`, the factory, the refuters, the judge ref and
 
 ## 5. One `prove_or_refute` call
 
-`prove_or_refute can_inst ctxt d (ctxt0, thm)`, with `ctxt` the guard-side
+`prove_or_refute kind can_inst ctxt d (ctxt0, thm)`, with `kind` the kind of
+the guard as written (§1 the check; since 2026-09-23), `ctxt` the guard-side
 ctxt (`reasoners.ML:1615`'s, carrying `Guess_Instantiate`'s looper and
 solver), `d` the guard digest and `thm` the goal state.
 
@@ -1123,14 +1222,19 @@ solver), `d` the guard digest and `thm` the goal state.
    [drafter, tenth review].)
 1½. **`guard_simp_tac` on `ctxt_g`**, once: the simplification of the
    guard with the entry's lemmas enabled (its own `enhance_for_guard`
-   call, fresh budgets), under its 60 s (§1 `guard_simp_tac`).  No state
-   left (`quick_cut` found `False`) → the simplifier refuted the guard:
+   call, fresh budgets), under its 60 s (§1 `guard_simp_tac`).  For an
+   ordinary guard, a subgoal whose conclusion the simplification left as
+   `False` (`concl_is_false`; until 2026-09-23 `quick_cut` inside
+   `guard_simp_tac` left no state) → the simplifier refuted the guard:
    write `{delta, Refuted}`, the decision record with refuter
    `guard_simp_tac`, the loud guard warning if the entry said `Proved`
    (naming the simplifier), return `Seq.empty`; nothing else runs [author
    2026-09-15 "P2 可以写 Refuted、出记录、entry 原是 Proved 时响亮报警";
    until then this ending yielded no verdict, no record and nothing
-   written, as the factory's pass had ended such a call].
+   written, as the factory's pass had ended such a call].  For the check
+   (§1) there is no such reading: a conclusion left as `False` is the
+   state the check is in before P-auto proves it from the premises [the
+   check plan's §4.3 a, ruling 9].
    Otherwise the state it produced is THE goal state of
    the rest of the call: `goals`, P-auto, both refuters, the judge's
    `thm` and the record's `subgoals` all read it [author 2026-09-15; §39].
@@ -1158,7 +1262,12 @@ solver), `d` the guard digest and `thm` the goal state.
      budgets) refutes → write `{empty delta, Refuted}`, return `Seq.empty`
      silently; else R-nitpick refutes → likewise; else a judge is
      installed → step 6; else print the undecided-guard warning, write
-     `{empty delta, Unknown}`, return `Seq.empty`.
+     `{empty delta, Unknown}`, return `Seq.empty`.  For the check (§1,
+     since 2026-09-23): R-conv is not run, R-nitpick is given the
+     premises as antecedents of its conjecture, and the undecided-check
+     warning is printed in place of the undecided-guard warning — here
+     and under `Proved` below; under `Unknown` above, where no refuter
+     runs, only the warning changes.
    - `Proved` — the lemmas did not suffice → R-conv; else R-nitpick; else
      a judge is installed → step 6 [author 06:10 "补充一点 … 如果 R-conv,
      R-nitpick 都失败了, 还要跑 LLM judge, 然后响亮报警"; "6. 要的"].  The
@@ -1196,8 +1305,11 @@ solver), `d` the guard digest and `thm` the goal state.
      prove on its strength, and the `Proved` entry written would not
      reproduce on a later call, which simplifies the raw state under the
      new delta alone [author 2026-09-15 "MD1 step 6 从进入 prove_or_refute
-     时的原始状态重新化简"; the review's MD1, §39] (no state left → `error`
-     "the judge is broken": its lemmas rewrote the guard to `False`)
+     时的原始状态重新化简"; the review's MD1, §39] (for an ordinary guard a
+     conclusion left as `False` → `error` "the judge is broken": its
+     lemmas rewrote the guard to `False`; for the check that conclusion is
+     the normal state before P-auto proves it — since 2026-09-23, §1 the
+     check)
      [author 2026-09-15 "注意 judge 是会修改 delta 的，于是在修改后我们必须重新
      跑 simpcut 对吗？"]; the judge itself was handed step 1½'s state, the
      one every other consumer of the call sees; then P-auto again, with a fresh time budget and —
@@ -3041,7 +3153,13 @@ Diagnosed with TEMPORARY probes, all reverted (`reasoners.ML` and
    not).  The idiom is therefore simp-only; the search was dead in the
    2024-05-15 original too (`9d3bd92c`: the same simp-and-quick_cut before
    the `is_F` split).  Not unsound: an undetected contradiction leaves the
-   inconsistent branch unpruned.
+   inconsistent branch unpruned.  [Since 2026-09-23 the idiom is no longer
+   simp-only: written `\<condition> False` it is the check (§1), decided by
+   P-auto, by R-nitpick on a model of the premises, and by the judge —
+   the check plan, whose smoke probes answer this finding's
+   question (a contradiction that needs classical search IS proved:
+   `FALLS (n # …) \<Longrightarrow> \<check> \<premise> \<consistency>` proved by P-auto);
+   `ai-artifacts/Guard_False_Probe.thy` is retired.]
 4. **Side finding — the loud guard warning fires by design on a shared
    entry.** Digest `3d7696d10790e4a8` (`\<condition>[\<no>-\<inst>] x = None`)
    is reached from two call sites with different aux facts: with `x = None`
@@ -3106,7 +3224,13 @@ new antecedent constant `\<check> \<hypothesis> \<consistency>`, defined as
 `False`, and reasoners dedicated to it and to `\<condition> False` — at a
 priority above the condition solver — whose one job is proving the
 contextual premises inconsistent, replacing the `is_F` shortcut as the home
-of that idiom.
+of that idiom.  [Superseded on 2026-09-22 by the author's own opening
+design of the check plan (`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`,
+its §2 and §8): an abbreviation `\<check> \<premise> \<consistency>` of
+`\<condition> False` — no new constant, no dedicated reasoner — and a
+`guard_kind` read at `guard_condition_judge`'s entrance that switches off
+the three steps that presuppose consistent premises (§1 the check);
+implemented and verified on 2026-09-23.]
 
 **The tier measurement (§10 step 3, second half) — brainstormed, SHELVED
 [author 2026-09-11 "先记录结果, 搁置这个问题, 这是我们之后才要处理的"].**
@@ -3714,7 +3838,10 @@ guard silently.
 10. **A refutation by the simplifier is a verdict** — the review's P2
    [author 2026-09-15 "P2 可以写 Refuted、出记录、entry 原是 Proved 时响亮报警"]:
    when `guard_simp_tac` at step 1½ rewrites the guard's conclusion to
-   `False` (`quick_cut` leaves no state), the call writes `{delta,
+   `False` (until 2026-09-23 `quick_cut` inside it left no state; since
+   then `prove_or_refute` reads the simplified state's conclusions itself,
+   `concl_is_false`, for an ordinary guard only — never for the check, §1;
+   the check plan's §4.3 a), the call writes `{delta,
    Refuted}`, emits the decision record with refuter `guard_simp_tac`, and
    prints the loud guard warning if the entry said `Proved`, naming the
    simplifier in place of the judge (§1 the loud guard warning; §5 step
@@ -3793,18 +3920,28 @@ provenance paragraph; three leftovers in §10's step list (the report:
   simplified state; the loud guard warning takes the overturning party
   (`"the LLM judge"` / `"the simplifier"`); `Test/Guard_Decision_Smoke.thy`
   gains the probe "the simplifier refuting a Proved entry" and asserts the
-  two loud lines apart.
+  two loud lines apart.  [Since 2026-09-23 step 1½ reads `th1`, the one
+  state `guard_simp_tac` yields (`simplified_in ctxt_g`), and
+  `by_simp = refuted_by_simp th1`, where `refuted_by_simp th = case kind of
+  Normal => exists concl_is_false (Thm.prems_of th) |
+  Check_Premise_Consistency => false` is the one function the judge path
+  also applies to its own `th'` (`simplified_in ctxt_g'`), decides the same
+  ending; `goals` are the state's as given when it refuted, `th1`'s
+  otherwise — the check plan's §4.3 a and the code review's D1.]
 - `PLPR.thy:1983` `solve_obligation_now`: unchanged in itself; it simply
   no longer receives the factory's pass (item 6 above).
 - `Test/Guard_Decision_Smoke.thy` and every other reference to the old
   names follow; the plan's §1, §3, §5, §10 and this section carry the
   design (done in this revision).
 - Stated consequences: `elapsed_ms` now includes the simplification; the
-  `quick_cut` refutation at step 1½ is a verdict since ruling 10 (`Refuted`
-  written, the record, the loud warning over a `Proved` entry) — before
-  it, no verdict and no entry write of its own; a `\<condition> False`
-  guard closed by simp now yields the trace line and, under `ML_debugger`,
-  a decision record.
+  refutation by the simplifier at step 1½ (until 2026-09-23 `quick_cut`'s
+  empty sequence, since then `prove_or_refute`'s own test of the
+  simplified state, ordinary guards only) is a verdict since ruling 10
+  (`Refuted` written, the record, the loud warning over a `Proved` entry)
+  — before it, no verdict and no entry write of its own; a
+  `\<condition> False` guard closed by simp now yields the trace line and,
+  under `ML_debugger`, a decision record (and since 2026-09-23 such a
+  guard is the check, §1).
 
 **Verification (2026-09-15, three runs)**: `Phi_System_Base` rebuilt on
 the author's approval ("你可以自己 build 批准": its parent
