@@ -1,6 +1,25 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 31 (2026-09-22) — **THE ISABELLE_RPC RENDERING UNIFICATION
+Status: rev 32 (2026-09-23) — **THE ISABELLE_RPC RENDERING UNIFICATION
+REVIEWED AND CLOSED**: after `3360162`, two rounds of adversarial review
+(60 and 53 agents; the records `contrib/Isabelle_RPC/ai-artifacts/
+UNICODE_REVIEW_2026-09-22.md` and `UNICODE_REVIEW2_2026-09-22.md`, both
+MET_ON_CONDITION) and one read-only re-check, their conditions applied
+in Isabelle_RPC commits `615cb01` … `d93ce46` (HEAD `adb3ad1`), the
+author's rulings on the way recorded in that plan's status paragraphs
+(the recording keeps only rewritten matches; §1b fixed; all six
+coordinate conversions kept — "这是库函数的最终产品"; an unknown offset gets
+no column); the author approved the final state ("很好，提交",
+2026-09-23).  Of the three remaining items, the `\<check> \<hypothesis>
+\<consistency>` plan is being advanced in another session (its plan is
+at rev 6, `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`); the
+order of the other two — the tier measurement (§33) and phase 2 (the
+judge) — is not yet ruled.  Also on 2026-09-23 the author ruled that
+experiment scripts, results and other temporary data under
+`ai-artifacts/` are never committed; plans and review records may be.
+The previous status follows.
+
+rev 31 (2026-09-22) — **THE ISABELLE_RPC RENDERING UNIFICATION
 IMPLEMENTED**, its plan's acceptance conditions met (Isabelle_RPC commit
 `3360162`; the light re-check of 2026-09-21 applied, its two design points
 ruled by the author on 2026-09-22: one private core with two views, the

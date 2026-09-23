@@ -150,7 +150,13 @@ system heaps, the Phi_System_Base and Isa_REPL chains rebuilt against them (veri
 session databases' input_heaps).  P-4 recorded in
 `contrib/Isa-REPL/ai-artifacts/CLIENT_TIMEOUT_AND_SERVER_ECHO_2026-09-15.md`, not fixed.
 Memory added: aoa-runs-under-isa-repl-by-design.  NEXT — order ruled 2026-09-21 ("是的，我们先看这个"): the Isabelle_RPC
-rendering unification goes first — DONE 2026-09-22, Isabelle_RPC commit `3360162`, the plan's
+rendering unification goes first — DONE and CLOSED 2026-09-23: Isabelle_RPC `3360162`, then two
+adversarial reviews and a re-check applied through HEAD `adb3ad1` (records in that repository's
+`ai-artifacts/`; rulings in its plan's status paragraphs; "很好，提交"). The `\<check>
+\<hypothesis> \<consistency>` plan is being advanced in ANOTHER session (rev 6 on 2026-09-23); the
+order of the tier measurement and phase 2 is not yet ruled. Experiment scripts and results under
+`ai-artifacts/` are never committed (ruled 2026-09-23; `ai-artifacts/.gitignore` admits Markdown
+only). (The original line: Isabelle_RPC commit `3360162`, the plan's
 acceptance conditions met (its plan `contrib/Isabelle_RPC/UNICODE_CONSISTENCY_FIX_PLAN.md`;
 the shape ruled 2026-08-18 is kept, "好"; one read-only Opus light re-check before code, "要的";
 the drafter's 2026-09-14 description of the shape as symbol-by-symbol was a departure, reported
