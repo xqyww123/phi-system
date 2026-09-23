@@ -4,8 +4,8 @@ Status: rev 6 (2026-09-23) — **READY FOR STAGE 1; stage 1 starts after the
 author's context compaction, from the handoff
 `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_HANDOFF_2026-09-23.md`.  Stage P
 done and committed (phi-system `be16be02`); three reviews done (§10);
-every condition ruled (§2, items 1-21) or applied; two names answered and
-awaiting the author's word (§9).  No ML has been changed.**  Points marked
+every condition ruled (§2, items 1-21) or applied; every name approved
+(§9).  No ML has been changed.**  Points marked
 [drafter] are the drafter's and stand only until the author rules on
 them.  Line numbers are those of phi-system commit `1f3c2142` (master);
 the working tree's ML is byte-identical to it in the files this plan
@@ -252,9 +252,9 @@ the check unconditionally (§3).
     Check_Premise_Consistency 批准，但最后要 hide_const (open)。record 属性 kind
     批准" — `guard_digest_of`, `concl_is_false`, the abbreviation's constant
     `Check_Premise_Consistency` followed by `hide_const (open)` (§4.8), and
-    the record attribute `kind` (§4.7).  Asked, answered in the same
-    exchange, and awaiting the author's word: `guard_kind_of` ("是做什么的？",
-    §1) and `string_of_guard_kind` ("为什么你需要", §4.7).  Stage 1 starts
+    the record attribute `kind` (§4.7).  Asked ("guard_kind_of 是做什么的？",
+    "为什么你需要 string_of_guard_kind？"), answered (§1, §4.7) and then
+    approved: "好的 批准这两个名字".  Stage 1 starts
     after the author's context compaction: "之后在 compact 后再开工，请准备，
     请确保你的计划足够详细，请再次通读确保自洽".
 
@@ -631,8 +631,8 @@ kind must be rendered, and it is rendered at two sites (the record and the
 trace line); `verdict` and `hit` are rendered by the one `string_of_verdict`
 for the same two sites, and the second review's F15 upheld that shape —
 two hand-written literals twenty lines apart would be the drift the file
-avoids everywhere else.  The attribute `kind` is approved (ruling 21); the
-function's name awaits the author's word (§9).
+avoids everywhere else.  The attribute `kind` and the function's name are
+approved (ruling 21).
 
 ### 4.8 The spelling
 
@@ -1158,11 +1158,10 @@ Approved by ruling 21: `guard_digest_of`, `concl_is_false`, the
 abbreviation's constant name `Check_Premise_Consistency` with its
 `hide_const (open)` (§4.8), the record attribute `kind` (§4.7).
 
-Answered on 2026-09-23 and awaiting the author's word — stage 1 confirms
-them with the author before typing them: `guard_kind_of` (§1: the function
-that recognises the check from the goal state at `guard_condition_judge`'s
-entrance) and `string_of_guard_kind` (§4.7: the one rendering of the kind
-for the record and the trace line).
+Answered and approved on 2026-09-23 ("好的 批准这两个名字"): `guard_kind_of`
+(§1: the function that recognises the check from the goal state at
+`guard_condition_judge`'s entrance) and `string_of_guard_kind` (§4.7: the
+one rendering of the kind for the record and the trace line).
 
 Under ruling 20 (the drafter's, within the design): the type name
 `guard_kind` (also "名字你随意起") and its owning structure `Phi_Guard_Refute`

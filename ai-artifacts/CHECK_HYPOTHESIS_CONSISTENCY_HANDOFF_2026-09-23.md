@@ -21,35 +21,21 @@ design.
 - The plan has been reviewed three times (§10 of the plan; the reports are
   `..._REVIEW_2026-09-22.md`, `..._REREVIEW_2026-09-22.md`,
   `..._THIRD_READ_2026-09-22.md`, all committed).  Every condition is ruled
-  or applied.  Two names are answered and await the author's word (§2 below).
+  or applied.  Every name is approved (§2 below); nothing is open.
 - The author said (2026-09-23): "之后在 compact 后再开工，请准备，请确保你的计划
-  足够详细，请再次通读确保自洽".  So: after compaction, stage 1 begins — but
-  first settle §2 below with the author, and ask for the explicit go
-  ("阶段 1 开工") before the first edit, because the author has twice this
-  week objected to work proceeding on an unanswered question.
+  足够详细，请再次通读确保自洽".  So: after compaction, stage 1 begins — ask
+  for the explicit go ("阶段 1 开工") before the first edit, because the
+  author has twice this week objected to work proceeding on an unanswered
+  question.
 
-## 2. Open with the author before typing them
-
-1. `guard_kind_of` — the author asked "是做什么的？".  Answer given: it is
-   the function that recognises the check from the goal state at
-   `guard_condition_judge`'s entrance — it reads the leading antecedent (the
-   guard as written, before `oblg_template`'s rewrite), strips its `\<And>`/`\<Longrightarrow>`
-   prefix with `Logic.strip_assums_concl`, and answers
-   `Check_Premise_Consistency` iff the conclusion is `False` under the
-   premise tag (or bare); `Normal` otherwise.  It is the only place the check
-   is recognised; `guard_digest_of` uses it too (plan §1, §4.2).
-2. `string_of_guard_kind` — the author asked "为什么你需要".  Answer given:
-   the `guard_decision` record's attributes are strings, the kind is rendered
-   at two sites (the record's `kind` attribute — approved — and the trace
-   line), and `verdict`/`hit` already go through the one `string_of_verdict`
-   for the same two sites; one function keeps the two renderings from
-   drifting (plan §4.7; the second review's F15).
-   If the author prefers another name for either, use his; if he objects to
-   the function, render the token inline at both sites and say so in §4.7.
+## 2. The names, all approved
 
 Approved on 2026-09-23 (ruling 21): `guard_digest_of`, `concl_is_false`,
 the abbreviation constant `Check_Premise_Consistency` followed by
-`hide_const (open) Check_Premise_Consistency`, the record attribute `kind`.
+`hide_const (open) Check_Premise_Consistency`, the record attribute `kind`;
+and, after the author asked what they are for and was answered (plan §1,
+§4.7), `guard_kind_of : thm -> guard_kind` and `string_of_guard_kind`
+("好的 批准这两个名字").
 Delegated to the drafter (ruling 20, "计划文本只要不违背我的设计可以你自行书写"):
 the plan's text; the type name `guard_kind` ("名字你随意起"); the token and
 trace suffix; the new `\<^descr>` wording; retiring `Guard_False_Probe.thy`.
