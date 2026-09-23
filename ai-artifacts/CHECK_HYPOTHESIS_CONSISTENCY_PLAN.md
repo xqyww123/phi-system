@@ -1,11 +1,10 @@
 # `\<check> \<premise> \<consistency>` — deciding a guard without assuming the premises consistent
 
-Status: rev 3 (2026-09-22) — **DRAFT; the targeted third read of five
-passages (§10) is still to be done before stage 1.  No code has been
-changed.**  Rev 1 was reviewed on 2026-09-22 (§10), rev 2 was reviewed the
-same day (§10); the author ruled on both reviews' conditions (§2), and this
-revision applies those rulings and the second review's thirteen drafter
-corrections.  Points marked [drafter] are the drafter's and stand only
+Status: rev 5 (2026-09-23) — **READY FOR STAGE 1 on the author's word;
+stage P done and committed (phi-system `be16be02`); three reviews done
+(§10), every condition ruled (§2, items 1-20) or applied.  No ML has been
+changed.**  Still open in §9: the ML names and the record token, which
+stage 1 settles with the author before typing them.  Points marked [drafter] are the drafter's and stand only
 until the author rules on them.  Line numbers are those of phi-system
 commit `1f3c2142` (master).
 
@@ -124,7 +123,8 @@ instance, the obligation instance, the goal state).  New terms:
   which is applied to a raw Isar goal — see §6 item 6.
 - **the three steps**: the three steps of one `prove_or_refute` call whose
   validity rests on the assumption that the premises are consistent, and
-  which therefore refute every check unconditionally today: the refutation
+  which therefore refute unconditionally every check the guard-side
+  simplification does not prove (§3 item 2): the refutation
   by the simplifier (a conclusion left as `False` by `guard_simp_tac`),
   R-conv, and the slice inside R-nitpick's `preprocess`.  Not "the
   consumers of the flag": the functions that read the kind are
@@ -139,13 +139,16 @@ instance, the obligation instance, the goal state).  New terms:
   keeps the problem's nondefinitional formulas in one list whose HEAD is the
   negated conjecture and whose TAIL is every other nondefinitional formula:
   the assumptions handed over (`nondef_assm_ts`) and the nondefinitional
-  axioms Nitpick generates from the conjecture's own constants and types
-  (nitpick_preproc.ML:1031-1040 builds the list from `add_axioms_for_term 1
-  neg_t` and then from `nondef_assm_ts`, and returns `neg_t :: nondefs`).
+  axioms Nitpick generates from the conjecture's and the assumptions' own
+  constants and types (nitpick_preproc.ML:1031-1040 builds the list from
+  `add_axioms_for_term 1 neg_t` and then from `nondef_assm_ts`, each
+  recursing through `add_axiom` at :902, and returns `neg_t :: nondefs`).
   The patch `trust_assms` puts the whole TAIL on the unknown-tolerant rail
-  and leaves the head on the problem's own flag (phi_nitpick.ML:527-533;
-  its comment at :519-522: the tail is "the premises passed in as
-  nondef_assm_ts together with machine-generated typedef/class axioms"),
+  and leaves the head on the problem's own flag (phi_nitpick.ML:527-533, and
+  its comment at :524-526: "head keeps the problem's own flag, tail gets the
+  relaxed one"; that comment's earlier clause at :520-521 names
+  "typedef/class axioms" and is wrong on "typedef" — typedef axioms are
+  definitional and reach `defs`, which `trust_assms` never touches, §4.3 c),
   and that flag is strict here: `unsound` is always `false` because
   `max_potential = 0` is pinned (reasoners.ML:1254; phi_nitpick.ML:860-862),
   so `unsound orelse trust_assms` collapses to `trust_assms`.  Antecedents
@@ -177,9 +180,8 @@ the check unconditionally (§3).
 1. **One parameter, meaning an assumption.**  "我们是否应该给一个参数来控制是否发生这一行为
    （例如名叫："是否可以假设 premises 的一致性"，或者直接就叫"mode"来看是否是要检查
    premises 的一致性）然后对于 condition False 直接设置此参数为 False 这是否就够了？"
-   — enough: the three steps whose validity rests on the assumption are the
-   ones that refute every check unconditionally (the wording "exactly"
-   softened in the second round, item 10).
+   — enough: the three steps (§1) are the ones whose validity rests on the
+   assumption (the wording "exactly" softened in the second round, item 10).
 2. **Computed at the entrance of `guard_condition_judge`, not in the factory.**
    "guard_condition_judge 是我们自己写的，我们不能在 guard_condition_judge 的最外部
    算出来这个值，然后作为参数传给 prove_or_refute 吗？" — yes: "好的，同意".
@@ -216,8 +218,7 @@ the check unconditionally (§3).
     nothing to trust"; that statement was wrong (the second review's F1, §10)
     and the question was re-put with the facts — item 17.  The wording "the
     three consumers are exactly the steps whose validity rests on it" is
-    replaced by "the three steps that refute every check unconditionally"
-    (§1, "the three steps").
+    replaced by the glossary entry "the three steps" (§1).
 11. **A datatype, not a bool.**  "那么我建议，改名 assume_consistent 为 datatype
     mode = Normal | Check_Premise_Consistency 你觉得如何？ 然后在
     Check_Premise_Consistency mode 下，禁用 R-conv" — adopted; the type name
@@ -243,6 +244,16 @@ the check unconditionally (§3).
     改一下" (§4.8).
 17. **`trust_assms` for the check is `false`**: "建议 the check 传 false" —
     re-put by the drafter with the corrected facts (item 10; §4.3 c, §7).
+
+**Fourth round** (after the targeted third read, 2026-09-23).
+
+18. **The `\<condition> P` paragraph's light correction covers both
+    sentences** (the third read's F7): "F7 批准" (§4.8).
+19. **Stage 1 corrects two comment blocks of phi_nitpick.ML** (the third
+    read's R2): "R2 好" (§4.4, §5 stage 1 item 0).
+20. **The plan's text is the drafter's, within the author's design**: "计划
+    文本只要不违背我的设计可以你自行书写" — under it the drafter took the third
+    read's R1 (the tail recorded as a rule, not a list, §4.3 c).
 
 Earlier rulings this plan rests on: the `is_F` shortcut is deleted [author
 2026-09-15 "建议直接删除 is_F 分支"; guard plan §39]; the 2026-09-11 follow-up
@@ -279,11 +290,18 @@ One `prove_or_refute` call on `\<condition> False` (reasoners.ML:1433):
    EMPTY assumption list, every assignment is a countermodel, the code is
    quasi-genuine (§4.3 c): an unconditional refutation that carries no
    information about the premises.
-5. And had the premises reached Nitpick as assumptions, they would ride the
-   unknown-tolerant rail (§1): `Phi_Guard_Refute.nitpick` passes the literal
-   `true` for `trust_assms` (guard_refute.ML:226).  For the check the
-   negated conclusion is `\<not> False`, the strict rail carries nothing, and
-   the verdict would rest on the tolerant rail alone.
+5. And had the premises reached Nitpick as assumptions, not one of them
+   would be on the strict rail: those Nitpick keeps in its nondefinitional
+   list ride the unknown-tolerant rail (§1; `Phi_Guard_Refute.nitpick`
+   passes the literal `true` for `trust_assms`, guard_refute.ML:226), and a
+   premise that exclusively defines a free variable is partitioned out of
+   that list by Nitpick's own preprocessing (nitpick_preproc.ML:888-889) and
+   enters the problem only when its free is met during the scan
+   (:981-986) — and the check's negated conjecture is `False \<Longrightarrow> False`
+   (phi_nitpick.ML:278-279), which has no free, so such a premise can be
+   dropped outright.  For the check the head carries nothing either, so the
+   verdict would rest on the tolerant rail and on whatever was not dropped,
+   never on a model of the premises.
 
 So the check is simp-only today, as guard plan §33 item 3 found; an
 undetected contradiction leaves a dead branch unpruned — not unsound.  The
@@ -356,7 +374,11 @@ goals the simplification cannot remove, so the index is always in range;
 within range `generic_rewrite_goal_tac` returns `Seq.single`
 (Pure/raw_simplifier.ML:1518-1521 — its `else Seq.empty` is the
 out-of-range branch just excluded) and `simp_loop_tac`'s continuation,
-`solve_tac i ORELSE TRY (...)`, cannot fail (Pure/simplifier.ML:325-327).
+`solve_tac i ORELSE TRY (...)`, cannot fail (Pure/simplifier.ML:325-327)
+— that rules out zero states; the cap is `Seq.take 1` (:1075), which yields
+at most one element and an empty tail (Pure/General/seq.ML:106-109), so the
+one 60 s bound over the first pull (:1076-1077) covers everything any caller
+can pull.  `Seq.take 1` and the sentence that records it (:1068) stay.
 The one place that could still fail is the 60 s timeout path (:1078-1082),
 which today returns `SOME (th, Seq.empty)` "since an empty sequence would
 read as a refutation" (:1066-1068); that reason retires and the shape stays
@@ -398,16 +420,20 @@ total, and after the re-simplification of `th0` with the judge's delta,
 under `Normal` and the NORMAL state of a check under
 `Check_Premise_Consistency` (the judge answering Provable and the
 re-simplification leaving `premises \<Longrightarrow> False` is exactly what the check
-looks like before P-auto proves it).  `goals` stays two-branched as today
-(:1479 — `th0` when the simplifier refuted, else the simplified state), so
-the loud guard warning and the record's `subgoals` field keep showing the
-guard as written.  The record's refuter name `guard_simp_tac`
+looks like before P-auto proves it).  `goals` keeps today's two branches
+(:1479) — the state `prove_or_refute` was given, UNSIMPLIFIED, when the
+simplifier refuted, and the simplified state otherwise — so the two
+warnings, the record's `subgoals` field and the trace line are unchanged.
+The record's refuter name `guard_simp_tac`
 (`simp_refuter`, :1389) still names what happened: the simplification left
 the conclusion `False`.
 
-Consequences: `guard_simp_tac`, `p_auto_attempt`, `p_auto_solving`,
-`guard_condition_solver'`, the method `\<phi>guard_P_auto` and `PLPR.thy`'s
-ML keep today's code; the one place in the pipeline where a verdict was the
+Consequences: `guard_simp_tac` keeps today's signature (:118) and is called
+from the same three places (:1098, :1478, :1514) — only its body loses the
+cut and its comments are rewritten (§5 stage 1 item 2); `p_auto_attempt`,
+`p_auto_solving`, `guard_condition_solver'`, the method `\<phi>guard_P_auto`
+and `PLPR.thy`'s ML keep today's code; the one place in the pipeline where a
+verdict was the
 ABSENCE of a result is gone, and the shortcut sits on the same line as the
 kind that authorises it; and the author's ruling that `guard_simp_tac` is
 standard simp whose output P-auto, R-conv, R-nitpick and the judge share
@@ -443,16 +469,31 @@ model of the premises, the question the check asks, put to the standard
 search.  Nothing is sliced.
 
 What `trust_assms` still governs, and the value the check passes.  The
-flag relaxes the TAIL of the list (§1): with the assumption list empty,
-the tail is the nondefinitional axioms Nitpick generates from the
-conjecture's own constants and types — the monomorphic class axioms of a
-type variable's sort (`add_axioms_for_sort`, ungated), the `is_descr` and
-choice-specification functions, and the equational-function axioms whose
-left-hand side is not a constructor pattern (`add_eq_axiom` routes those to
-`add_nondef_axiom`, nitpick_hol.ML:1492-1506); typedef axioms are
-definitional (`optimized_typedef_axioms`, nitpick_hol.ML:1974-1996,
-routed by `add_maybe_def_axiom`, nitpick_preproc.ML:907-909) and the
-`user_axioms`-gated route (:976-978) is off under the pinned `false`.  By
+flag relaxes the TAIL of the list (§1), and the tail is decided by a RULE,
+not a list (the third read's R1, under ruling 20): it is exactly what
+Nitpick's `add_nondef_axiom` puts there — the assumptions handed over, and
+the nondefinitional axioms Nitpick generates from the constants and types
+of the conjecture and of the assumptions (nitpick_preproc.ML:1031-1040, the
+recursion through `add_axiom` at :902), where "nondefinitional" is decided
+by two routers and nothing else: `add_maybe_def_axiom` (:907-909; an axiom
+is nondefinitional iff its head is `Pure.imp`) and `add_eq_axiom`
+(:910-912; an equation is definitional iff `is_constr_pattern_formula`
+holds).  Exhaustive by construction: the accumulator's `nondefs` component
+(:891) is written only by `add_nondef_axiom` (:905-906), the two routers
+are the only conditional writers, after the folds only `defs` is appended
+to (:1037), and the function returns `neg_t :: nondefs` (:1040).
+Examples, marked as examples: the monomorphic class axioms of a type
+variable's sort (`add_axioms_for_sort`, :1026); an equational axiom of a
+function whose left-hand side is not a constructor pattern.  Not in the
+tail: typedef axioms, which are `Trueprop`-headed and definitional
+(`optimized_typedef_axioms`, nitpick_hol.ML:1974-1996).  The theory's OWN
+nondefinitional axioms enter only through `nondef_props_for_const`
+lookups: the one on an ordinary constant (:976-978) is off under the
+pinned `user_axioms = false`, the two on a typedef's `Abs_`/`Rep_`
+constant (:949-951, :957-959) are ungated — no phi-system axiom is known
+to mention one, and one more tail formula only costs an Unknown.  For the
+check the assumption list is empty, so the tail is the generated axioms
+alone.  By
 the author's ruling the check passes `false` — `trust_assms = (kind = Normal)`
 — so those generated axioms ride the strict rail for the check, and its
 problem is STRICTER than an ordinary guard's in that one respect.  The
@@ -486,9 +527,11 @@ template's fix level 1 (vars of the premises minus vars of the conclusion,
 :403) fixes every variable of the premises before any solving function
 runs, and `can_inst` has no effect on a check.
 
-The comment `preprocess` carries about the assumption parameter (:202-205)
-stays true and gains the check's case: the premises go in as assumptions
-under `Normal`, where the tolerant rail is the deliberate choice, and as
+The comment above `nitpick` about the assumption parameter (:202-205) is
+REWRITTEN to state both cases — its rationale survives, its unqualified
+first sentence and its closing warning do not: the premises go in as
+assumptions under `Normal`, where `trust_assms = true` is the deliberate
+choice, and as
 antecedents under `Check_Premise_Consistency`, where the strict rail is the
 question; the flag then governs only Nitpick's generated axioms, and the
 check passes `false`.  `preprocess`'s `NONE` (its own simplification closed
@@ -517,7 +560,8 @@ factory `gen_guard_condition_solver`: untouched, including its front
 `quick_cut 1 th` (:1617), which cannot fire on a tagged conclusion and is
 not to be wired to the kind.  Every ordinary guard's digest (§4.5), so every
 existing entry keeps hitting.  `slice`, `split_conjunctions`,
-`premises_of`, the hooks, phi_nitpick.ML.
+`premises_of`, the hooks, and every line of code in phi_nitpick.ML — two
+of its COMMENT blocks are corrected (ruling 19, §5 stage 1 item 1).
 
 ### 4.5 The digest of a check [drafter]
 
@@ -625,12 +669,18 @@ Two `\<^descr>` paragraphs in the text block that documents `\<condition> P`
   `safe_obligation_solver`, :2011-2012, whose `clarsimp_tac` is
   reasoners.ML:1657-1659) and has not been `\<condition> P`'s since the
   guard machinery replaced it; a new paragraph beside it would contradict
-  it.  By ruling 16 the correction is light: that one sentence becomes
-  "The assertion \<open>P\<close> is decided by the guard machinery under its own bounds
-  (library/reasoners.ML, prove_or_refute), so that an unprovable assertion
-  cannot loop the reasoning", the rest of the paragraph stays, and
-  `\<condition>[\<safe>] P` is not mentioned (ruling 15 defers it)
-  [drafter's wording; §9].
+  it.  By ruling 16 the correction is light, and it covers the paragraph's
+  two sentences (:214-217; only :213 stays verbatim), because the second
+  sentence, "Therefore, any rule protected by it is appliable only when the
+  condition \<open>P\<close> is provable using the safe solver", repeats the claim and
+  would refer to a solver the block no longer introduces (the third read's
+  F7, §10).  The first sentence becomes "The assertion \<open>P\<close> is decided by the
+  guard machinery under its own bounds (library/reasoners.ML,
+  prove_or_refute), so that an unprovable assertion cannot loop the
+  reasoning"; the second becomes "Therefore, any rule protected by it is
+  applicable only when \<open>P\<close> is decided provable." (three words deleted, the
+  adjective corrected); `\<condition>[\<safe>] P` is not mentioned (ruling 15
+  defers it).  Both sentences approved (ruling 18).
 - The new paragraph: "\<^prop>\<open>\<check> \<premise> \<consistency>\<close> is the guard
   \<open>\<condition> False\<close> under its own name: it holds exactly when the premises are
   inconsistent, so what it guards applies only in a case that cannot occur.
@@ -704,14 +754,36 @@ is the one caller of `Phi_Guard_Refute.nitpick` — and that is expected;
 re-evaluating after item 1 still typechecks the edited file against its
 own signature):
 
+0. `Phi_Logic_Programming_Reasoner/library/phi_nitpick.ML`, COMMENTS ONLY
+   (ruling 19): the patch header (:14-22) says the patch puts "the premises
+   of the guard" on the unknown-tolerant rail and that "Premises reach this
+   file as nondef_assm_ts" — an under-claim: it relaxes the whole TAIL of
+   the nondefinitional list, every nondefinitional formula but the negated
+   conjecture, built from the conjecture's own generated axioms as well as
+   from `nondef_assm_ts`; one clause says that antecedents of the
+   conjecture are in the head and are never relaxed, and one that a
+   premise which exclusively defines a free is moved to the definitional
+   list by Nitpick's own preprocessing (nitpick_preproc.ML:888-889).  The
+   PHI-PATCH comment (:519-526) names "typedef/class axioms": typedef
+   axioms are definitional and unaffected; say "class axioms and the other
+   nondefinitional axioms Nitpick generates" (§4.3 c's rule).  Constraints:
+   no distribution line changes; the `fun_box` paragraph (:24-28) is not
+   touched; phi-system's pinned parameter values stay out of the header
+   (they belong at reasoners.ML:1254-1256 and guard_refute.ML:207-208).
+   Both blocks are phi-system's own text (the distribution's nitpick.ML
+   header is :1-6), so a diff-and-reapply rebase never meets them.
 1. `Phi_Logic_Programming_Reasoner/library/guard_refute.ML`: the datatype
    `guard_kind` in the signature and the structure (the signature already
    carries a `datatype` spec, :19); `preprocess` and `nitpick` take the
    kind first; the residue is split and sliced under `Normal`, handed whole
    under `Check_Premise_Consistency` (§4.3 c); `trust_assms` =
    `(kind = Normal)`; the comments — the pipeline comment (:168-174), the
-   assumption-parameter comment (:202-205, extended as §4.3 c says: the two
-   ways the premises go in, and what the flag then governs), and what
+   assumption-parameter comment above `nitpick` (:202-205, rewritten as
+   §4.3 c says: the two ways the premises go in, and what the flag then
+   governs; its closing sentence "Passing them inside the goal turns the
+   trust patch silently off" is a warning addressed to `Normal`'s path and
+   is either scoped to it or dropped, since the check passes them inside the
+   goal on purpose), and what
    keeping every premise buys (§4.3 c — content, not certification; NOT a
    claim that the model satisfies the premises, and NOT a claim that the
    patch has nothing to act on) — each concise, pointing at this plan.
@@ -722,7 +794,8 @@ own signature):
    §6 needs them: `guard_kind_of`, `guard_digest_of`, `guard_digest`,
    `string_of_guard_kind`); `quick_cut` over `concl_is_false`;
    `guard_simp_tac` without the cut and with its comment rewritten (§4.3 a:
-   one state; the timeout path's surviving reason); `prove_or_refute kind ...`
+   one state — the cap `Seq.take 1` and the bound it carries; the timeout
+   path's surviving reason); `prove_or_refute kind ...`
    with the refutation by the simplifier (§4.3 a), the judge-path test,
    R-conv under `Normal` (§4.3 b), `r_nitpick kind`, the warning selected
    by the kind (§4.6), the record attribute and the trace suffix (§4.7);
@@ -916,10 +989,7 @@ source.
   was already aborting and now waits at most 400 ms for its message — and
   P-auto may prove such a goal from contradictory premises, a completeness
   gain.  The method has no caller.  For the method the cut is lost only on
-  a bare `False` conclusion (§6 item 6).  The second review measured the
-  hoist's loss of the step-1½ short-circuit on the committed corpus records
-  and found it zero (every `guard_simp_tac` refutation there has one
-  subgoal).
+  a bare `False` conclusion (§6 item 6).
 - **A guard instantiated to a literal `False` by unification** (e.g. the
   `\<r>if` rule of PLPR.thy:2779 with `C := False`, reached only when
   `RDB_False` fails and the search backtracks) is the check by this
@@ -961,8 +1031,10 @@ From the design rounds:
   guards whose conclusion happens to be closed; superseded by ruling 10,
   under which the check is not sliced because it is not split.
 - **Passing the premises as trusted assumptions and only turning the slice
-  off** (rev 1's shape): the premises would ride the tolerant rail and the
-  verdict would rest on it alone (§3 item 5); superseded by ruling 10.
+  off** (rev 1's shape): no premise would be on the strict rail — those
+  Nitpick keeps nondefinitional would ride the tolerant rail, and one that
+  exclusively defines a free could be dropped outright (§3 item 5);
+  superseded by ruling 10.
 - **Keeping the literal `true` for `trust_assms` under the check** (the
   second review's R1, recommended by its judge): the check's Nitpick call
   would be identical to an ordinary guard's except for the antecedents, and
@@ -1023,7 +1095,8 @@ From the review of rev 2 (§10), rejected by its judge — one line each:
   declaration is a compile error at reasoners.ML:201; the checklist names
   the comments, the types are enforced.
 - **The hoist gives up the step-1½ short-circuit** (F18): measured zero on
-  the committed records (§7).
+  the committed records — every `guard_simp_tac` refutation there has one
+  subgoal.
 - **`guard_kind_of` re-spells `Thm.major_prem_of`** (F20): it is the
   reading the file already uses at five sites.
 - **Test the judge path with a probe** (F6's headline): the judge ref is
@@ -1057,8 +1130,10 @@ Approved: the undecided-check warning (§4.6, its first line the author's);
 the constructor names `Normal` and `Check_Premise_Consistency` (the
 author's); the spelling `\<check> \<premise> \<consistency>` (ruling 12); the
 raw right-hand side `Premise MODE_GUARD False` (ruling 14); the light
-correction of the `\<condition> P` paragraph (ruling 16, its wording the
-drafter's below); `trust_assms = false` for the check (ruling 17).
+correction of the `\<condition> P` paragraph, both sentences, in the
+drafter's wording (rulings 16 and 18); `trust_assms = false` for the check
+(ruling 17); the comment corrections in phi_nitpick.ML (ruling 19); the
+plan's text within the design (ruling 20, under which R1 is taken).
 
 Pending [drafter]: the type name `guard_kind` (delegated: "名字你随意起") and
 its owning structure `Phi_Guard_Refute` with the re-export (§1, §4.2); the
@@ -1067,7 +1142,9 @@ ML names `guard_kind_of`, `guard_digest_of`, `concl_is_false`,
 `Check_Premise_Consistency` (§4.8); the wording of the two `\<^descr>`
 paragraphs (§4.8); the record attribute `kind`, its token (the
 constructor's spelling) and the trace suffix (§4.7); the retirement of
-`Guard_False_Probe.thy` (§5 stage 1 item 5).
+`Guard_False_Probe.thy` (§5 stage 1 item 5).  The wording of the new
+`\<^descr>` paragraph (§4.8) is covered by ruling 20 unless the author
+objects to it on reading.
 
 Deferred, recorded at the author's request and NOT this plan's: the author
 intends to replace `\<condition>[\<safe>] P` by `\<condition> P` everywhere,
@@ -1112,13 +1189,40 @@ unchanged.  Applied here:
   surviving reason, §4.3 a, §5 stage 3), F13 (§4.1's list of readers).
 - Rejected by the judge: §8.
 
-**Before stage 1**: the second review's judge asks for a TARGETED third
-read of the five passages that will land verbatim in source comments —
-§4.3 a's sketch (the `concl_is_false` seam), §4.3 c, §1's rails entry, §7
-and §8's `trust_assms` bullet — not another full round; the remaining
-corrections are checked in stage 3's code review with the code beside
-them.  That read is still to be done.  Stage P is gated by nothing and may
-start as soon as the author allows.
+**Rev 3 → rev 4.**  `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_THIRD_READ_2026-09-22.md`:
+the targeted third read the second review's judge asked for — three
+readers over the five passages that land in source comments (§4.3 a's
+sketch, §4.3 c, §1's rails entry, §7, §8's `trust_assms` bullets) and, for
+accuracy only, §4.8's two `\<^descr>` paragraphs; a curator, one fresh
+defender per point, a judge; 13 findings and 2 relaxation proposals;
+MET_ON_CONDITION, the design untouched.  Applied here (DRAFTER_APPLIES,
+each checked again in stage 3's code review beside the code): F6 (`goals`
+described in the file's own word, UNSIMPLIFIED — "the guard as written"
+must not be typed into reasoners.ML, §4.3 a), F1 and F13 (the comment above
+`nitpick` is rewritten, not extended, §4.3 c, §5), F3 (§1's quotation of the
+patch comment corrected in place), F4 (the assumptions' own generated
+axioms in §1; the two ungated `Abs_`/`Rep_` sites, §4.3 c), F5 (`Seq.take 1`
+named as the cap, §4.3 a, §5), F8 ("every check the guard-side
+simplification does not prove", §1, §2), F9 (`guard_simp_tac` keeps its
+signature and call sites, not its body, §4.3 a), F10 (`add_eq_axiom` cited
+to nitpick_preproc.ML:910-912), F11 (§3 item 5 and §8's first bullet: a
+premise that exclusively defines a free is partitioned out; "where
+`trust_assms = true` is the deliberate choice", §4.3 c), F12 (the F18
+measurement moved from §7 to §8).  Rejected as nitpicking: F2 (§8's list is
+not extended for it: the "definitely true" sentence stands, it is not the
+forbidden sentence).  Ruled in the fourth round (§2 items 18-20): F7 —
+the light correction covers both sentences of the `\<condition> P`
+paragraph (§4.8); R2 — stage 1 corrects two comment blocks of
+phi_nitpick.ML, comments only (§5 stage 1 item 0); R1 — taken by the
+drafter under ruling 20: §4.3 c records the tail as the rule `add_nondef_axiom`
+enforces, with two examples marked as examples, in place of the list the
+two reviews had each caught inexact.
+
+**Stage P** is done: phi-system `be16be02` (with the plan rev 3 and the two
+review reports), root `603fefa2`; the two extra stale counts the stage
+found (`jedit/DRAG_AND_DROP_PLAN.md:745`, `jedit/WORD_BOUNDARY_PLAN.md:207`,
+`:217`) were corrected in the same commit by ruling.  Stage 1 begins with
+the Isabelle-MCP restart (§5).
 
 The vocabulary change of ruling 12 (premise, not hypothesis) renames the
 file's subject but not the file: the plan and the reviews keep their names
