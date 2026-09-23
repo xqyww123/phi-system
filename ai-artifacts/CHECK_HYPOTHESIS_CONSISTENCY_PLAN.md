@@ -1,29 +1,20 @@
 # `\<check> \<premise> \<consistency>` — deciding a guard without assuming the premises consistent
 
-Status: rev 5 (2026-09-23) — **READY FOR STAGE 1 on the author's word;
-stage P done and committed (phi-system `be16be02`); three reviews done
-(§10), every condition ruled (§2, items 1-20) or applied.  No ML has been
-changed.**  Still open in §9: the ML names and the record token, which
-stage 1 settles with the author before typing them.  Points marked [drafter] are the drafter's and stand only
-until the author rules on them.  Line numbers are those of phi-system
-commit `1f3c2142` (master).
+Status: rev 6 (2026-09-23) — **READY FOR STAGE 1; stage 1 starts after the
+author's context compaction, from the handoff
+`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_HANDOFF_2026-09-23.md`.  Stage P
+done and committed (phi-system `be16be02`); three reviews done (§10);
+every condition ruled (§2, items 1-21) or applied; two names answered and
+awaiting the author's word (§9).  No ML has been changed.**  Points marked
+[drafter] are the drafter's and stand only until the author rules on
+them.  Line numbers are those of phi-system commit `1f3c2142` (master);
+the working tree's ML is byte-identical to it in the files this plan
+touches (the three reviews verified this).
 
 The parent plan is `Docs/GUARD_CACHE_QUICK_MODE_PLAN.md` ("the guard plan"
 below); this is the "plan of its own" that its §33 rulings of 2026-09-11
-deferred until after step 5 (guard plan §37 item 11).
-
-What changed from rev 2, in one paragraph: the account of Phi_Nitpick's
-`trust_assms` is corrected — the check's premises are on the strict rail
-because they are antecedents of the conjecture, and what the flag still
-governs is the nondefinitional axioms Nitpick generates from the conjecture
-itself, which the check now puts on the strict rail too by the author's
-ruling (§4.3 c, §7); `guard_kind` is declared in `Phi_Guard_Refute` and
-re-exported from `Phi_Reasoners` (§4.2); `concl_is_false` takes a subgoal
-and strips the prefix itself (§4.3 a); one `string_of_guard_kind` feeds the
-record and the trace line (§4.7); the abbreviation's right-hand side is
-written raw by ruling (§4.8); the `\<condition> P` paragraph gets a light
-correction by ruling (§4.8); the probes, the checklists and the citations
-are corrected where the second review found them wrong (§5, §6, §10).
+deferred until after step 5 (guard plan §37 item 11).  §10 records what
+each revision applied; §2 records every ruling verbatim.
 
 
 ## 0. Essence
@@ -105,7 +96,10 @@ instance, the obligation instance, the goal state).  New terms:
   type name is the drafter's [author 2026-09-22 "名字你随意起"]; it is not
   `mode`, which in PLPR already names the Premise tag's HOL type
   (PLPR.thy:185-194, the variable `mode` in guard_refute.ML:88-98) and the
-  reasoner's cut and backtrack modes.
+  reasoner's cut and backtrack modes.  `Check_Premise_Consistency` is also
+  the HOL abbreviation's constant name (§4.8), hidden by
+  `hide_const (open)` right after its declaration (ruling 21), so the two
+  namespaces never meet.
 - **`guard_kind_of`**: `thm -> guard_kind`, the function that computes the
   kind from a goal state: `Check_Premise_Consistency` iff the state has a
   premise and that premise's conclusion under its prefix
@@ -127,7 +121,7 @@ instance, the obligation instance, the goal state).  New terms:
   simplification does not prove (§3 item 2): the refutation
   by the simplifier (a conclusion left as `False` by `guard_simp_tac`),
   R-conv, and the slice inside R-nitpick's `preprocess`.  Not "the
-  consumers of the flag": the functions that read the kind are
+  consumers of the kind": the functions that read the kind are
   `prove_or_refute`, `guard_digest`, `Phi_Guard_Refute.preprocess` and
   `Phi_Guard_Refute.nitpick` (§4.1; §4.3 b says why R-conv is switched off
   from outside and R-nitpick reshaped from inside).
@@ -167,7 +161,7 @@ instance, the obligation instance, the goal state).  New terms:
   guard digest hashes, for the check only (§4.5).
 
 
-## 2. The rulings of 2026-09-22, verbatim
+## 2. The rulings, verbatim (2026-09-22 and 2026-09-23)
 
 **First round** (the design).  The author opened with: "我的想法是也许我们可以在
 PLPR.thy 中引入 \<check> \<hypothesis> \<consistency> \<equiv> \<condition> False 这个
@@ -254,6 +248,15 @@ the check unconditionally (§3).
 20. **The plan's text is the drafter's, within the author's design**: "计划
     文本只要不违背我的设计可以你自行书写" — under it the drafter took the third
     read's R1 (the tail recorded as a rule, not a list, §4.3 c).
+21. **Names** (2026-09-23): "guard_digest_of，concl_is_false 批准。…
+    Check_Premise_Consistency 批准，但最后要 hide_const (open)。record 属性 kind
+    批准" — `guard_digest_of`, `concl_is_false`, the abbreviation's constant
+    `Check_Premise_Consistency` followed by `hide_const (open)` (§4.8), and
+    the record attribute `kind` (§4.7).  Asked, answered in the same
+    exchange, and awaiting the author's word: `guard_kind_of` ("是做什么的？",
+    §1) and `string_of_guard_kind` ("为什么你需要", §4.7).  Stage 1 starts
+    after the author's context compaction: "之后在 compact 后再开工，请准备，
+    请确保你的计划足够详细，请再次通读确保自洽".
 
 Earlier rulings this plan rests on: the `is_F` shortcut is deleted [author
 2026-09-15 "建议直接删除 is_F 分支"; guard plan §39]; the 2026-09-11 follow-up
@@ -561,7 +564,7 @@ factory `gen_guard_condition_solver`: untouched, including its front
 not to be wired to the kind.  Every ordinary guard's digest (§4.5), so every
 existing entry keeps hitting.  `slice`, `split_conjunctions`,
 `premises_of`, the hooks, and every line of code in phi_nitpick.ML — two
-of its COMMENT blocks are corrected (ruling 19, §5 stage 1 item 1).
+of its COMMENT blocks are corrected (ruling 19, §5 stage 1 item 0).
 
 ### 4.5 The digest of a check [drafter]
 
@@ -621,9 +624,15 @@ so that the check's decisions can be counted and timed on a corpus run
 token for the check.  The existing readers (`ai-artifacts/step5/analyze.py`,
 the smoke test's `path_of`) select the attributes they know and are
 unaffected.  The token is the constructor's own spelling, `Normal` /
-`Check_Premise_Consistency` [drafter; §9 — the record already holds a
-lowercased rendering, `proved`, and a capitalized one, `Provable`, so the
-casing is the author's].
+`Check_Premise_Consistency` [drafter, under ruling 20; the record already
+holds a lowercased rendering, `proved`, and a capitalized one, `Provable`].
+Why a function at all: an Event_Log record's attributes are strings, so the
+kind must be rendered, and it is rendered at two sites (the record and the
+trace line); `verdict` and `hit` are rendered by the one `string_of_verdict`
+for the same two sites, and the second review's F15 upheld that shape —
+two hand-written literals twenty lines apart would be the drift the file
+avoids everywhere else.  The attribute `kind` is approved (ruling 21); the
+function's name awaits the author's word (§9).
 
 ### 4.8 The spelling
 
@@ -632,7 +641,14 @@ In `PLPR.thy`, right after `Simp_Premise` (:204-205):
     abbreviation Check_Premise_Consistency ("\<check> \<premise> \<consistency>")
       where "\<check> \<premise> \<consistency> \<equiv> Premise MODE_GUARD False"
 
-An abbreviation, so the term IS `Premise MODE_GUARD False`: the registered
+    hide_const (open) Check_Premise_Consistency
+
+The `hide_const (open)` follows the declaration by ruling 21, as PLPR.thy
+does for `Guard_Budget` (:3279): the unqualified constant name leaves the
+name space, the notation and the qualified name stay, and the reverting
+rule that prints the notation is keyed on the constant's internal name, so
+hiding does not affect printing — measured in stage 1 with the rest of
+§6 item 1.  An abbreviation, so the term IS `Premise MODE_GUARD False`: the registered
 reasoner for `\<condition> ?P` (:2005-2006) matches it unchanged, no new
 reasoner, no term inspection beyond `guard_kind_of`, and `Phi_BI.thy`'s
 eight live `\<condition> False` need no edit.  The constant name echoes the
@@ -810,8 +826,9 @@ own signature):
    body comments that spell `prove_or_refute`'s argument list (:1430-1432)
    and the factory's "of prove_or_refute's type" (:1596-1600 — the
    factory's CODE stays untouched, §4.4).
-3. `Phi_Logic_Programming_Reasoner/PLPR.thy`: the abbreviation and the two
-   `\<^descr>` paragraphs (§4.8).  No ML changes.
+3. `Phi_Logic_Programming_Reasoner/PLPR.thy`: the abbreviation, its
+   `hide_const (open)`, and the two `\<^descr>` paragraphs (§4.8).  No ML
+   changes.
 4. `Phi_Logic_Programming_Reasoner/Test/Guard_Decision_Smoke.thy`: the
    probes of §6, a new section "The check" after "The judge"; the header's
    summary line names the check, and its reachability constraint (:14-20)
@@ -853,7 +870,9 @@ All under Isabelle-MCP, session `Phi_System_Base`, theories loaded from
 source.
 
 1. `PLPR.thy` clean.  The display measured: `term \<open>\<condition> False\<close>` and
-   `thm ToA_case_sum_src` (after `Phi_BI.thy`) print the new spelling.
+   `thm ToA_case_sum_src` (after `Phi_BI.thy`) print the new spelling, with
+   the constant hidden (§4.8); and `term \<open>\<check> \<premise> \<consistency>\<close>`
+   parses to `Premise MODE_GUARD False`.
 2. `Guard_Decision_Smoke.thy` clean twice in a row.  The second run runs
    against the store the first run's entries were written into and against
    the same `guard_decision` log, and must be unaffected by both, because
@@ -1135,16 +1154,22 @@ drafter's wording (rulings 16 and 18); `trust_assms = false` for the check
 (ruling 17); the comment corrections in phi_nitpick.ML (ruling 19); the
 plan's text within the design (ruling 20, under which R1 is taken).
 
-Pending [drafter]: the type name `guard_kind` (delegated: "名字你随意起") and
-its owning structure `Phi_Guard_Refute` with the re-export (§1, §4.2); the
-ML names `guard_kind_of`, `guard_digest_of`, `concl_is_false`,
-`string_of_guard_kind`; the HOL abbreviation's constant name
-`Check_Premise_Consistency` (§4.8); the wording of the two `\<^descr>`
-paragraphs (§4.8); the record attribute `kind`, its token (the
-constructor's spelling) and the trace suffix (§4.7); the retirement of
-`Guard_False_Probe.thy` (§5 stage 1 item 5).  The wording of the new
-`\<^descr>` paragraph (§4.8) is covered by ruling 20 unless the author
-objects to it on reading.
+Approved by ruling 21: `guard_digest_of`, `concl_is_false`, the
+abbreviation's constant name `Check_Premise_Consistency` with its
+`hide_const (open)` (§4.8), the record attribute `kind` (§4.7).
+
+Answered on 2026-09-23 and awaiting the author's word — stage 1 confirms
+them with the author before typing them: `guard_kind_of` (§1: the function
+that recognises the check from the goal state at `guard_condition_judge`'s
+entrance) and `string_of_guard_kind` (§4.7: the one rendering of the kind
+for the record and the trace line).
+
+Under ruling 20 (the drafter's, within the design): the type name
+`guard_kind` (also "名字你随意起") and its owning structure `Phi_Guard_Refute`
+with the re-export (§1, §4.2); the record's token (the constructor's
+spelling) and the trace suffix (§4.7); the wording of the new `\<^descr>`
+paragraph (§4.8), unless the author objects to it on reading; the
+retirement of `Guard_False_Probe.thy` (§5 stage 1 item 5).
 
 Deferred, recorded at the author's request and NOT this plan's: the author
 intends to replace `\<condition>[\<safe>] P` by `\<condition> P` everywhere,
@@ -1223,6 +1248,15 @@ review reports), root `603fefa2`; the two extra stale counts the stage
 found (`jedit/DRAG_AND_DROP_PLAN.md:745`, `jedit/WORD_BOUNDARY_PLAN.md:207`,
 `:217`) were corrected in the same commit by ruling.  Stage 1 begins with
 the Isabelle-MCP restart (§5).
+
+**Rev 5 → rev 6 (2026-09-23).**  Ruling 21 applied (§1, §4.7, §4.8, §5
+stage 1 item 3, §6 item 1, §9); a read-through for self-consistency: the
+stale "what changed from rev 2" paragraph replaced by a pointer to §10,
+§4.4's item number for the phi_nitpick.ML comments corrected to 0, "the
+consumers of the flag" in §1 corrected to "the kind", §2's heading dated
+for both days.  The resume handoff for the start of stage 1 after the
+author's context compaction is
+`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_HANDOFF_2026-09-23.md`.
 
 The vocabulary change of ruling 12 (premise, not hypothesis) renames the
 file's subject but not the file: the plan and the reviews keep their names
