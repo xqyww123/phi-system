@@ -1,11 +1,14 @@
 # PLPR Guard Cache — prove_or_refute rework
 
-Status: rev 33 (2026-09-23) — **THE CHECK `\<check> \<premise> \<consistency>`
+Status: rev 34 (2026-09-28) — **`\<condition>[\<safe>] P` IS THE OUT-OF-RUN
+INSTANCE (§40): `safe_obligation_solver` retired, the two safe reasoners
+registered to `guard_condition_solver` — no store, no refuter, no judge, no
+undecided-guard warning — pending the commit.**  Rev 33 (2026-09-23) — **THE CHECK `\<check> \<premise> \<consistency>`
 IMPLEMENTED, VERIFIED, REVIEWED (stages 1 to 3 of
 `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`: the code review
 MET_ON_CONDITION, its conditions ruled — that plan's rulings 22-25 — and
 applied, the re-review MET_ON_CONDITION on document items, applied),
-pending the commit**: a guard written `\<condition> False` is the
+committed as phi-system `0110a6fa`**: a guard written `\<condition> False` is the
 check (§1 the check), decided without the three steps that presuppose
 consistent premises — `prove_or_refute` takes a `guard_kind` first;
 `guard_simp_tac` no longer cuts, the refutation by the simplifier being read
@@ -229,7 +232,12 @@ document.
   `MODE_GUARD` or `NO_INST`, `PLPR.thy:187`, `:189`; until 2026-09-15 also
   the predicate `is_guard_mode`, deleted with the `is_F` shortcut, §39),
   discharged inside a run by the reasoners registered at
-  `PLPR.thy:2005-2006`, `:2008-2009`.  [code]
+  `PLPR.thy:2005-2006`, `:2008-2009`.  The safe modes `MODE_SAFE` and
+  `MODE_NO_INST_SAFE` (`:192-193`) are guards discharged by
+  `guard_condition_solver`, the out-of-run instance, and never by
+  `prove_or_refute` (since 2026-09-28, §40): what this document says of a
+  guard's decision — entries, the refuters, the judge, the warnings — does
+  not apply to them.  [code]
 - **the check**, **`guard_kind`** (since 2026-09-23;
   `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`, whose §1 is
   authoritative for both): the check is a guard whose leading antecedent,
@@ -386,13 +394,15 @@ document.
   [drafter].  The factory's contract, total [drafter, tenth review]:
   `oblg_template` (`reasoners.ML:336-380`) is SHARED — four live callers,
   `defer_obligation` `:819`, `hammer_obligation_solver` `:850`,
-  `gen_guard_condition_solver` `:1591`, `safe_obligation_solver` `:1651` — and
+  `gen_guard_condition_solver` `:1591`, `safe_obligation_solver` `:1651`
+  (three since 2026-09-28: the last retired, §40) — and
   becomes polymorphic in the solving function's result type `'a` through
   three extra parameters, `inj : thm -> 'a` (how a thm that never reached
   the solving function becomes a result), `on_thm : (thm -> thm) -> 'a ->
   'a` (how a thm-to-thm post-pass reaches the result) and `prj : 'a -> thm`
   (how a filter reads the thm out of a result); the three thm-returning
-  callers pass `I`, `I` and `I`, the guard path passes `pair ctxt0`,
+  callers (two since 2026-09-28, `defer_obligation` and
+  `hammer_obligation_solver`, §40) pass `I`, `I` and `I`, the guard path passes `pair ctxt0`,
   `apsnd` and `snd`.  Every exit of the template that bypasses the solving
   function goes through `inj` — the `TrueI` exit `:344-345`, the two
   `fast_inst` exits `:346-347` and `:369-370` (until 2026-09-15 also
@@ -408,7 +418,8 @@ document.
   (`:222-228`, `Thm.nprems_of st' < Thm.nprems_of st` on the OUTPUT state)
   reads the output through `prj`: it keeps `st'` iff `Thm.nprems_of (prj
   st') < Thm.nprems_of th`.  `apply_tac` itself (`:222-228`; three
-  callers, `:854`, `:1625`, `:1658`) is on the guard path and changes
+  callers, `:854`, `:1625`, `:1658` — two since 2026-09-28, §40: `:1658`
+  was `safe_obligation_solver`'s) is on the guard path and changes
   shape: today it puts the body's tactic into the `tactic` slot of
   `Tactic_Configures`'s hook state (`:217-220`, `type state = thm list *
   tactic * Proof.context`; `invoke_until_success`, `Hook.ML:109-111`,
@@ -431,15 +442,19 @@ document.
   only the solving function may replace the ctxt.
   Three instances (§3): **`guard_condition_judge`** = the factory applied
   to `prove_or_refute`, `{can_inst : bool} -> context_state ->
-  context_state Seq.seq`, registered on the state by the in-run
-  `\<condition>` reasoners as `guard_condition_judge {can_inst = …} o snd`
+  context_state Seq.seq`, registered on the state by the `\<condition> ?P`
+  and `\<condition>[NO_INST] ?P` reasoners as `guard_condition_judge {can_inst = …} o snd`
   (at `PLPR.thy:2005`, `:2008` only `Phi_Reasoners.wrap` goes — it re-pairs
   the incoming ctxt and would drop the lemmas; `o snd` stays because
   `apply_tactic`, `reasoner.ML:688`, hands an ML reasoner `(backtrack_mode,
-  context_state)`); the existing **`guard_condition_solver'`** /
-  **`guard_condition_solver1`** = the factory applied to `p_auto_attempt`
-  (§1 P-auto, §3, §39 ruling 9), used by the out-of-run
-  callers; and the factory applied to `try_prove_or_give_up` over
+  context_state)`); **`guard_condition_solver`** (since 2026-09-28, §40: the
+  out-of-run instance in the same shape — the term names its first
+  callers, and since then it is also the reasoner of `\<condition>[\<safe>] P`
+  and `\<condition>[\<no>-\<inst>-\<safe>] P` inside runs, registered `o snd` like
+  the judge instance) and its tactic shapes
+  **`guard_condition_solver'`** / **`guard_condition_solver1`** = the
+  factory applied to `p_auto_attempt` (§1 P-auto, §3, §39 ruling 9), used
+  by the out-of-run callers; and the factory applied to `try_prove_or_give_up` over
   `fastforce` for `defer_premise`'s solve-now case — with NO
   `guard_simp_tac` before it: `fastforce` is `fast_force_tac` =
   `Classical.fast_tac o addss`, so its `asm_full_simp_tac` runs inside the
@@ -1045,16 +1060,22 @@ OUT OF A RUN   (guard_condition_solver' / guard_condition_solver1: four
                 command-level callers in Phi_System — local_value.ML:169,
                 toplevel0.ML:387, generic_variable_access2.ML:182, :272;
                 application.ML:137 is commented out — solving proof
-                obligations, `Premise default P` / `Premise MODE_COLLECT P`)
+                obligations, `Premise default P` / `Premise MODE_COLLECT P`;
+                and, since 2026-09-28, guard_condition_solver as the reasoner
+                of \<condition>[\<safe>] P and \<condition>[\<no>-\<inst>-\<safe>] P INSIDE
+                runs, §40 — the same instance, the term kept)
   gen_guard_condition_solver (fn _ => fn ctxt => fn _ => fn (ctxt0, th) =>
       p_auto_attempt ctxt th |> Seq.map (pair ctxt0)):
     same preprocessing (no digest step), then p_auto_attempt — guard_simp_tac
     under its bound and P-auto once, the one definition the method
-    \<phi>guard_P_auto also runs — no store; not proved → Seq.empty →
-    the caller's error continuation.  A deliberate narrowing: today these
-    sites also get a 35 ms auto_search_tac gate (reasoners.ML:1405) and a
-    2000 ms P-auto budget (:1421, :1504); all four sites raise `error` on
-    failure, so §10 step (5) surfaces any regression as a build failure.
+    \<phi>guard_P_auto also runs — no store; not proved → Seq.empty, which
+    at the four command-level sites goes to the caller's error continuation
+    and for the two safe reasoners inside a run is a backtrack: the rule is
+    skipped (PLPR.thy, the \<^descr> of \<condition>[\<safe>] P).  A deliberate
+    narrowing for the command-level sites: today they also get a 35 ms
+    auto_search_tac gate (reasoners.ML:1405) and a 2000 ms P-auto budget
+    (:1421, :1504); all four raise `error` on failure, so §10 step (5)
+    surfaces any regression as a build failure.
 
 OBLIGATIONS SOLVED ON THE SPOT   (solve_obligation_now, PLPR.thy:1982/1983, from
                 defer_premise at :1990 when
@@ -1078,9 +1099,10 @@ asynchronous piece.  Reused: `Hasher`, the proof store (§8),
 `Raw_Simplifier.mksimps` and `addsimps` (the lemma budget), `Strhashtab` of
 `Performant_Isabelle_ML`, the R-conv/R-nitpick bodies (screens verbatim),
 `RPC_Pretty`'s raw term codec (functorised, §8).  `Phi_Reasoners.wrap`
-stays at every registration except the two guard reasoners, which now
-take the state directly (§1 `gen_guard_condition_solver`) [2026-09-02 12:08
-"registrations unchanged" superseded for these two by 2026-09-04 04:19].
+stays at every registration except the guard reasoners (two until
+2026-09-28, four since, §40), which take the state directly (§1
+`gen_guard_condition_solver`) [2026-09-02 12:08 "registrations unchanged"
+superseded for these by 2026-09-04 04:19].
 
 Every caller of the old `guard_condition_solver` must migrate, and the
 factory's changed type makes a missed one a compile error.  Known callers
@@ -1090,10 +1112,12 @@ instance [author 2026-09-03 11:15]; `Test/Guard_Race_Smoke.thy:79` →
 migrated at §10 step (2).  `oblg_template`'s three new parameters (§1)
 make its other three callers compile errors too: `defer_obligation`
 `reasoners.ML:819`, `hammer_obligation_solver` `:850`,
-`safe_obligation_solver` `:1651` each pass `I`, `I` and `I`; and
+`safe_obligation_solver` `:1651` (retired 2026-09-28, §40) each pass `I`, `I` and `I`; and
 `apply_tac` (`:222-228`), reshaped to run the body outside
 `Tactic_Configures`'s hook fold (§1), keeps its three callers `:854`,
-`:1625`, `:1658` — the two thm-returning ones pass `I` for `prj` — and
+`:1625`, `:1658` (two since 2026-09-28: the safe solver's is gone, and so
+is the `solver_mode` argument, §40) — the thm-returning ones (one since
+2026-09-28, `hammer_obligation_solver`) pass `I` for `prj` — and
 leaves the hook's `state` type and the registration in
 `Phi_Envir.ML:336-338` untouched.
 
@@ -3966,3 +3990,178 @@ three undecided guards and the slice-merge obligation as in run (i), the
 AoA record replaying and live; ruling 10 wrote seven `Refuted` entries
 into `Quicksort.proof-store` (222 → 229 live records, no tombstone) —
 guards the simplifier refutes outright, which until then left no trace.
+
+
+## 40. `\<condition>[\<safe>] P` unified onto the out-of-run instance (2026-09-28)
+
+**What changed** [author's design; drafter's plan text].  The two safe
+reasoners (`PLPR.thy`, `\<condition>[\<safe>] ?P` and
+`\<condition>[\<no>-\<inst>-\<safe>] ?P`) are registered to
+**`guard_condition_solver`** `{can_inst = true | false} o snd`, the
+out-of-run instance in the judge instance's shape (`context_state ->
+context_state Seq.seq`): the factory over `p_auto_attempt` —
+`guard_simp_tac` then P-auto once, under the same bounds as the judge
+instance — no store, no refuter, no judge, no undecided-guard warning,
+the context returned unchanged; its tactic shapes `guard_condition_solver'` /
+`guard_condition_solver1` are unchanged and now built on it.
+`safe_obligation_solver` (clarsimp on the replaced safe simpset,
+unbounded, no store) and its two entry points are deleted;
+`Phi_Safe_Simps` stays for its other users (`\<simplify>[\<safe>]`, the
+method `\<phi>safe_simp`, the deriver, the `\<r>nat_to_suc_nat` reasoner of
+`PhiSem_Common_Int.thy:78`); `MODE_SAFE` / `MODE_NO_INST_SAFE`,
+the simp facts of `PLPR.thy:247` and the `\<r>EIF` / `\<r>ESC` rules stay,
+as does the spelling `\<condition>[\<safe>] P`.  The `\<^descr>` block of
+`PLPR.thy` now describes it (text approved by the author after a reader
+test by six fresh Opus readers); the `\<condition> P` paragraph is
+tightened and documents `\<condition>[\<no>-\<inst>] P`; the two mode
+comments and the `case_split` comment are corrected.  Two facts the
+review made explicit (its F5, F6): `guard_simp_tac`'s loop warning,
+unconditional on its 60 s bound, still applies — "不告警" is "no warning
+when the guard fails", i.e. no undecided-guard warning; and the instance
+sees the lemma list the context carries through `enhance_for_guard`, like
+every guard-side prover, so its completeness can vary with what earlier
+`\<condition>` guards of the run brought in, while it neither reads nor
+writes the store ("不用 store").  The mode comment of `MODE_SAFE` describes
+both antecedents that use the mode, `\<simplify>[\<safe>]` (45 uses in ten
+files: normalisation steps under the `\<phi>safe_simp` simpset) and
+`\<condition>[\<safe>]`.
+
+**Rulings** [author 2026-09-28]: unify — "保留 \<condition>[\<safe>] 但修改其
+reasoner，统一到 condition guard judge 上，但以一种'快速模式'去做，例如不走 LLM
+judge and the refuters 只走 the P-auto"; "1. 不用 store 2. 不告警"; the
+description "批准这个文案", with "可以直说 it's weaker than \<condition>";
+the two details (`\<no>-\<inst>-\<safe>` → `can_inst = false`;
+`Phi_Safe_Simps` kept) "赞同"; the code step "好，请继续"; the name
+`guard_condition_solver` (the primed tactic forms already existed) "挺好的".
+After the review (2026-09-28): its F1 "赞同你的建议，请做" (experiment 4 and
+the simpset-delta paragraph below); F4 "按你提议的来改" (the per-antecedent
+mode comment); F5 "'不告警'指'guard 失败时不告警'"; F6 "这三处的修改量大吗？
+不大的话你可以直接改" (the three corrections of the `\<^descr>` block, made).
+After the re-review: F4's wording, its option (a) — "in `\<simplify>[\<safe>]`,
+simplification in the `\<phi>safe_simp` simpset only (the simp rules of
+`HOL.List` plus the `\<phi>safe_simp` rules)" — "赞同你的建议"; and the review's
+loosening proposal to delete the dead `solver_mode` argument "赞同" —
+done: `datatype solver_mode` (`Agressive_Solver | Safe_Solver`, read by no
+code since `0110a6fa`) is gone, `Tactic_Configures`'s `arg` is `unit`,
+`apply_tac` takes no mode and its two bodies' patterns have three slots,
+the one registration (`Phi_Envir.ML:336-338`, `fn _ =>`) is unchanged.
+After the final check (`ai-artifacts/SAFE_GUARD_CODE_FINAL_CHECK_2026-09-28.md`):
+the `MODE_SAFE` comment's parenthetical, which names the `HOL.List` rules
+and the `\<phi>safe_simp` rules but not the two simprocs `Phi_BI.thy:4809-4810`
+adds to that simpset, stays as it is — "保持原样就好"; the commit: "批准提交".
+
+**Experiments** (cslh19, `isabelle build … Phi_Examples` on the committed
+pins, phi-system `0110a6fa`, the AoA gate closed for every build; the
+author's "可以用 isabelle build"): (1) the safe solver on the standard
+system simpset instead of `Phi_Safe_Simps`: Phi_Examples clean.  (2) the
+eleven uses (`PhiSem_Mem_C_Ag_NT.thy` ×7, `Phi_Type.thy` ×3,
+`PhiSem_Aggregate_Named_Tuple.thy` ×1) rewritten to `\<condition> P`:
+Phi_Examples clean, the stores gaining entries for them.  (3) the change
+above, the uses as committed: `Phi_Logic_Programming_Reasoner` clean,
+`Test/Guard_Decision_Smoke.thy` clean with its section "The out-of-run
+instance" (a provable safe guard solved, an unprovable one not, the
+no-inst twin solved — the first probe repeated with `can_inst = false`
+on a ground guard, called directly; replaced in (5); for each no entry,
+no decision record, no warning),
+Phi_Examples clean (8:15, the five consumer heaps rebuilt).  Covered: the
+guards the corpus fires; a rule whose guard never fires there is not.
+(4) [the review's F1, ruled "赞同你的建议，请做"] one more leg on the same
+bytes: `Phi_Test` (`PhiTest_All`, which imports `PhiTest_Mem_C`, and
+`PhiTest_Arithmetic`) and `Bucket_Hash` (in no ROOT; a wrapper session over
+the `Phi_Examples` heap, `ai-artifacts/bucket_root/`, never committed):
+clean — `Phi_Examples` as a heap image 4:12, `Bucket_Hash` 1:02, `Phi_Test`
+1:41 — covering the field-name family where it is densest.  The gate was
+closed for every build by commenting the `AOA_ALLOW_NONINTERACTIVE=yes` line
+of the test machine's `etc/settings` for the build's duration, restored by a
+trap; the heaps moved aside in (3) were deleted after the run.  Session
+times of the `Phi_Examples` run across the experiments: 3:47 (1), 4:12 (2),
+3:47 (3), 4:12 (4, as a heap image): no slowdown from the routine failure
+path, where the out-of-run instance runs P-auto for up to 400 ms of thread
+CPU on a conclusion the simplifier left as `False` (the judge instance
+stops there, `refuted_by_simp`) — recorded as an observation, not a defect.
+(5) After the review's conditions were applied (its F3–F9 and the text of
+F4–F6): `Phi_Logic_Programming_Reasoner` clean; the smoke session clean
+with the section's probes now driven through the two registrations
+(`Phi_Reasoner.reason` on a state whose leading antecedent is the tagged
+guard — a provable safe guard solved; `BLIND_SPIN _` and `PP (LOOP _)`,
+the latter Unknown with the undecided-guard warning under the judge
+instance, not solved and silent; a body `CHAIN _ \<and> SOMETRUE ?x` solved
+under `\<safe>` and not under `\<no>-\<inst>-\<safe>`; for each no entry, no
+decision record, no warning; and the context returned is the same
+object), a negative control — the `\<safe>` registration's `can_inst`
+flipped on the test machine, then restored — failing on the
+instantiation probe; then `Phi_Examples`, `Phi_Test` and `Bucket_Hash`
+clean (10:40 in all) with the consumer heaps rebuilt from the bytes of
+that time: `Phi_Semantics_Framework.db` records `reasoners.ML`
+`93764d68…` and `PLPR.thy` `8891d280…`, the working tree's SHA1s then.
+(6) After the re-review's residuals (among them a ground body solved
+under `\<no>-\<inst>-\<safe>`, so that registration is reached — its F3),
+F4's option (a) and the deletion of `solver_mode`: PLPR, the smoke session
+and the full leg clean again (10:40), the databases recording `reasoners.ML` `0558ce0f…`, `PLPR.thy`
+`2de5dc5b…` and `Guard_Decision_Smoke.thy` `78ec8479…` — the bytes
+offered for the commit.
+
+**The simpset delta** [the review's F1; drafter, checked in the sources]:
+the retired solver ran both `oblg_template`'s front rewrite and its clarsimp
+in `Phi_Safe_Simps.equip ctxt0` (the `HOL.List` simpset plus
+`\<phi>safe_simp`); the out-of-run instance runs the front rewrite in the run's
+simpset and `guard_simp_tac` / P-auto in that simpset plus `\<phi>guard_simp`
+(no declaration in the tree, only the binding, `guard_cache.ML:144`) and
+the context's lemma list.  So the `\<phi>safe_simp` rules without `[simp]` no
+longer reach `\<condition>[\<safe>] P` — among them `map_beta`,
+`map_pairewise_eq`, `map_unspec`, `map_unspec_eq`
+(`Phi_Preliminary.thy:522-536`), `nested_case_prod` and the
+`prod.case_distrib` instances (`:285-293`), `ExBI_split_prod` and
+`ExBI_subj_split_prod` (`Phi_BI.thy:1833`, `:1838`), `len_intvl.pred_True`
+and `len_intvl.rel_eq` (`Phi_Algb_Pre.thy:50`), and
+`atLeastLessThan_singleton_alt` (`:56`); the other declarations of
+`Phi_Preliminary.thy:261` and `Phi_Algb_Pre.thy:43-54` (`comb.K_*`,
+`sublist_map_*`, the rest of `len_intvl.*`, `Len_Intvl.set_def`,
+`shift_by_nat_nat_def`, `shift_by_nat_int_def`) have `[simp]` or `[iff]`
+twins at their origin (`Phi_Aug.thy`; `Len_Intvl.thy:47-48`, `:107-114`)
+and still reach it [the re-review's F1 and the final check corrected this
+list].  Why none of the eleven
+uses needs them: the field-name family (`PhiSem_Mem_C_Ag_NT.thy` ×7,
+`PhiSem_Aggregate_Named_Tuple.thy:440`; `s |\<notin>| field\<^sub>2`, `s |\<notin>| fmdom tys`)
+is decided by `[simp]` twins — `fempty_iff`, `finsert_iff` (`FSet.thy:406`,
+`:487`), `fmdom_empty`, `fmdom_fmupd` (`Finite_Map.thy:239`, `:252`),
+`symbol_digit_inject` / `_distinct` / `_neq_zero`
+(`Performant_Isabelle_ML/HOL/SSymb.thy:65-78`); `Phi_Type.thy:82` and
+`:102` guard the boolean `C` of a conditional mapper, and
+`LPR_ctrl_red_bool` is `[simp]` (`PLPR.thy:1773`); `Phi_Type.thy:4227`,
+`(C\<^sub>R \<or> r = (\<lambda>_. unspec)) \<and> (C\<^sub>W \<or> w = (\<lambda>_. unspec))`, is non-trivial only
+when `C\<^sub>R` or `C\<^sub>W` is `False`, which only `SE_Has_or_Not_None` (`:2876`)
+gives, forcing the remainder to `\<circle>`, and the mappers the rules give a
+`\<circle>` remainder are a schematic (`IDE_CP_Reasoning2.thy:572-578`, `:1803`;
+settled by `fast_inst` or the guess-inst solver), the literal
+`(\<lambda>_. unspec)` (`:1149-1165`), or `?\<^sub>M False m f`, which `cond_mapper_red`
+`[simp]` (`Phi_Type.thy:68`) reduces — the search `/usr/bin/grep -rnIF
+'\<OTast> \<circle>' Phi_System/IDE_CP_Reasoning2.thy Phi_System/Phi_Type.thy`
+(a fixed string; 10 lines, in seven mapper rules of
+`IDE_CP_Reasoning2.thy`: `:574-575`, `:1129`, `:1140`, `:1151`, `:1162`,
+`:1283-1284`, `:1803-1804`) shows no rule that yields a product mapper
+for a `\<circle>` remainder.  Experiment (1) isolated the swap.  A future safe
+guard that needs one of the dropped rules gets it through
+`[\<phi>guard_simp]`, which strengthens every `\<condition>` guard and is the
+author's to declare.
+
+**How a `reasoners.ML` edit reaches a leg** [the review's F2; drafter,
+measured]: `Phi_Logic_Programming_Reasoner` and `Phi_BI` are Running
+sessions with no heap image; their theories are compiled into the first
+heap session that loads them, `Phi_Semantics_Framework`, whose session
+database records `reasoners.ML` and `PLPR.thy` among its sources
+(`log/Phi_Semantics_Framework.db`, table `isabelle_sources`), so an edit
+invalidates that session and every session above it — the ordinary
+mechanism.  The "lesson" recorded here earlier, that it does not, was
+wrong: `isabelle build -n` prints its plan only with `-v`, and the
+"nothing to build" the drafter read off a silent `-n` was the absence of
+output; experiment (1)'s first run was valid, and the runs that moved the
+five consumer heaps aside rebuilt from the same bytes.  The check to make
+after a leg is the digest: for the runs of experiments (3) and (4) the
+database recorded `reasoners.ML` `9ae22157…` and `PLPR.thy` `f2e2e224…`,
+the working tree's SHA1s at that time; for run (5), after the review's
+text changes, `93764d68…` and `8891d280…`; for run (6), the bytes offered
+for the commit, `0558ce0f…` and `2de5dc5b…`, and the smoke session's
+database `Guard_Decision_Smoke.thy` `78ec8479…`.
+
+Record: `ai-artifacts/SAFE_GUARD_REPLACEMENT_HANDOFF_2026-09-23.md` §6.

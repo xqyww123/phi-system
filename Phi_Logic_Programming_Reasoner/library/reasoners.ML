@@ -104,7 +104,7 @@ signature PHI_REASONERS = sig
     prefix; read on the state the factory receives, BEFORE oblg_template's rewrite turns
     ordinary guards into \<condition> False as well*)
   val guard_kind_of : thm -> guard_kind
-  (*the in-run instance: the factory over prove_or_refute with the guard digest, both
+  (*the judge instance: the factory over prove_or_refute with the guard digest, both
     under the kind of the guard as written*)
   val guard_condition_judge : {can_inst: bool} -> context_state -> context_state Seq.seq
   (*the guard digest: the whole goal state -- the guard's subgoals and the protected
@@ -118,7 +118,14 @@ signature PHI_REASONERS = sig
   val guard_digest_of : thm -> Proof.context -> thm -> Hasher.digest
   val prove_or_refute : guard_kind -> bool -> Proof.context -> Hasher.digest -> context_state -> context_state Seq.seq
   val string_of_guard_kind : guard_kind -> string
-  (*the out-of-run instances: the factory over p_auto_attempt, no store*)
+  (*the out-of-run instances, named after their first callers: the factory over
+    p_auto_attempt -- no store read or written, no refuter, no judge, no undecided-guard
+    warning (guard_simp_tac's loop warning still applies); the context comes back
+    unchanged, and the search sees the lemma list the context carries, like every
+    guard-side prover.  guard_condition_solver is also the reasoner of \<condition>[\<safe>] P
+    and \<condition>[\<no>-\<inst>-\<safe>] P inside runs (PLPR.thy); the primed forms are its
+    tactic shapes*)
+  val guard_condition_solver : {can_inst: bool} -> context_state -> context_state Seq.seq
   val guard_condition_solver': {can_inst: bool}
                              -> (Proof.context -> thm -> thm) (*failure callback*)
                              -> Proof.context -> thm -> thm
@@ -145,13 +152,6 @@ signature PHI_REASONERS = sig
   val guard_classic_prover_timeout : int Config.T (*milliseconds of thread CPU, 400 provisional*)
   val guard_classic_prover_bound : Proof.context -> Time.time
 
-  val safe_obligation_solver : {can_inst: bool} -> Proof.context -> thm -> thm Seq.seq
-      (*The annotation of \<open>case_split\<close> is supported*)
-  val safe_obligation_solver': {can_inst: bool}
-                             -> (Proof.context -> thm -> thm) (*failure callback*)
-                             -> Proof.context -> thm -> thm
-  val safe_obligation_solver1: {can_inst: bool} -> Proof.context -> thm -> thm
-
 
   (*defer the leading antecedent to the nearest obligation and call the contract*)
   val defer_obligation : {can_inst:bool, fix_level:int}
@@ -165,8 +165,8 @@ signature PHI_REASONERS = sig
   val has_obligations_tag : thm -> bool
 
 
-  structure Tactic_Configures : HOOKS (*You can alter auxiliary facts, tactics, and configure the
-      context before applying either the automatic solving*)
+  structure Tactic_Configures : HOOKS (*alter the auxiliary facts, the pre-tactic and the context
+      before the automatic solving -- the obligation solver and the guard factory*)
 
 (*  val extract_prem  : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm option
   val extract_prems : Context.generic -> bool (*strip the Premise tag or not*) -> thm -> thm list
@@ -269,10 +269,8 @@ fun simple_simp ctxt sequent =
 (** Tactic Configures **)
 (*depreciate?*)
 
-datatype solver_mode = Agressive_Solver (*the auto method*) | Safe_Solver (*by clarsimp*)
-
 structure Tactic_Configures = Hooks (
-  type arg = solver_mode
+  type arg = unit
   type state = thm list (*aux thms*) * tactic * Proof.context
 )
 
@@ -282,10 +280,10 @@ structure Tactic_Configures = Hooks (
   kept iff it has fewer premises than the input.  A hook raising Success with a
   tactic of its own no longer replaces the body: its state is used like the fold's
   result and the body runs (no registration does that today).*)
-fun apply_tac prj ctxt body mode th =
+fun apply_tac prj ctxt body th =
   let val (aux, pre, ctxt') =
-        Tactic_Configures.invoke (Context.Proof ctxt) mode (aux_thms ctxt, all_tac, ctxt)
-   in body (ctxt', pre, aux, mode) th
+        Tactic_Configures.invoke (Context.Proof ctxt) () (aux_thms ctxt, all_tac, ctxt)
+   in body (ctxt', pre, aux) th
    |> Seq.filter (fn st => Thm.nprems_of (prj st) < Thm.nprems_of th)
   end
 
@@ -920,7 +918,7 @@ fun hammer_obligation_solver
         let val (_, th'1) = collect_obligation_premises (true, true, Config.get ctxt existential_obligation) ctxt th
             val th' = @{thm' Premise_I} RS th'1
          in th'
-         |> head_only (apply_tac I ctxt (fn (ctxt,pre,aux,_) =>
+         |> head_only (apply_tac I ctxt (fn (ctxt,pre,aux) =>
             pre THEN HEADGOAL (Method.insert_tac ctxt aux)
                 THEN (fn st =>
                    let (*The one place all failure text is composed: the forked
@@ -972,8 +970,7 @@ fun hammer_obligation_solver
                        here: it falls through to the outer handle, which also
                        prints the agent cost. *)
                     handle e as Phi_Sledgehammer_Solver.Auto_Fail _ => error (compose e))
-                   end))
-            Agressive_Solver)
+                   end)))
          |> Seq.pull
         end
         handle MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, cost) =>
@@ -1124,7 +1121,7 @@ fun p_auto_tac ctxt =
    in solved_states (norm_tac (REPEAT_DETERM (FIRSTGOAL main_tac) #> Seq.take 1))
   end
 
-(*one whole attempt outside a run: the guard-side simplification, then P-auto once under
+(*one whole attempt: the guard-side simplification, then P-auto once under
   \<phi>guard_classic_prover_timeout -- the out-of-run instance and the method
   \<phi>guard_P_auto share this one definition, so the two cannot drift apart*)
 fun p_auto_attempt ctxt =
@@ -1684,7 +1681,7 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
   oblg_template true {can_inst = can_inst, fix_level = if can_inst then 1 else 2}
                 {inj = pair ctxt0, on_thm = apsnd}
   (fn ctxt => fn th =>
-      apply_tac snd ctxt (fn (ctxt, pre, aux, _) => fn th =>
+      apply_tac snd ctxt (fn (ctxt, pre, aux) => fn th =>
         let val guard_ctxt = Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}
                              |> Guess_Instantiate.add_guess_inst_looper
          in quick_cut 1 th
@@ -1696,7 +1693,7 @@ fun gen_guard_condition_solver digest_of solve {can_inst} (ctxt0, th0) =
                        |> Seq.maps (fn th => solve can_inst guard_ctxt d (ctxt0, th))
                    end)))
          |> Seq.take 1
-        end) Safe_Solver th
+        end) th
       |> Seq.take 1
       |> Seq.pull) ctxt0 th0
 
@@ -1736,45 +1733,15 @@ fun guard_condition_judge cfg (ctxt0, th0) =
 (*the out-of-run instance: one whole attempt, no store*)
 fun p_auto_solving _ ctxt _ (ctxt0, th) = p_auto_attempt ctxt th |> Seq.map (pair ctxt0)
 
+fun guard_condition_solver cfg (ctxt0, th0) =
+  gen_guard_condition_solver (K (K ())) p_auto_solving cfg (ctxt0, th0)
+
 fun guard_condition_solver' cfg =
   context_tactic_to_state_transition (fn ctxt => fn th =>
-    gen_guard_condition_solver (K (K ())) p_auto_solving cfg (ctxt, th) |> Seq.map snd)
+    guard_condition_solver cfg (ctxt, th) |> Seq.map snd)
 
 fun guard_condition_solver1 can_inst ctxt sequent =
   guard_condition_solver' can_inst (fn _ =>
-    error (Pretty.string_of (Pretty.chunks [
-        Pretty.str "Fail to solve the proof obligation automatically:",
-        Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)
-  ]))) ctxt sequent
-
-fun safe_obligation_solver {can_inst} ctxt0 =
-        oblg_template true {can_inst = can_inst, fix_level= if can_inst then 1 else 2 }
-                      {inj = I, on_thm = I}
-  (fn ctxt => fn th =>
-      let val th' = th
-          fun clarsimp_tac ctxt =
-                Simplifier.asm_full_simp_tac (Guess_Instantiate.add_guess_inst_solver ctxt) THEN_ALL_NEW
-                (fn i => fn th => Classical.clarify_tac (addSss ctxt) i th)
-       in
-        apply_tac I ctxt (fn (ctxt,pre,aux,_) => fn thtt => thtt |> (quick_cut 1 THEN (
-             pre (*THEN REPEAT_DETERM_N new_conds (HEADGOAL (resolve_tac ctxt @{thms' impI}))*)
-                 THEN HEADGOAL (
-                              case_split_by_annotations_leading_subgoal ctxt 
-                 THEN_ALL_NEW Method.insert_tac ctxt aux
-                 THEN_ALL_NEW (fn s => fn x => clarsimp_tac (ctxt addsimps @{thms' Premise_def}) s x) )
-               (*THEN_ALL_NEW (fn s => fn x => Clasimp.fast_force_tac
-                      (Guess_Instantiate.add_guess_inst_solver ctxt addsimps @{thms' Premise_def}) s x)*) )
-               )
-              |> Seq.take 1 ) Safe_Solver th'
-       |> Seq.take 1
-       |> Seq.pull
-      end)
-  (Phi_Safe_Simps.equip ctxt0)
-
-val safe_obligation_solver' = context_tactic_to_state_transition o safe_obligation_solver
-
-fun safe_obligation_solver1 can_inst ctxt sequent =
-  safe_obligation_solver' can_inst (fn _ =>
     error (Pretty.string_of (Pretty.chunks [
         Pretty.str "Fail to solve the proof obligation automatically:",
         Syntax.pretty_term ctxt (Phi_Help.leading_antecedent' sequent)

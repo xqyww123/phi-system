@@ -184,13 +184,16 @@ text \<open>We provide a serial of predefined modes, which may be commonly usefu
 
 consts default :: mode
        MODE_CHANGED :: \<open>mode \<Rightarrow> mode\<close> ("\<changed>")
-       MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiating the
-                              goal but never instantiating the contextual premises\<close>
+       MODE_GUARD :: mode \<comment> \<open>necessary condition for exploring a search branch, may instantiate the
+                              goal but never the contextual premises\<close>
        NO_INST :: mode ("\<no>-\<inst>") \<comment> \<open>prohibiting instantiation\<close>
        MODE_COLLECT :: mode \<comment> \<open>relating to collection\<close>
        MODE_AUTO :: \<open>mode \<Rightarrow> mode\<close> \<comment> \<open>something that will be triggered automatically\<close> (*deprecated!*)
-       MODE_SAFE :: mode ("\<safe>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
-       MODE_NO_INST_SAFE :: mode ("\<no>-\<inst>-\<safe>") \<comment> \<open>simplification where only selected safe rules are applied.\<close>
+       MODE_SAFE :: mode ("\<safe>") \<comment> \<open>in \<simplify>[\<safe>], simplification in the \<phi>safe_simp simpset only
+                              (the simp rules of HOL.List plus the \<phi>safe_simp rules); in \<condition>[\<safe>],
+                              a guard decided only by the simplifier and a short automatic search (see the
+                              text on \<condition>[\<safe>] P below)\<close>
+       MODE_NO_INST_SAFE :: mode ("\<no>-\<inst>-\<safe>") \<comment> \<open>as MODE_SAFE in \<condition>[\<safe>], prohibiting instantiation\<close>
 
 
 
@@ -214,10 +217,18 @@ hide_const (open) Check_Premise_Consistency
 text \<open>
   \<^prop>\<open>Premise mode P\<close> wraps a boolean assertion for different roles in reasoning.
 
-  \<^descr> \<^prop>\<open>\<condition> P\<close> is \<^emph>\<open>guard\<close> of a rule constraining whether the rule can be applied.
-    The assertion \<open>P\<close> is decided by the guard machinery under its own bounds (library/reasoners.ML,
-    prove_or_refute), so that an unprovable assertion cannot loop the reasoning.
-    Therefore, any rule protected by it is applicable only when \<open>P\<close> is decided provable.
+  \<^descr> \<^prop>\<open>\<condition> P\<close> is a \<^emph>\<open>guard\<close>: the rule applies only when \<open>P\<close> is proved.
+    \<open>P\<close> is decided by the guard machinery under its own bounds, so that a hard assertion cannot
+    make the reasoning loop.  Refutations, undecided results and the lemmas a proof needed are
+    recorded in the theory's proof store; an undecided guard is reported as a warning when
+    \<open>\<phi>trace_reasoning\<close> is at least 1.  \<^prop>\<open>\<condition>[\<no>-\<inst>] P\<close> is the same
+    but never instantiates schematic variables of \<open>P\<close>.
+
+  \<^descr> \<^prop>\<open>\<condition>[\<safe>] P\<close> guards a rule in the same way, but is decided only by the simplifier
+    and then a short automatic search, under the same bounds and without reading or writing the
+    proof store; if they do not prove \<open>P\<close>, the rule is skipped without warning.  It is weaker than \<open>\<condition> P\<close>: use it where
+    failure is routine, as when choosing among alternative rules.  \<^prop>\<open>\<condition>[\<no>-\<inst>-\<safe>] P\<close>
+    is the same but never instantiates schematic variables of \<open>P\<close>.
 
   \<^descr> \<^prop>\<open>\<check> \<premise> \<consistency>\<close> is the guard \<open>\<condition> False\<close> under its own name: it holds
     exactly when the premises are inconsistent, so what it guards applies only in a case that
@@ -1739,7 +1750,8 @@ paragraph \<open>Annotations of Case-Split\<close>
 
 definition \<open>case_split x \<equiv> x\<close>
   \<comment> \<open>Annotating the wrapped term \<open>x\<close> should be case-split.
-      The annotation is supported in safe_obligation_solver, i.e., \<open>\<condition> P\<close>\<close>
+      The annotation is honoured by every guard reasoner (the case split in the guard
+      factory, library/reasoners.ML)\<close>
 
 subparagraph \<open>Reductions\<close>
 
@@ -2010,8 +2022,9 @@ fun defer_premise ctxt =
 \<phi>reasoner_ML Normal_Premise %general (\<open>\<premise> ?P\<close> | \<open>\<obligation> ?P\<close>)
   = \<open>Phi_Reasoners.wrap defer_premise o snd\<close>
 
-(*the two in-run guard reasoners take the state directly: the context they return
-  is the incoming one plus the guard's lemmas, which Phi_Reasoners.wrap would drop*)
+(*the four guard reasoners take the state directly: guard_condition_judge returns the
+  incoming context plus the guard's lemmas, which Phi_Reasoners.wrap would drop;
+  guard_condition_solver returns it unchanged*)
 \<phi>reasoner_ML Simp_Premise %general (\<open>\<condition> ?P\<close>)
   = \<open>Phi_Reasoners.guard_condition_judge {can_inst=true} o snd\<close>
 
@@ -2019,10 +2032,10 @@ fun defer_premise ctxt =
   = \<open>Phi_Reasoners.guard_condition_judge {can_inst=false} o snd\<close>
 
 \<phi>reasoner_ML \<open>\<condition>[\<safe>] P\<close> %general (\<open>\<condition>[\<safe>] ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=true}) o snd\<close>
+  = \<open>Phi_Reasoners.guard_condition_solver {can_inst=true} o snd\<close>
 
 \<phi>reasoner_ML \<open>\<condition>[\<no>-\<inst>-\<safe>] P\<close> %general (\<open>\<condition>[\<no>-\<inst>-\<safe>] ?P\<close>)
-  = \<open>Phi_Reasoners.wrap (Phi_Reasoners.safe_obligation_solver {can_inst=false}) o snd\<close>
+  = \<open>Phi_Reasoners.guard_condition_solver {can_inst=false} o snd\<close>
 
 consts prove_obligations_in_time :: mode
 

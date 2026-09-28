@@ -1,8 +1,9 @@
 # `\<check> \<premise> \<consistency>` — deciding a guard without assuming the premises consistent
 
 Status: rev 11 (2026-09-23) — **STAGES 1 AND 2 DONE, THE CODE REVIEW AND
-ITS RE-REVIEW DONE; pending the author's word on two local names (§9) and
-the commit.**  The code written; the verification of §6 run (PLPR.thy, the
+ITS RE-REVIEW DONE; the two local names approved (ruling 26) and the work
+committed as phi-system `0110a6fa` (ruling 27); ruling 15's deferred item
+resolved on 2026-09-28 (guard plan §40).**  The code written; the verification of §6 run (PLPR.thy, the
 smoke theory twice and Phi_BI.thy clean; the corpus with 0 flips on
 `PhiTest_Arithmetic` and one flip on `Phi_Examples` that the change did not
 cause, §10); the code review (`ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_CODE_REVIEW_2026-09-23.md`,
@@ -19,8 +20,7 @@ MET_ON_CONDITION: no code defect, one item for the author — the names
 `simplified_in` and `by_simp`, §9 — and eight document items, applied in
 this revision).  §10 records all of it.  Stage P done and committed
 (phi-system `be16be02`); three plan reviews done (§10); every condition
-ruled (§2, items 1-25) or applied; every name approved (§9) but the two of
-the re-review's N1.  Points marked
+ruled (§2, items 1-27) or applied; every name approved (§9).  Points marked
 [drafter] are the drafter's and stand only until the author rules on
 them.  Line numbers are those of phi-system commit `1f3c2142`, the code
 before stage 1; resolve a citation with `git show 1f3c2142:<file>`.
@@ -249,7 +249,8 @@ the check unconditionally (§3).
     `\<equiv> Premise MODE_GUARD False`: "赞同" (§4.8).
 15. **`\<condition>[\<safe>] P` is deferred**: "\<condition>[\<safe>] P 是另一个问题，
     其实我有计划打算最后都换成 \<condition> P 的。不过这个我们之后再讨论吧。请记一笔"
-    — recorded in §9, not this plan's.
+    — recorded in §9, not this plan's.  Resolved 2026-09-28: the spelling
+    stays, re-registered to the out-of-run instance (guard plan §40).
 16. **The `\<condition> P` paragraph gets a light correction**: "你可以适当稍微
     改一下" (§4.8).
 17. **`trust_assms` for the check is `false`**: "建议 the check 传 false" —
@@ -295,6 +296,12 @@ the check unconditionally (§3).
     drafter's, 4 is ruling 22.
 26. **The two local names** `simplified_in` and `by_simp` (the re-review's
     N1, §9): "批准 这些内部名".
+27. **The commit** (phi-system `0110a6fa`, root `681e7961`; nothing pushed):
+    "好的，批准提交".  The two glyphs of stage P checked in the author's
+    jEdit: "通过".  Ruling 15's deferred item — replacing `\<condition>[\<safe>] P`
+    by `\<condition> P` — is taken up after the author's next context
+    compaction ("建议在 compact 后来看这个，请准备 compact"); the handoff is
+    `ai-artifacts/SAFE_GUARD_REPLACEMENT_HANDOFF_2026-09-23.md`.
 
 Earlier rulings this plan rests on: the `is_F` shortcut is deleted [author
 2026-09-15 "建议直接删除 is_F 分支"; guard plan §39]; the 2026-09-11 follow-up
@@ -431,8 +438,9 @@ the method's failure), not a verdict, and inside `prove_or_refute` both
 pulls are total.  The source comment keeps one concise clause and points at
 this paragraph, the file's own habit.  The `quick_cut` after the
 simplification (:1075) goes; `quick_cut` itself stays for its two other
-callers (the factory front :1617 and `safe_obligation_solver` :1661),
-rewritten over a shared predicate on a SUBGOAL [drafter]:
+callers (the factory front :1617 and `safe_obligation_solver` :1661; one
+since 2026-09-28, the latter retired, guard plan §40), rewritten over a
+shared predicate on a SUBGOAL [drafter]:
 
     fun concl_is_false subgoal =
       case Logic.strip_assums_concl subgoal
@@ -1237,7 +1245,9 @@ intends to replace `\<condition>[\<safe>] P` by `\<condition> P` everywhere,
 eventually [author 2026-09-22 "\<condition>[\<safe>] P 是另一个问题，其实我有计划
 打算最后都换成 \<condition> P 的。不过这个我们之后再讨论吧。请记一笔"] (ruling
 15).  Until then the `\<condition> P` paragraph of §4.8 does not mention the
-safe variant.
+safe variant.  Resolved 2026-09-28 the other way: the spelling stays and
+`\<condition>[\<safe>] P` is re-registered to the out-of-run instance; the
+`\<^descr>` block now describes it (guard plan §40; the handoff's §6).
 
 
 ## 10. The reviews and what each revision applied

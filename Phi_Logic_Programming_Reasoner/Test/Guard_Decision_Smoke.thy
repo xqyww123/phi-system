@@ -9,8 +9,9 @@ begin
    and the check \<check> \<premise> \<consistency>, the guard \<condition> False decided
    without assuming the premises consistent (plan section 1, the check) -- driven through the guard
    factory with entries injected into the store and a test judge installed into
-   the ref.  Not registered in any ROOT: evaluate on demand (e.g. via
-   Isabelle-MCP under session Phi_System_Base).
+   the ref; and the out-of-run instance, the reasoner of \<condition>[\<safe>] P, which reads
+   and writes no entry and raises no undecided-guard warning.  Not registered in any ROOT:
+   evaluate on demand (e.g. via Isabelle-MCP under session Phi_System_Base).
 
    Reachability constraint: every guard below must survive the factory's own
    exits (the TrueI exit, fast_inst) so that it reaches prove_or_refute, and
@@ -21,7 +22,9 @@ begin
    the guard to False on purpose; and, in the section The check, the probe
    whose premise guard_simp_tac rewrites to False (closing the goal) and the
    regression probe, an equation guard on purpose.  The other check probes are
-   decided by P-auto, by R-nitpick or by the judge, and BADN's ends unknown.
+   decided by P-auto, by R-nitpick or by the judge, and BADN's ends unknown.  The
+   probes of the out-of-run instance meet the same constraint with p_auto_solving in
+   place of prove_or_refute, and assert that prove_or_refute is never reached.
 
    The store is this theory's proof store, Guard_Decision_Smoke.proof-store (plan
    step 4), with no deletion, and it outlives a re-evaluation of this theory and
@@ -778,6 +781,70 @@ lemma "FALLS [1,2,3,4,5,6,7,8,9,10] \<Longrightarrow> False" by \<phi>guard_P_au
 lemma "CHAIN [1] \<Longrightarrow> False"
   apply (fails \<open>\<phi>guard_P_auto\<close>)
   oops
+
+section \<open>The out-of-run instance\<close>
+
+(*the reasoner of \<condition>[\<safe>] P and its no-inst twin (PLPR.thy): the factory over
+  p_auto_attempt, guard_simp_tac then P-auto once -- no store read or written, no refuter,
+  no judge, no undecided-guard warning, the context returned unchanged.  Driven through
+  the two registrations (Phi_Reasoner.reason on a state whose leading antecedent is the
+  tagged guard: the mode written in the proposition picks the instance and its can_inst);
+  the store and the log are checked under the digest the judge instance would have used,
+  computed with the can_inst PLPR.thy registers for that mode -- a digest this instance
+  never computes.*)
+ML \<open>
+local
+  fun run can_inst ctxt prop_str =
+    let val st = Thm.trivial (Thm.cterm_of ctxt (read true ctxt prop_str))
+        val d = digest_of can_inst ctxt st
+        val result = Unsynchronized.ref NONE
+        val ws = warnings_of (fn () => result := SOME (Phi_Reasoner.reason NONE NONE (ctxt, st)))
+        val solved = (case the (! result) of SOME (_, th) => Thm.no_prems th | NONE => false)
+        val logged = filter (fn r => attr "digest" r = Hasher.hex d) (decision_records ())
+     in {solved = solved, entry = entry_of ctxt d, logged = length logged, warnings = ws} end
+  fun check name expect_solved {solved, entry, logged, warnings} =
+    (if solved = expect_solved then ()
+     else error (name ^ ": " ^ (if solved then "solved" else "not solved") ^ ", unexpected");
+     if is_none entry then () else error (name ^ ": an entry was written: " ^ show_entry entry);
+     if logged = 0 then ()
+     else error (name ^ ": " ^ string_of_int logged ^ " guard_decision record(s) logged");
+     List.app (fn l => assert_warnings name l 0 warnings) warning_lines;
+     writeln (name ^ ": " ^ (if solved then "solved" else "not solved") ^
+              "; no entry, no record, no warning, as expected"))
+  (*the can_inst of each registration (PLPR.thy): \<safe> true, \<no>-\<inst>-\<safe> false*)
+  val safe = true
+  val no_inst_safe = false
+in
+  val _ = check "safe guard, provable: P-auto proves it" true
+            (run safe \<^context> ("\<condition>[\<safe>] (CHAIN (" ^ fresh () ^ " # " ^ intro_chain ^ "))"));
+  val _ = check "safe guard, unprovable under P-auto's bound: not applied, silently" false
+            (run safe \<^context> ("\<condition>[\<safe>] (BLIND_SPIN " ^ fresh () ^ ")"));
+  (*the judge instance ends this guard Unknown with the undecided-guard warning*)
+  val _ = check "safe guard the judge instance would report as undecided: silent here" false
+            (run safe \<^context> ("\<condition>[\<safe>] (PP (LOOP " ^ fresh () ^ "))"));
+  val _ = check "safe guard with a schematic, some instance provable: instantiated" true
+            (run safe \<^context> ("\<condition>[\<safe>] (CHAIN (" ^ fresh () ^ " # " ^ intro_chain ^ ") \<and> SOMETRUE ?x)"));
+  val _ = check "no-inst safe guard, the same body: instantiation prohibited, not applied" false
+            (run no_inst_safe \<^context> ("\<condition>[\<no>-\<inst>-\<safe>] (CHAIN (" ^ fresh () ^ " # " ^ intro_chain ^ ") \<and> SOMETRUE ?x)"));
+  (*a ground body under the no-inst spelling is solved: its registration is reached -- an
+    absent registration would leave the probe above unsolved as well*)
+  val _ = check "no-inst safe guard, provable: its registration is reached" true
+            (run no_inst_safe \<^context> ("\<condition>[\<no>-\<inst>-\<safe>] (CHAIN (" ^ fresh () ^ " # " ^ intro_chain ^ "))"))
+end\<close>
+
+(*the context comes back unchanged -- the same object, not an equal one; the instance is
+  called directly here, since a run may rebuild the context it returns*)
+ML \<open>
+let val ctxt = \<^context>
+    val st = Thm.trivial (Thm.cterm_of ctxt (read false ctxt
+               ("\<condition>[\<safe>] (CHAIN (" ^ fresh () ^ " # " ^ intro_chain ^ "))")))
+ in case Seq.pull (Phi_Reasoners.guard_condition_solver {can_inst = true} (ctxt, st)) of
+      SOME ((ctxt', _), _) =>
+        if pointer_eq (ctxt', ctxt)
+        then writeln "the out-of-run instance returns the context it was given"
+        else error "the out-of-run instance returned another context"
+    | NONE => error "the out-of-run instance did not solve a provable guard"
+end\<close>
 
 section \<open>The switch and the variable disciplines\<close>
 
