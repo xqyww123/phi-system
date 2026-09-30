@@ -3,7 +3,8 @@
 Status: rev 34 (2026-09-28) — **`\<condition>[\<safe>] P` IS THE OUT-OF-RUN
 INSTANCE (§40): `safe_obligation_solver` retired, the two safe reasoners
 registered to `guard_condition_solver` — no store, no refuter, no judge, no
-undecided-guard warning — pending the commit.**  Rev 33 (2026-09-23) — **THE CHECK `\<check> \<premise> \<consistency>`
+undecided-guard warning — committed as phi-system `88286c94`, root bump
+`3274ebfc`.**  Rev 33 (2026-09-23) — **THE CHECK `\<check> \<premise> \<consistency>`
 IMPLEMENTED, VERIFIED, REVIEWED (stages 1 to 3 of
 `ai-artifacts/CHECK_HYPOTHESIS_CONSISTENCY_PLAN.md`: the code review
 MET_ON_CONDITION, its conditions ruled — that plan's rulings 22-25 — and
@@ -3702,7 +3703,7 @@ uncommitted.  The Quicksort obligation failure of the Phi_Examples leg is
 undiagnosed (the report says what is known); the four failures of that leg
 are reported, not attributed.
 
-## 39. The Quicksort regression diagnosed (2026-09-15) — P-auto's second simplification; rulings, pending implementation
+## 39. The Quicksort regression diagnosed (2026-09-15) — P-auto's second simplification; rulings implemented, verified, reviewed, committed as phi-system `97be6d75`
 
 **Symptom** [author 2026-09-15 "你看一下 Phi_Examples/Quicksort.thy:47 被你
 搞坏了"; "AoA 显示现在生成的 proof obligation 是 unprovable 的！而且如果只是 AoA

@@ -129,8 +129,17 @@ other sessions changed Isa-Mini/Semantic_Embedding; the WARM corpus run in a fre
   Synchronized.var keyed by theory name, closed only at Theory.at_end).  Options put to the author:
   (i) delete the mechanism; (ii) keep, exempt guard entries (explicit bit on the write / prefix);
   (iii) keep, reword.  UNDECIDED — do nothing until ruled.
+  [STATUS 2026-09-30: RULED on 2026-09-13 (plan §36 ruling 9, §8 "the proof store's
+  key-collision alarm and guard entries") and IMPLEMENTED — auto_sledgehammer `02457b1` …
+  `8134469`: the alarm stays for proof obligations; a writer that rewrites its own key by
+  design says so (`update_cached_proof thy {id, hash, rewrites}`, `rewrites = true` from the
+  guard cache's `write_entry` only, neither checked nor marked); the marks are the text's
+  `Hasher.string` digest, computed only under `ML_debugger`, dropped at theory begin and end.]
 
 ## Pending the author (from the 2026-09-12 audit; do not act before a ruling)
+[STATUS 2026-09-30: every item below was ruled on 2026-09-14, plan §37; the `\<check>
+\<premise> \<consistency>` constant landed 2026-09-23 (phi-system `0110a6fa`); the tier
+measurement stays shelved ("不重要，可以继续搁置", 2026-09-30); phase 2 is open.]
 - A4: plan §1 says the judge "may re-enter PLPR", reversing the author's rule (2026-09-07 13:21 "judge
   不能重入 PLPR") on the drafter's own bullet; mark [drafter, 待裁].
 - A1: §1 judge contract and §7 cite "2. 不掺" (which ruled assumptions OUT of the digest, since
