@@ -962,7 +962,8 @@ fun hammer_obligation_solver
                    (Seq.single (snd (MiniLang_Agent_AoA.hammer_or_AoA
                       {fact_override = Sledgehammer_Fact.no_fact_override,
                        proof_id = id, hammer_timeout = NONE, async_mode = mode,
-                       read_store = read_store, write_store = write_store} ctxt st))
+                       read_store = read_store, write_store = write_store,
+                       task = MiniLang_Agent_AoA.usual, user_operations = []} ctxt st))
                     (* Sync face: under Sync nothing upstream converts an escaping
                        Auto_Fail, and Internal_Failure must surface its payload
                        (§2.9's consumption rule) — so this terminal slot renders
