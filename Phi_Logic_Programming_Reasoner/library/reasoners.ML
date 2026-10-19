@@ -930,7 +930,7 @@ fun hammer_obligation_solver
                          built here and substituted into the caller's mode below,
                          rather than being handed down from Phi_Envir.*)
                        fun compose (MiniLang_Agent_AoA.Agent_Give_Up (reason, detail, _)) =
-                             wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail)
+                             wrap (MiniLang_Agent_AoA.give_up_message reason detail)
                          | compose (Phi_Sledgehammer_Solver.Auto_Fail
                                       (Phi_Sledgehammer_Solver.Internal_Failure msg)) =
                              (*engine bug, not an unprovable goal: the payload IS the message*)
@@ -983,7 +983,7 @@ fun hammer_obligation_solver
               member (op =) ["refute", "resource_unavailable",
                              "resource_exhausted", "surrender"] reason
            then NONE
-           else error (wrap (MiniLang_Agent_AoA.banner_of reason ^ "\n" ^ detail))))
+           else error (wrap (MiniLang_Agent_AoA.give_up_message reason detail))))
 
 fun hammer_obligation_solver' opts wrap id =
       context_tactic_to_state_transition (hammer_obligation_solver opts wrap id)
